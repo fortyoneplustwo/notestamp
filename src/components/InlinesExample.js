@@ -7,12 +7,15 @@ import {
   Transforms,
   Range,
   createEditor,
+  Text
 } from 'slate'
 import { withHistory } from 'slate-history'
 import isHotkey from 'is-hotkey'
 import { EventEmitter } from './EventEmitter.js'
 import { Toolbar, Button, Icon } from './Toolbar.js'
 import FileUpload from './FileUpload.js'
+import escapeHtml from 'escape-html'
+import { jsPDF } from 'jspdf'
 
 const HOTKEYS = {
   'mod+b': 'bold',
@@ -35,7 +38,7 @@ const badgeCSS = {
   height: '100%'
 }
 
-const InlinesExample = ({ editorStyle, onCreateBadge, textContentRequest }) => {
+const InlinesExample = ({ editorStyle, onCreateBadge }) => {
   const fileUploadModalRef = useRef(null)
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
@@ -117,7 +120,7 @@ const handlePaste = event => {
       }}
     >
       <div style={{  display: 'flex', flexDirection: 'column', fontSize: '16px', width: '100%', height: '90%' }}>
-        <FileUpload ref={fileUploadModalRef} onSubmit={handleOpenFile} />
+        <FileUpload ref={fileUploadModalRef} onSubmit={handleOpenFile} type='.stmp' />
         <Toolbar style={{ display: 'flex', flexDirection: 'row'}}>
           <MarkButton format='bold' icon="format_bold" description='Bold (Ctrl+B)' />
           <MarkButton format='italic' icon="format_italic" description="Italic (Ctrl+I)"/>
@@ -127,6 +130,7 @@ const handlePaste = event => {
           <OpenFileButton icon="folder_open" description="Open document" modal={fileUploadModalRef} />
           <ActionButton action='copy' icon="content_copy" description="Copy all text to clipboard" />
           <ActionButton action='save' icon="download" description="Download document" />
+          <ActionButton action='pdf' icon="picture_as_pdf" description="Export to PDF document" />
           <div style={{ width: '1px', backgroundColor: '#ccc'}}></div>
           <form action="https://www.paypal.com/donate" method="post" target="_top">
             <input type="hidden" name="business" value="L7VEWD374RJ38" />
@@ -184,11 +188,12 @@ const onKeyDown = (event, onCreateBadge, editor) => {
   // on shift enter: prevent insertion of new paragraph
   else if (isHotkey('shift+enter', nativeEvent)) {
     event.preventDefault()
+    Transforms.insertText(editor, '\n')
     return
   }
   // on enter: insert badge
   else if (isKeyHotkey('enter', nativeEvent)) {
-    const { label, value } = onCreateBadge()
+    const { label, value } = onCreateBadge(new Date())
     event.preventDefault()
     // save marks then restore after all transforms have been performed
     const marks = Editor.marks(editor)
@@ -204,7 +209,7 @@ const onKeyDown = (event, onCreateBadge, editor) => {
     if (!editorIsEmpty) Transforms.insertText(editor, '\n')
     const caretPathBeforeInsert = editor.selection.focus.path
     Transforms.insertNodes(editor, { 
-      type: 'badge', 
+      type: 'stamp', 
       label: label, 
       value: value,
       children: [{ text: '' }] 
@@ -237,6 +242,37 @@ const onKeyDown = (event, onCreateBadge, editor) => {
   }
 }
 
+const toHtml = node => {
+  if (Text.isText(node)) {
+    let string = escapeHtml(node.text)
+    string = string.replace(/\n/g, '<br>')
+    string = string.replace(/\t/g, '&nbsp;&nbsp;')
+    if (node.bold) {
+      string = `<strong>${string}</strong>`
+    } else if (node.italic) {
+      string = `<em>${string}</em>`
+    } else if (node.underline) {
+      string = `<u>${string}</u>`
+    } else if (node.code) {
+      string = `<code>${string}</code>`
+    }
+    return string
+  }
+
+  const children = node.children.map(n => toHtml(n)).join('')
+
+  switch (node.type) {
+    case 'quote':
+      return `<blockquote><p>${children}</p></blockquote>`
+    case 'paragraph':
+      return `<p>${children}</p>`
+    case 'link':
+      return `<a href="${escapeHtml(node.url)}">${children}</a>`
+    default:
+      return children
+  }
+}
+
 const downloadJSON = (jsonObject, fileName) => {
   const jsonString = JSON.stringify(jsonObject, null, 2)
   const blob = new Blob([jsonString], { type: 'application/json' })
@@ -260,6 +296,21 @@ const toggleAction = (editor, action) => {
       if ('text' in node) textContent += node.text
     }
     navigator.clipboard.writeText(textContent)
+  }
+  else if (action === 'pdf') {
+    const result = toHtml(editor)
+    // Default export is a4 paper, portrait, using millimeters for units
+    const doc = new jsPDF();
+    doc.html(result, {
+      callback: function(doc) {
+          // Save the PDF
+          doc.save('document.pdf');
+      },
+      x: 15,
+      y: 15,
+      width: 170, //target width in the PDF document
+      windowWidth: 650, //window width in CSS pixels
+    })
   }
 }
 
@@ -288,11 +339,11 @@ const withInlines = editor => {
   } = editor
   // overriding these methods to define badge behaviour
   editor.isInline = element => 
-    ['badge'].includes(element.type) || isInline(element)
+    ['stamp'].includes(element.type) || isInline(element)
   editor.isElementReadOnly = element => 
-    element.type === 'badge' || isElementReadOnly(element)
+    element.type === 'stamp' || isElementReadOnly(element)
   editor.isSelectable = element => 
-    element.type !== 'badge' && isSelectable(element)
+    element.type !== 'stamp' && isSelectable(element)
   return editor
 }
 
@@ -346,7 +397,7 @@ const MarkButton = ({ format, icon, description }) => {
 const Element = props => {
   const { attributes, children, element } = props
   switch (element.type) {
-    case 'badge':
+    case 'stamp':
       return <Badge {...props} />
     default:
       return <p {...attributes}>{children}</p>
@@ -359,7 +410,7 @@ const Badge = ({ attributes, children, element }) => {
       {...attributes}
       contentEditable={false}
       onClick={() => { 
-        EventEmitter.dispatch('badgeClicked', [element.label, element.value])
+        EventEmitter.dispatch('badge-clicked', [element.label, element.value])
       }}
       style={badgeCSS}
     >

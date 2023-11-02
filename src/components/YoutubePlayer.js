@@ -71,7 +71,7 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
           <input
             type="text"
             name="inputField"
-            placeholder="Enter youtube url"
+            placeholder="Enter youtube link"
           />
           <button type="submit">Go</button>
         </form>

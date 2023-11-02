@@ -1,33 +1,86 @@
-import './App.css';
-import InlinesExample from './components/InlinesExample.js';
-import React, { useState, useRef } from 'react';
-import YoutubePlayer from './components/YoutubePlayer.js';
-import { EventEmitter } from './components/EventEmitter.js';
+import './App.css'
+import InlinesExample from './components/InlinesExample.js'
+import React, { useState, useRef } from 'react'
+import YoutubePlayer from './components/YoutubePlayer.js'
+import { EventEmitter } from './components/EventEmitter.js'
+import AudioRecorder from './components/AudioRecorder'
+import AudioPlayer from './components/AudioPlayer.js'
+import FileUpload from './components/FileUpload.js'
+
+// Variables needed to calculate timestamp from audio recorder
+let dateWhenRecLastInactive = new Date()
+let dateWhenRecLastActive = dateWhenRecLastInactive
+let recDuration = 0
 
 const App = () => {
-  const [textContentRequest, setTextContentRequest] = useState(false)
   const playerRef = useRef(null)
+  const audioPlayerRef = useRef(null)
+  const fileUploadModalRef = useRef(null)
+
+  const [audioSource, setAudioSource] = useState(null)
   const [showPlayer, setShowPlayer] = useState(false)
+  const [showAudioPlayer, setShowAudioPlayer] = useState(false)
+  const [showAudioRecorder, setShowAudioRecorder] = useState(false)
 
   ////////////////////////////////
   ///  METHODS  //////////////////
   ////////////////////////////////
 
-  // Listen for request to save contents to text file
-  EventEmitter.subscribe('textContentRequest', data => {
-    // download data to text file
-  }) 
+  // Upload audio file
+  const handleOpenFile = (file, modal) => {
+    modal.current.close()
+    setAudioSource(window.URL.createObjectURL(file)) 
+    setShowAudioPlayer(true)
+  }
 
-  // when a badge is clicked, seek to its timestamp value
-  EventEmitter.subscribe('badgeClicked', data => {
+  // Dispatched when recorder started or resumed
+  EventEmitter.subscribe('recorder-active', data => { dateWhenRecLastActive = data })
+
+  // Dispatched when recorder paused or stopped
+  EventEmitter.subscribe('recorder-inactive', data => {
+    // Fix: for unknown reasons, this event emits 4 times on pause
+    // The if condition ensures recDuration only updates once per pause
+    if (dateWhenRecLastInactive !== data) {
+      recDuration += (data - dateWhenRecLastActive)
+    }
+    dateWhenRecLastInactive = data
+  })
+
+  // Dispatched when recorder stopped
+  EventEmitter.subscribe('recorder-stopped', data => { 
+    setShowAudioPlayer(true)
+    setAudioSource(data)
+    setShowAudioRecorder(false)
+  })
+
+  // When a badge is clicked, seek to its timestamp value
+  EventEmitter.subscribe('badge-clicked', data => {
     const value = data[1]
+    if (audioPlayerRef.current) { 
+      audioPlayerRef.current.currentTime = value
+      audioPlayerRef.current.play()
+    }
     if (playerRef.current) playerRef.current.seekTo(value, true)
   })
 
   // return type must be { label: String, value: Any or null to abort operation }
-  const setBadgeData = () => { 
-    const currentTime = playerRef.current ? playerRef.current.getCurrentTime() : null
-    return { label: formatTime(currentTime), value: currentTime }    
+  const setBadgeData = (dateBadgeRequested) => { 
+    if (showAudioPlayer) {
+      const currentTime = audioPlayerRef.current.currentTime
+      return { label: formatTime(currentTime), value: currentTime }
+    } else if (showAudioRecorder) {
+      let timestamp = null
+      if (dateWhenRecLastActive > dateWhenRecLastInactive) {
+        timestamp = recDuration + (dateBadgeRequested - dateWhenRecLastActive)
+      } else {
+        timestamp = recDuration
+      }
+      timestamp = Math.floor(timestamp / 1000)
+      return { label: formatTime(timestamp), value: timestamp }    
+    } else {
+      const currentTime = playerRef.current ? playerRef.current.getCurrentTime() : null
+      return { label: formatTime(currentTime), value: currentTime }    
+    }
   }
 
   // format time to MM:SS
@@ -47,45 +100,52 @@ const App = () => {
   return (
     <div style={{ height: '100vh', overflowY: 'hidden', display: 'flex', flexDirection: 'row' }}>
           <div style={{ ...paneCSS, paddingLeft: '30px',paddingRight: '20px', overflowY: 'hidden', background: '#1b1b1b' }}>
+            <FileUpload ref={fileUploadModalRef} onSubmit={handleOpenFile} type='audio/*' />
             {
-              !showPlayer &&
-              <div style={{ display: 'flex', flexDirection: 'column', color: 'white'}}>
-                <pre>
-                  Welcome to <strong><i>Timestamp</i></strong>, a web app that synchronizes your notes to a video.
+              !showPlayer && !showAudioRecorder && !showAudioPlayer &&
+              <div style={{ display: 'flex', flexDirection: 'column', color: 'white', overflowX: 'visible' }}>
+                <pre style={{ whiteSpace: 'pre-wrap' }}>
+                  Welcome to <strong>Notestamp</strong>, a web app that synchronizes your notes to audio or video.
                 </pre>
                 <br></br>
-                <pre>
+                <pre style={{ whiteSpace: 'pre-wrap' }}>
                   How it works:
                   <ul>
-                    <li>Open a YouTube video.</li>
-                    <li>Hit &lt;enter&gt; to insert a timestamp at the beginning of a new line.</li>
-                    <li>Click a timestamp to seek the video to it.</li>
-                    <li>Your document persists even if you reload the page or close the browser.</li>
+                    <li style={{ whiteSpace: 'pre-wrap' }}>When recording or viewing media, hitting &lt;enter&gt; inside the editor will insert a timestamp at the beginning of a line.</li>
+                    <li style={{ whiteSpace: 'pre-wrap' }}>Click a timestamp and instantly return to the specific moment in the audio or video.</li>
+                    <li style={{ whiteSpace: 'pre-wrap' }}>Your notes persist across page reloads unless you clear the browser cache.</li>
+                    <li style={{ whiteSpace: 'pre-wrap' }}>Download the document to your device and open it back in the editor with timestamps preserved.</li>
                   </ul>
                 </pre>
-                <br></br>
-                <pre>
+                <pre style={{ whiteSpace: 'pre-wrap' }}><strong style={{ color: 'red' }}>Warning: </strong>This app is still in development and has only been tested on Chrome desktop.</pre>
+                <pre style={{ whiteSpace: 'pre-wrap' }}>
                   Features coming soon:
                   <ul>
-                    <li>Record audio and synchronize to your notes.</li>
-                    <li>Upload a pdf document and synchronize to your notes.</li>
+                    <li style={{ whiteSpace: 'pre-wrap' }}>Synchronize your notes to a pdf document.</li>
                   </ul>
                 </pre>
-                <pre><i>Dedicated to the students of the University of Toronto.</i></pre>
-                <pre><i>With love,</i></pre>
-                <pre><i>- Olive</i></pre>
-                <button style={{ alignSelf: 'center', width: 'fitContent'}} onClick={() => setShowPlayer(true)}>Get started</button>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '5px'}}>
+                  <button style={{ width: 'fitContent'}} onClick={() => setShowPlayer(true)}>Link YouTube video</button>
+                  <button style={{ width: 'fitContent'}} onClick={() => fileUploadModalRef.current.showModal()}>Upload audio file</button>
+                  <button style={{ width: 'fitContent'}} onClick={() => setShowAudioRecorder(true)}>Record audio</button>
+                </div>
               </div>
             }
+            {(showAudioRecorder || showAudioPlayer || showPlayer)
+              && <button style={{ position: 'absolute', top: '10px', left: '10px', background: 'red', border: '0px', borderRadius: '3px', color: 'white' }}
+                         onClick={() => { setShowAudioPlayer(false); setShowPlayer(false); setShowAudioRecorder(false)}}>
+                  x
+                 </button>}
             {showPlayer && <YoutubePlayer ref={playerRef} />}
+            {showAudioPlayer && <AudioPlayer src={audioSource} ref={audioPlayerRef} />}
+            {showAudioRecorder && <AudioRecorder />}
           </div>
           <div style={{ ...paneCSS, paddingLeft: '20px', paddingRight: '40px', overflowY: 'auto' }}>
             <InlinesExample 
               editorStyle={editorCSS}
-              textContentRequest={textContentRequest}
               onCreateBadge={setBadgeData} />
           </div>
-    </div>
+    </div>  
   )
 }
 
