@@ -1,4 +1,4 @@
-import React, {  useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 const YoutubePlayer = React.forwardRef((props, ref) => {
   let player = useRef(null)
@@ -65,8 +65,8 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
   /// JSX ////////////////////////
   ////////////////////////////////
   return (
-    <>
-      <div style={{ marginBottom: '10px', justifySelf: 'flex-start' }}>
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ marginBottom: '10px', alignSelf: 'center' }}>
         <form onSubmit={handleSubmitUrl}>
           <input
             type="text"
@@ -77,7 +77,7 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
         </form>
       </div>
       <div id="youtube-player"></div>
-    </>
+    </div>
   )
 })
 

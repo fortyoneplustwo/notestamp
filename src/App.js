@@ -133,14 +133,20 @@ const App = () => {
             }
             {(showAudioRecorder || showAudioPlayer || showPlayer)
               && <button style={{ position: 'absolute', top: '10px', left: '10px', background: 'red', border: '0px', borderRadius: '3px', color: 'white' }}
-                         onClick={() => { setShowAudioPlayer(false); setShowPlayer(false); setShowAudioRecorder(false)}}>
+                         onClick={() => { 
+                          setShowAudioPlayer(false)
+                          setShowPlayer(false)
+                          setShowAudioRecorder(false)
+                          playerRef.current = null
+                          audioPlayerRef.current = null
+                 }}>
                   x
                  </button>}
             {showPlayer && <YoutubePlayer ref={playerRef} />}
             {showAudioPlayer && <AudioPlayer src={audioSource} ref={audioPlayerRef} />}
             {showAudioRecorder && <AudioRecorder />}
           </div>
-          <div style={{ ...paneCSS, paddingLeft: '20px', paddingRight: '40px', overflowY: 'auto' }}>
+          <div style={{ ...paneCSS, paddingLeft: '20px', paddingRight: '30px', overflowY: 'auto' }}>
             <InlinesExample 
               editorStyle={editorCSS}
               onCreateBadge={setBadgeData} />
@@ -154,13 +160,13 @@ const App = () => {
 ////////////////////////////////
 
 const editorCSS = { 
-  fontFamily: 'Times New Roman, monospace,serif',
+  fontFamily: 'Times New Roman, monospace ,serif',
   background: 'white',
   outline: 'none',
   color: 'black',
   width: '100%',
   height: '100%',
-  padding: '10px',
+  padding: '5px',
   overflowY: 'scroll',
   boxShadow: '0px 3px 15px rgba(0,0,0,0.2)'
 }
