@@ -1,7 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { EventEmitter } from './EventEmitter.js'
+import BackButton from './BackButton.js'
+import '../MediaComponent.css'
+import '../AudioRecorder.css'
+import '../Button.css'
 
-const AudioRecorder = () => {
+const AudioRecorder = ({ closeComponent }) => {
   const mediaRecorder = useRef(null)
   const chunks = useRef(null)
 
@@ -84,9 +88,12 @@ const AudioRecorder = () => {
   ////////////////////////////////
 
   return (
-    <div style={{ display: 'flex', gap: '5px'}}>
-      {showRecControls && <button ref={recordButtonRef} onClick={toggleRecord}>{recordButtonText}</button>}
-      {showRecControls && <button ref={stopButtonRef} disabled={stopButtonDisabled} onClick={toggleStop}>Stop</button>}
+    <div className='media-component-container'>
+      <div className='back-btn-container'><BackButton handler={closeComponent} /></div>
+      <div className='audio-rec-btn-container'>
+        {showRecControls && <button className='recorder-btn' ref={recordButtonRef} onClick={toggleRecord}>{recordButtonText}</button>}
+        {showRecControls && <button ref={stopButtonRef} className='recorder-btn recorder-stop-btn' style={{ background: 'lightgray'}} disabled={stopButtonDisabled} onClick={toggleStop}>Stop</button>}
+      </div>
     </div>
   )
 }

@@ -1,9 +1,7 @@
-.App {
-  text-align: center;
-}
+@import './GlobalStyles.css';
 
 .App-logo {
-  height: 40vmin;
+  height: 50%;
   pointer-events: none;
 }
 
@@ -13,19 +11,75 @@
   }
 }
 
+.App-canvas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  height: 100vh;
+}
+
 .App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+  /* background-color: #282c34; */
+  grid-row-start: 1;
+  grid-row-end: 2;
+  background-color: var(--header-bg-color);
   display: flex;
   flex-direction: column;
-  align-items: center;
+  padding: 0 20px 0 20px;
+  /* align-items: center; */
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.App-reader-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  /* grid-template-rows: 15% 75% 10%; */
+  grid-template-rows: 50px 1fr;
+  background-color: var(--main-bg-color);
+  overflow: hidden;
+  /* background-color: white; */
+}
+
+.reader-homepage {
+  grid-row-start: 2;
+  grid-row-end: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: auto;
+  overflow-wrap: break-word;
+  color: white;
+  /* white-space: pre-wrap; */
+  padding: 10px 20px 10px 20px;
+}
+
+.reader-media-container {
+  grid-row-start: 2;
+  grid-row-end: 3;
+  padding: 10px 10px 10px 10px;
+  overflow: auto;
+}
+
+.App-writer-container {
+  padding: 20px;
+  overflow: hidden;
+  background-color: var(--sub-bg-color);
+}
+
+.editor-container {
+  height: 100%;
+  width: 100%;
+}
+
+.App-footer {
+  grid-row-start: 3;
+  grid-row-end: 4;
+  display: flex;
+  background-color: var(--header-bg-color);
+  color: white;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes App-logo-spin {

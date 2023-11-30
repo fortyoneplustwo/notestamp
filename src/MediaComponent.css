@@ -1,0 +1,10 @@
+.media-component-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+}
+
+.back-btn-container {
+  align-self: flex-start;
+}

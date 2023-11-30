@@ -1,0 +1,50 @@
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.toolbar-btn-container {
+  /* For unknown reasons these styles only apply using !important */
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 30px !important;
+}
+
+.toolbar-btn-separator {
+  width: 1px;
+  background-color: #ccc;
+}
+
+.editor { 
+  font-family: Times New Roman, monospace ,serif;
+  background: white;
+  outline: none;
+  color: black;
+  width: 99%; /* < 100% to allow room for scrollbar */
+  height: 100%;
+  padding: 5px;
+  /* scroll: auto; */
+  align-self: center;
+  overflow: auto;
+  box-shadow: rgba(17, 17, 26, 0.05) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 0px 8px;
+}
+
+.badge {
+  font-family: Helvetica;
+  font-weight: bold;
+  background-color: transparent;
+  color: tomato;
+  text-align: center;
+  padding-right: 1em; /* used to be 10px */
+  padding-top: 0;
+  font-size: 0.65em;
+  cursor: pointer;
+  user-select: none;
+  height: 100%;
+}
+
+p {
+  margin: 0;
+}

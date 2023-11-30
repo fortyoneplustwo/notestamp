@@ -1,0 +1,26 @@
+.youtube-media-container {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  width: 100%;
+}
+
+.form-container {
+  margin: 20px 0 20px 0;
+  align-self: center;
+}
+
+.form {
+  display: flex;
+  flex-direction: row
+}
+
+.form-input {
+  border-radius: 0;
+  border: 0;
+  padding: 0.5em;
+  width: 300px;
+  height: 1em;
+  background: white;
+}
+

@@ -1,6 +1,11 @@
 import React, { useRef, useState } from 'react';
+import BackButton from './BackButton';
+import '../MediaComponent.css'
+import '../YoutubePlayer.css'
+import '../Button.css'
 
 const YoutubePlayer = React.forwardRef((props, ref) => {
+  const { closeComponent } = props
   let player = useRef(null)
   const [youtubeUrl, setYoutubeUrl] = useState('')
 
@@ -9,7 +14,7 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
   ////////////////////////////////
 
   const onYouTubeIframeAPIReady = () => {
-    // Need to destroy player ref before reassigning to a new link
+    // Need to destroy existing player ref before loading a new video
     if (player.current) player.current.destroy();
 
     player.current = new window.YT.Player('youtube-player', {
@@ -65,18 +70,22 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
   /// JSX ////////////////////////
   ////////////////////////////////
   return (
-    <div style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ marginBottom: '10px', alignSelf: 'center' }}>
-        <form onSubmit={handleSubmitUrl}>
-          <input
-            type="text"
-            name="inputField"
-            placeholder="Enter youtube link"
-          />
-          <button type="submit">Go</button>
-        </form>
+    <div className='media-component-container'>
+      <div className='back-btn-container'><BackButton handler={closeComponent} /></div>
+      <div className='youtube-media-container'>
+        <div className='form-container'>
+          <form onSubmit={handleSubmitUrl} className='form'>
+            <input
+              type="text"
+              name="inputField"
+              placeholder="Enter YouTube link"
+              className='form-input'
+            />
+            <button type="submit" className='searchbar-submit-btn'>Play</button>
+          </form>
+        </div>
+        <div id="youtube-player"></div>
       </div>
-      <div id="youtube-player"></div>
     </div>
   )
 })
