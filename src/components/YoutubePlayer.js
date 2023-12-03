@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import BackButton from './BackButton';
 import '../MediaComponent.css'
 import '../YoutubePlayer.css'
@@ -6,18 +6,36 @@ import '../Button.css'
 
 const YoutubePlayer = React.forwardRef((props, ref) => {
   const { closeComponent } = props
-  let player = useRef(null)
+  let playerInstanceRef = useRef(null)
+  let currentVideoRef = useRef(null)
   const [youtubeUrl, setYoutubeUrl] = useState('')
 
   ////////////////////////////////
-  /// initialize youtube player //
+  /// Initialize controller //////
+  ////////////////////////////////
+  
+  useEffect(() => {
+  // Parent component can use this controller using ref
+    const controller = {
+      getState: function (data = null) {
+        return currentVideoRef.current.getCurrentTime()
+      },
+      setState: function (newState) {
+        currentVideoRef.current.seekTo(newState, true)
+      }
+    } 
+    ref.current = controller
+  }, [ref])
+
+  ////////////////////////////////
+  /// Initialize youtube player //
   ////////////////////////////////
 
   const onYouTubeIframeAPIReady = () => {
-    // Need to destroy existing player ref before loading a new video
-    if (player.current) player.current.destroy();
+    // Need to destroy existing player instance before loading a new video
+    if (playerInstanceRef.current) playerInstanceRef.current.destroy();
 
-    player.current = new window.YT.Player('youtube-player', {
+    playerInstanceRef.current = new window.YT.Player('youtube-player', {
       width: '100%',
       videoId: extractVideoId(youtubeUrl), // Replace with a valid video ID
       playerVars: {
@@ -36,7 +54,7 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
     // Player is ready to be controlled
     // You can use 'event.target' to access the player object
     // Pass player object as a ref so it can be controlled by the parent
-    ref.current = event.target
+    currentVideoRef.current = event.target
   }
 
   // Load the YouTube API script if not already loaded

@@ -15,7 +15,6 @@ import { Toolbar, Button, Icon } from './Toolbar.js'
 import FileUpload from './FileUpload.js'
 import escapeHtml from 'escape-html'
 import { jsPDF } from 'jspdf'
-import { wait } from '@testing-library/user-event/dist/utils/index.js'
 import '../Editor.css'
 
 const HOTKEYS = {
@@ -28,7 +27,7 @@ const HOTKEYS = {
   'mod+l': 'forwardTenSecs'
 }
 
-const TextEditor = ({ onCreateBadge }) => {
+const TextEditor = ({ onCreateStamp }) => {
   const fileUploadModalRef = useRef(null)
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
@@ -132,7 +131,7 @@ const TextEditor = ({ onCreateBadge }) => {
           autoFocus={true}
           onCopy={handleCopy}
           onPaste={handlePaste}
-          onKeyDown={(event) => { onKeyDown(event, onCreateBadge, editor) }}
+          onKeyDown={(event) => { onKeyDown(event, onCreateStamp, editor) }}
         />
       </div>
     </SlateReact.Slate>
@@ -146,7 +145,7 @@ const TextEditor = ({ onCreateBadge }) => {
 ////////////////////////////////
 
 // Keyboard events
-const onKeyDown = (event, onCreateBadge, editor) => {
+const onKeyDown = (event, onCreateStamp, editor) => {
   const { nativeEvent } = event
 // Handle formatting hotkeys. TODO reimplement this. it's really slow
   for (const hotkey in HOTKEYS) {
@@ -172,7 +171,7 @@ const onKeyDown = (event, onCreateBadge, editor) => {
   }
   // on enter: insert badge
   else if (isKeyHotkey('enter', nativeEvent)) {
-    const { label, value } = onCreateBadge(new Date())
+    const { label, value } = onCreateStamp(new Date())
     event.preventDefault()
     // *save marks then restore after all transforms have been performed
     const marks = Editor.marks(editor)
@@ -374,7 +373,7 @@ const Badge = ({ attributes, children, element }) => {
       {...attributes}
       contentEditable={false}
       onClick={() => { 
-        EventEmitter.dispatch('badge-clicked', [element.label, element.value])
+        EventEmitter.dispatch('stamp-clicked', [element.label, element.value])
       }}
       className='badge'
     >

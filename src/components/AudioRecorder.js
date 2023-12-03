@@ -5,7 +5,13 @@ import '../MediaComponent.css'
 import '../AudioRecorder.css'
 import '../Button.css'
 
-const AudioRecorder = ({ closeComponent }) => {
+// Variables needed to calculate timestamp
+// Defined outside of component to prevent reset on re-renders
+let dateWhenRecLastActive = new Date()
+let dateWhenRecLastInactive = dateWhenRecLastActive
+let recDuration = 0
+
+const AudioRecorder = React.forwardRef(({ closeComponent }, ref) => {
   const mediaRecorder = useRef(null)
   const chunks = useRef(null)
 
@@ -15,6 +21,34 @@ const AudioRecorder = ({ closeComponent }) => {
   const [recordButtonText, setRecordButtonText] = useState('Record')
   const [stopButtonDisabled, setStopButtonDisabled] = useState(true)
   const [showRecControls, setShowRecControls] = useState(true)
+
+  ////////////////////////////////
+  /// Initialize controller //////
+  ////////////////////////////////
+  
+  useEffect(() => {
+  // Parent component can use this controller using ref
+    const controller = {
+      getState: function (data) {
+        const dateStampDataRequested = data
+        let timestamp = null
+        // If statement checks if the recorder was stopped while still recording
+        if (dateWhenRecLastActive > dateWhenRecLastInactive) {
+          timestamp = recDuration + (dateStampDataRequested - dateWhenRecLastActive)
+        } else {
+          timestamp = recDuration
+        }
+        timestamp = Math.floor(timestamp / 1000)
+        return timestamp
+      },
+      setState: function (_) {}
+    } 
+    ref.current = controller
+  }, [ref])
+
+  ////////////////////////////////
+  /// Initialize recorder  ///////
+  ////////////////////////////////
 
   const initPlayer = () =>{
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !mediaRecorder.current) {
@@ -26,7 +60,7 @@ const AudioRecorder = ({ closeComponent }) => {
           // handle onstart event
           mediaRecorder.current.onstart = () => {
             chunks.current = []
-            EventEmitter.dispatch('recorder-active', new Date())
+            dateWhenRecLastActive = new Date()
           }
           // handle ondataavailable event
           mediaRecorder.current.ondataavailable = (e) => {
@@ -34,16 +68,18 @@ const AudioRecorder = ({ closeComponent }) => {
           }
           // handle onresume event
           mediaRecorder.current.onresume = () => {
-            EventEmitter.dispatch('recorder-active', new Date())
+            dateWhenRecLastActive = new Date()
             mediaRecorder.current.requestData()
           }
           // handle onpause event
           mediaRecorder.current.onpause = () => {
-            EventEmitter.dispatch('recorder-inactive', new Date())
+            dateWhenRecLastInactive = new Date()
+            recDuration += (dateWhenRecLastInactive - dateWhenRecLastActive)
           }
           // handle onstop event
           mediaRecorder.current.onstop = () => {
-            EventEmitter.dispatch('recorder-inactive', new Date())
+            dateWhenRecLastInactive = new Date()
+            recDuration += (dateWhenRecLastInactive - dateWhenRecLastActive)
             const blob = new Blob(chunks.current, {type: "audio/ogg; codecs=opus"})
             const audioURL = window.URL.createObjectURL(blob)
             EventEmitter.dispatch('recorder-stopped', audioURL)
@@ -96,6 +132,6 @@ const AudioRecorder = ({ closeComponent }) => {
       </div>
     </div>
   )
-}
+})
 
 export default AudioRecorder
