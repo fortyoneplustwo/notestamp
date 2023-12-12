@@ -23,10 +23,11 @@
   grid-row-end: 2;
   background-color: var(--header-bg-color);
   display: flex;
-  flex-direction: column;
+  /* flex-direction: column; */
   padding: 0 20px 0 20px;
   /* align-items: center; */
-  justify-content: center;
+  /* justify-content: center; */
+  align-items: center;
   font-size: calc(10px + 2vmin);
   color: white;
 }

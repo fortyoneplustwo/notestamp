@@ -127,6 +127,7 @@ const TextEditor = ({ onCreateStamp }) => {
           className='editor'
           renderElement={renderElement}
           renderLeaf={renderLeaf}
+          placeholder={'Press <Enter> to insert a stamp.\nPress <Shift + Enter> to escape stamping.'}
           spellCheck={true}
           autoFocus={true}
           onCopy={handleCopy}
