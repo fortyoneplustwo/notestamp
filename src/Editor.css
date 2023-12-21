@@ -18,7 +18,10 @@
 }
 
 .editor { 
-  font-family: Times New Roman, monospace ,serif;
+  /* font-family: Times New Roman, monospace ,serif; */
+  font-family: Outfit;
+  tab-size: 2;
+  /* font-weight: 300; */
   background: white;
   outline: none;
   color: black;
@@ -29,6 +32,7 @@
   align-self: center;
   overflow: auto;
   box-shadow: rgba(17, 17, 26, 0.05) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 0px 8px;
+  overflow-x: hidden;
 }
 
 .badge {

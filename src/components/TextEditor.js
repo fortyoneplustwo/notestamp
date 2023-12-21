@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useRef } from 'react'
+import React, { useMemo, useCallback, useRef, useEffect } from 'react'
 import { isKeyHotkey } from 'is-hotkey'
 import { Editable, withReact, useSlate } from 'slate-react'
 import * as SlateReact from 'slate-react'
@@ -16,6 +16,7 @@ import FileUpload from './FileUpload.js'
 import escapeHtml from 'escape-html'
 import { jsPDF } from 'jspdf'
 import '../Editor.css'
+import { saveProject } from '../api.js'
 
 const HOTKEYS = {
   'mod+b': 'bold',
@@ -27,7 +28,7 @@ const HOTKEYS = {
   'mod+l': 'forwardTenSecs'
 }
 
-const TextEditor = ({ onCreateStamp }) => {
+const TextEditor = ({ project, onCreateStamp }) => {
   const fileUploadModalRef = useRef(null)
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
@@ -35,6 +36,9 @@ const TextEditor = ({ onCreateStamp }) => {
 
   const initialValue = useMemo(
     () => 
+      // changing local storage can break the apply
+      // TODO make sure local storage contains at least one paragraph node
+      
       JSON.parse(localStorage.getItem('content')) || [
         {
           type: 'paragraph',
@@ -43,6 +47,27 @@ const TextEditor = ({ onCreateStamp }) => {
       ],
     []
   )
+
+  // replace contents of editor with project if not null
+  useEffect(() => {
+    if (project) {
+      console.log(project.stmp)
+      const newNodes = JSON.parse(project.stmp)
+      // fix: focus the editor to ensure all nodes get removed
+      Transforms.select(editor, {
+        anchor: Editor.start(editor, []),
+        focus: Editor.end(editor, []),
+      })
+      Transforms.removeNodes(editor)
+      // if editor is empty remove the default empty paragraph node
+      if (editor.children.length > 0 
+        && editor.children[0].type === 'paragraph' 
+        && editor.children[0].children[0].text === '') {
+        Transforms.removeNodes(editor, { at: [0] })
+      }
+      Transforms.insertNodes(editor, newNodes)
+    }
+  }, [project, editor])
 
   // Paste contents of submitted .stmp file into the editor
   const handleOpenFile = (file, modal) => {
@@ -119,7 +144,8 @@ const TextEditor = ({ onCreateStamp }) => {
             <div className='toolbar-btn-separator'></div>
             <OpenFileButton icon="folder_open" description="Open .stmp file" modal={fileUploadModalRef} />
             <ActionButton action='copy' icon="content_copy" description="Copy all text to clipboard" />
-            <ActionButton action='save' icon="save" description="Save as .stmp file" />
+            <ActionButton action='download' icon="download" description="Download project file (.stmp)" />
+            {project && <ActionButton action='save' icon="save" description="Save project" options={{ title: project.title }} />}
             <ActionButton action='pdf' icon="picture_as_pdf" description="Export to PDF document" />
           </div>
         </Toolbar>
@@ -248,8 +274,17 @@ const downloadJSON = (jsonObject, fileName) => {
   URL.revokeObjectURL(url)
 }
 
-const toggleAction = (editor, action) => {
+const toggleAction = (editor, action, options = null) => {
   if (action === 'save') {
+    if (options) {
+      const json = localStorage.getItem('content')
+      saveProject(options.title, json)
+        .then(_ => {
+          console.log('save sucessful')
+        })
+    }
+  }
+  else if (action === 'download') {
     const json = JSON.parse(localStorage.getItem('content'))
     downloadJSON(json, null) 
   }
@@ -328,13 +363,13 @@ const OpenFileButton = ({ icon, description, modal }) => {
   )
 }
 
-const ActionButton = ({ action, icon, description}) => {
+const ActionButton = ({ action, icon, description, options = null}) => {
   const editor = useSlate()
   return (
     <Button
       title={description}
       onMouseDown={() => {
-        toggleAction(editor, action)
+        options ? toggleAction(editor, action, options) : toggleAction(editor, action)
       }}
     >
       <Icon>{icon}</Icon>

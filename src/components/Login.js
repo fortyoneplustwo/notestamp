@@ -1,71 +1,70 @@
 import React, { useState } from 'react'
+import { loginWithCredentials } from '../api'
+import "../Button.css"
+import Register from './Register'
 
-const Login = ({ onCancel }) => {
+const Login = ({ onCancel, successCallback }) => {
   // State variables to store the username and password
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showRegister, setShowRegister] = useState(false)
+  const [usernameError, setUsernameError] = useState('')
+  const [passwordError, setPasswordError] = useState('')
 
   // Event handler for form submission
   const handleSubmit = (e) => {
     e.preventDefault()
-    // Authentication
-    const credentials = {
-      username: username,
-      password: password
-    }
-    
-    const requestOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        "Accept": "application/json"
-      },
-      body: credentials
-    }
-
-    fetch('http://localhost:8080/auth/signin', requestOptions)
-      .then(response => {
-        console.log(response.json())
+    loginWithCredentials(username, password)
+      .then(userData => {
+        if (userData) successCallback(userData)
       })
-      .then(data => {
-        console.log(data)
-      })
-      .catch(error => {
-        console.log(error.message())
-      })
-
     // Reset the form after submission
-    setUsername('')
-    setPassword('')
+    setUsername("")
+    setPassword("")
   }
 
   return (
     <div>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Username: &nbsp;
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </label>
+      {!showRegister && <div>
+        <h3>Login</h3>
         <br />
-        <br />
-        <label>
-          Password: &nbsp;
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
-        <br />
-        <br />
-        <button type="submit">Login</button>
-        <button onClick={onCancel} style={{ marginLeft: '0.5em' }}>Cancel</button>
-      </form>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', justifyContent: 'center'}} >
+          <div style={{ display: 'flex', flexDirection: 'column'}}>
+            <label>
+              E-mail: &nbsp;
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <p style={{ fontSize: 'small', color: 'red' }}>{usernameError}</p>
+            <br />
+            <label>
+              Password: &nbsp;
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <p style={{ fontSize: 'small', color: 'red' }}>{passwordError}</p>
+            <br />
+            <br />
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <button className='media-option-btn' type="submit">Login</button>
+              <button className='media-option-btn' onClick={onCancel} style={{ marginLeft: '0.5em' }}>Cancel</button>
+            </div>
+            <br></br>
+            <div style={{ display: 'flex', justifyContent: 'center' }}><p>Don't have an account?</p>
+              &nbsp;
+              <button onClick={()=>{setShowRegister(true)}} className='nav-btn'>Create account</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      }
+      {showRegister && <Register onCancel={onCancel} successCallback={() => { setShowRegister(false) }} />}
     </div>
   )
 }
