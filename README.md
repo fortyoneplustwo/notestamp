@@ -19,8 +19,8 @@ the editor is always available to the user for note taking.
 
 ## Stack
 - React
-- Slate (editor framework)
-- pdfJS
+- [Slate](https://docs.slatejs.org/) (editor framework)
+- [React-PDF](https://www.npmjs.com/package/react-pdf)
 
 ## Design pattern
 The design requirement suggests that there should be low coupling between the reader and writer, so I opted
