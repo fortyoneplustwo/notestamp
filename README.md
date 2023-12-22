@@ -10,7 +10,7 @@ A single page application that synchronizes your notes to media using stamps.
 [notestamp.com](https://notestamp.com)
 
 # Design
-The app is divided into two panes, reader on the left and writer (writer for short) on the right.
+The app is divided into two panes, reader on the left and writer on the right.
 The reader handles browsing, navigation and playing media while the writer always displays the text editor.
 This design harmonizes well with the prime focus of this app: note taking. No matter which page they are on,
 the editor is always available to the user for note taking.
