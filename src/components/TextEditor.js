@@ -36,9 +36,6 @@ const TextEditor = ({ project, onCreateStamp }) => {
 
   const initialValue = useMemo(
     () => 
-      // changing local storage can break the apply
-      // TODO make sure local storage contains at least one paragraph node
-      
       JSON.parse(localStorage.getItem('content')) || [
         {
           type: 'paragraph',
@@ -48,10 +45,9 @@ const TextEditor = ({ project, onCreateStamp }) => {
     []
   )
 
-  // replace contents of editor with project if not null
+  // Replace contents of editor with project prop
   useEffect(() => {
     if (project) {
-      console.log(project.stmp)
       const newNodes = JSON.parse(project.stmp)
       // fix: focus the editor to ensure all nodes get removed
       Transforms.select(editor, {
@@ -98,7 +94,7 @@ const TextEditor = ({ project, onCreateStamp }) => {
     }
   }
 
-  // Override copy event to skip copying stamps
+  // Skip over stamps when copying
   const handleCopy = event => {
     event.preventDefault();
     const { selection } = editor
@@ -111,7 +107,7 @@ const TextEditor = ({ project, onCreateStamp }) => {
     }
   }
 
-  // Override paste function to prevent '\n' from inserting new paragraphs
+  // Prevent pasting a newline from inserting a paragraph node
   const handlePaste = event => {
     event.preventDefault()
     const clipboardData = event.clipboardData
@@ -155,7 +151,6 @@ const TextEditor = ({ project, onCreateStamp }) => {
           renderLeaf={renderLeaf}
           placeholder={'Press <Enter> to insert a stamp.\nPress <Shift + Enter> to escape stamping.'}
           spellCheck={true}
-          autoFocus={true}
           onCopy={handleCopy}
           onPaste={handlePaste}
           onKeyDown={(event) => { onKeyDown(event, onCreateStamp, editor) }}
@@ -233,7 +228,7 @@ const onKeyDown = (event, onCreateStamp, editor) => {
   }
 }
 
-// Recursive algorithm that takes in an editor and returns its text nodes as html
+// Recursive algorithm that consumes an editor and returns its text nodes as html
 const toHtml = node => {
   if (Text.isText(node)) {
     let string = escapeHtml(node.text)
@@ -263,6 +258,7 @@ const toHtml = node => {
   }
 }
 
+// Download stmp file
 const downloadJSON = (jsonObject, fileName) => {
   const jsonString = JSON.stringify(jsonObject, null, 2)
   const blob = new Blob([jsonString], { type: 'application/json' })
@@ -274,6 +270,7 @@ const downloadJSON = (jsonObject, fileName) => {
   URL.revokeObjectURL(url)
 }
 
+// Action button handlers (from toolbar)
 const toggleAction = (editor, action, options = null) => {
   if (action === 'save') {
     if (options) {
@@ -313,7 +310,7 @@ const toggleAction = (editor, action, options = null) => {
   }
 }
 
-// Toggle text formatting on current selection
+// Toggle mark on current selection
 const toggleMark = (editor, format) => {
   const isActive = isMarkActive(editor, format)
 
