@@ -27,6 +27,8 @@ The design requirement suggests that there should be low coupling between the re
 to follow the Mediator pattern by having the main app component as the mediator. The reader and writer components are its children.
 
 ## Implementation 
+
+### Design constraints ###
 According to the design requirements, the reader's content can change frequently and experience side effects whereas the writer remains relatively stable with the only change being the editor's text content. 
 
 ### Component hierarchy ###
@@ -37,7 +39,8 @@ According to the design requirements, the reader's content can change frequently
      - Login and register forms
   - Writer: Displays text editor and toolbar.
 
-When a user presses `<enter>`, the mediator tries to obtain current state from the reader using the `ref`.
+### Communication ###
+When a user presses `<enter>` inside the editor a callback function executes and the mediator tries to obtain current state from the reader using the `ref`.
 The state is returned to the editor which sets the stamp value.
 
 When a user clicks a stamp, the writer emits a custom event to the mediator.
