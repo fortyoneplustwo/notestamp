@@ -24,7 +24,7 @@ the editor is always available to the user for note taking.
 
 ## Design pattern
 The design requirement suggests that there should be low coupling between the reader and writer, so I opted
-to follow the Mediator pattern in which the main app component is the mediator the reader and writer components as its children.
+to follow the Mediator pattern by having the main app component as the mediator. The reader and writer components are its children.
 
 ## Implementation 
 According to the design requirements, the reader's content can change frequently and experience side effects whereas the writer remains relatively stable with the only change being the editor's text content. 
