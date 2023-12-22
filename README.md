@@ -34,7 +34,7 @@ According to the design, the reader's view can change frequently and experience 
 The design requirement suggests low coupling between the reader and writer, so I opted
 to follow the mediator pattern. The main app component being the mediator while the reader and writer components are its children.
 
-### Component hierarchy ###
+## Component hierarchy 
 - Mediator: Maintains a `ref` (pointer) to the reader.
   - Reader: Attaches  `ref` to the media's component's controller
      - Media: Either youtube, audio player, audio recorder or pdf viewer.
@@ -42,7 +42,7 @@ to follow the mediator pattern. The main app component being the mediator while 
      - Login and register forms
   - Writer: Displays text editor and toolbar.
 
-### Logic ###
+## Logic 
 **User presses `<enter>` inside the editor**: a callback executes in the mediator. The mediator gets the reader's state through the media controller
 and returns it to the writer for stamp insertion.
 
@@ -54,7 +54,7 @@ The Recording API does not provide a query for the length of the audio being rec
 algorithm to compute a stamp's value (in this case a timestamp) in O(1). See more details in [timestamp](https://github.com/fortyoneplustwo/timestamp)
 repository (an early version of notestamp).
 
-### API ###
+## API 
 The front-end is responsible for hydrating the components with user session data. I debated using NextJS for SSR, but decided that
 CSR was more approrpiate because:
 - Navigation speed is much faster.
