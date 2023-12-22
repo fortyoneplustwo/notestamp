@@ -58,7 +58,7 @@ repository (an early version of notestamp).
 The front-end is responsible for hydrating the components with user session data. I debated using NextJS for SSR, but decided that
 CSR was more approrpiate because:
 - Navigation speed is much faster.
-- Losing an internet connection does not 'break' the application as you can still navigate to and use the
+- Losing an internet connection does not 'break' the application as you can still navigate to the
   features that work offline.
 
 # Takeaways
