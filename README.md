@@ -9,7 +9,7 @@ A single page application for desktop that synchronizes your notes to media usin
 # Demo
 [notestamp.com](https://notestamp.com)
 
-### Project goals ###
+# Project goals 
 - Must be lightweight and work fast.
 - Although being a web app, it must reach the level of a native app experience or as close as possible.
 
