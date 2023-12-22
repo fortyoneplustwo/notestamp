@@ -47,7 +47,7 @@ and returns it to the writer for stamp insertion.
 The mediator updates the reader's state through the media controller.
 
 ## Editor
-I implemented a custom rich text editor that can support clickable stamps. Will probably release this as a react library at some point.
+I implemented a custom rich text editor that can support clickable stamps. Will probably release this as a react component at some point.
 
 ## Timestamp algorithm ##
 The Recording API does not provide a query for the length of the audio being recorded, so I implemented a dynamic programming
