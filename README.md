@@ -1,70 +1,89 @@
+# Description
+A single page application that synchronizes your notes to media using stamps.
+
+# Features
+- Media reader: Youtube player, audio recorder, audio player, pdf reader. 
+
+- Rich text editor: Press `<enter>` to insert a stamp then click it to seek the media to the stamp value.
+
+# Demo
+[notestamp.com](https://notestamp.com)
+
+# Design
+The app is divided into two panes, reader on the left and writer (writer for short) on the right.
+The reader handles browsing, navigation and playing media while the writer always displays the text editor.
+This design harmonizes well with the prime focus of this app: note taking. No matter which page they are on,
+the editor is always available to the user for note taking.
+
+# Implementation
+
+## Stack
+- React
+- Slate (editor framework)
+- pdfJS
+
+## Design pattern
+The design requirement suggests that there should be low coupling between the reader and writer, so I opted
+to follow the Mediator pattern in which the main app component is the mediator the reader and writer components as its children.
+
+## Implementation 
+According to the design requirements, the reader's content can change frequently and experience side effects whereas the writer remains relatively stable with the only change being the editor's text content. 
+
+### Component hierarchy ###
+- Main app: Maintains a `ref` (pointer) to the reader.
+  - Reader: Displays media components. `ref` from the Main app is attached to a media component's controller.
+     - Media: Youtube player, audio player, audio recorder, pdf viewer.
+     - Dashboard: Displays user's saved projects.
+     - Login and register forms
+  - Writer: Displays text editor and toolbar.
+
+When a user presses `<enter>`, a callback funtion defined in the mediator executes to obtain current state from the reader using the `ref`.
+The state is returned by the callback function which the editor can use as the stamp value.
+
+When a user clicks a stamp, the writer emits a custom event to the mediator.
+The mediator handles this event by using the reader `ref` to update the media state with the event data.
+
+## Timestamp algorithm ##
+The Recording API does not provide a query for the length of the audio being recorded, so I implemented a dynamic programming
+algorithm to compute a stamp's value (in this case a timestamp) in O(1). See more details in [timestamp](https://github.com/fortyoneplustwo/timestamp)
+repository (an early version of notestamp).
+
+### Calling the back-end API ###
+The front-end is responsible for hydrating the components with user session data. I debated using a NextJS for SSR, but I decided that
+CSR was better for these reasons:
+- Navigation speed is much faster.
+- Once you have loaded the application, everything still works offline except loading a youtube video and signing in. Losing an
+  internet connection does not 'break' the application as you can still navigate to the different componments that work offline.
+
+## Styling ##
+Implemented in vanilla CSS so I could get better at CSS.
+
+# Neat features #
+- The app is free to use unless you want to create an account for cloud storage.
+- Export your notes to a pdf file.
+- Never lose your unsaved notes since they are stored to local storage, so they persist even across device restarts.
+
+# Updates
+Currently working on displaying a user's project data.
+
+
+
+
+
+
+
+
+
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
+## Install
 
-In the project directory, you can run:
+`npm install`
 
-### `yarn start`
+`npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `yarn test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `yarn build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `yarn eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `yarn build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
