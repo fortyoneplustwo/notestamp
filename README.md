@@ -13,16 +13,13 @@ A single page application for desktop that synchronizes your notes to media usin
 - Must be lightweight and work fast.
 - Although being a web app, it must reach the level of a native app experience or as close as possible.
 
-# Design
+# Design & implementation
 The app is divided into two columns: a reader and a writer.
 The reader handles browsing and media playing while the writer always displays a text editor for user input.
 This layout remains constant throughout the entire app.
 
 The design highlights the prime focus of this app: note taking. No matter what you are doing in the reader,
 the editor is always available for input in the writer.
-
-
-# Implementation
 
 ## Stack
 - React
@@ -40,7 +37,7 @@ to follow the mediator pattern. The main app component being the mediator while 
      - Media: Either youtube, audio player, audio recorder or pdf viewer.
      - Dashboard: Displays user's saved projects.
      - Login and register forms
-  - Writer: Displays text editor and toolbar.
+  - Writer: Displays a rich text editor and toolbar.
 
 ## Logic 
 **User presses `<enter>` inside the editor**: a callback executes in the mediator. The mediator gets the reader's state through the media controller
@@ -48,6 +45,9 @@ and returns it to the writer for stamp insertion.
 
 **User clicks a stamp**: the writer emits a custom event to the mediator.
 The mediator updates the reader's state through the media controller.
+
+## Editor
+I implemented a custom rich text editor that can support clickable stamps. Will probably release this as a react library at some point.
 
 ## Timestamp algorithm ##
 The Recording API does not provide a query for the length of the audio being recorded, so I implemented a dynamic programming
