@@ -37,11 +37,11 @@ According to the design requirements, the reader's content can change frequently
      - Login and register forms
   - Writer: Displays text editor and toolbar.
 
-When a user presses `<enter>`, a callback funtion defined in the mediator executes to obtain current state from the reader using the `ref`.
-The state is returned by the callback function which the editor can use as the stamp value.
+When a user presses `<enter>`, the mediator tries to obtain current state from the reader using the `ref`.
+The state is returned to the editor which sets the stamp value.
 
 When a user clicks a stamp, the writer emits a custom event to the mediator.
-The mediator handles this event by using the reader `ref` to update the media state with the event data.
+The mediator then updates the reader's state using `ref` and the event data.
 
 ## Timestamp algorithm ##
 The Recording API does not provide a query for the length of the audio being recorded, so I implemented a dynamic programming
@@ -50,10 +50,10 @@ repository (an early version of notestamp).
 
 ### Calling the back-end API ###
 The front-end is responsible for hydrating the components with user session data. I debated using a NextJS for SSR, but I decided that
-CSR was better for these reasons:
+CSR because:
 - Navigation speed is much faster.
-- Once you have loaded the application, everything still works offline except loading a youtube video and signing in. Losing an
-  internet connection does not 'break' the application as you can still navigate to the different componments that work offline.
+- Losing an internet connection does not 'break' the application as you can still navigate to the
+- different components that work offline i.e. everything except youtube and dashboard components.
 
 ## Styling ##
 Implemented in vanilla CSS so I could get better at CSS.
@@ -61,19 +61,10 @@ Implemented in vanilla CSS so I could get better at CSS.
 # Neat features #
 - The app is free to use unless you want to create an account for cloud storage.
 - Export your notes to a pdf file.
-- Never lose your unsaved notes since they are stored to local storage, so they persist even across device restarts.
+- Never lose your unsaved notes since they are stored to local storage. Yes, they persist even across device restarts.
 
 # Updates
-Currently working on displaying a user's project data.
-
-
-
-
-
-
-
-
-
+Currently working on displaying a user's daved project.
 
 
 # Getting Started with Create React App
