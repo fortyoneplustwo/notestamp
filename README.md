@@ -43,7 +43,8 @@ to follow the mediator pattern. The main app component being the mediator while 
   - Writer: Displays text editor and toolbar.
 
 ### Logic ###
-**User presses `<enter>` inside the editor**: a callback executes in the mediator. The mediator gets the reader's state through the media controller.
+**User presses `<enter>` inside the editor**: a callback executes in the mediator. The mediator gets the reader's state through the media controller
+and returns it to the writer for stamp insertion.
 
 **User clicks a stamp**: the writer emits a custom event to the mediator.
 The mediator updates the reader's state through the media controller.
