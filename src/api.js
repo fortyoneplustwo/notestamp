@@ -126,6 +126,10 @@ export const registerWithCredentials = async (username, password) => {
     console.log(error)
     return null
   }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 76b74cf148c2104cf67f4a6d7053453f4ce4d7d5
 }
 
 export const logOut = async () => {
@@ -133,7 +137,6 @@ export const logOut = async () => {
     method: "DELETE",
     credentials: "include",
   };
-
   try {
     const response = await fetch(api + '/auth/signout', options)    
     if (response.ok) {

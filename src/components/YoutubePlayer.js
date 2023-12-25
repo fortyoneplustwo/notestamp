@@ -17,6 +17,7 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
   useEffect(() => {
   // Parent component can use this controller using ref
     const controller = {
+<<<<<<< HEAD
       getState: function (_) {
         return {
           value: currentVideoRef.current ? currentVideoRef.current.getCurrentTime() : null,
@@ -26,6 +27,13 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
       },
       setState: function (newState) {
         if (currentVideoRef) currentVideoRef.current.seekTo(newState, true)
+=======
+      getState: function (data = null) {
+        return currentVideoRef.current ? currentVideoRef.current.getCurrentTime() : null
+      },
+      setState: function (newState) {
+        if (currentVideoRef.current) currentVideoRef.current.seekTo(newState, true)
+>>>>>>> 76b74cf148c2104cf67f4a6d7053453f4ce4d7d5
       }
     } 
     ref.current = controller

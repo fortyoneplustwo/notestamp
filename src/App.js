@@ -14,6 +14,7 @@ import Login from './components/Login'
 import Dashboard from './components/Dashboard'
 import { deleteProject, getProjectData, logOut, saveProject } from './api'
 import Modal from './components/Modal'
+import { logOut } from './api'
 
 const App = () => {
   const readerRef = useRef(null)

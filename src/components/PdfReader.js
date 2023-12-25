@@ -14,6 +14,10 @@ const PdfReader = React.forwardRef((props, ref) => {
   const [pageScale, setPageScale] = useState(1);
 
 
+  ////////////////////////////////
+  /// Initialize controller //////
+  ////////////////////////////////
+
   useEffect(()=> {
     // Parent component can use this controller using ref
     const controller = {

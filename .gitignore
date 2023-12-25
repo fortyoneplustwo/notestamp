@@ -42,6 +42,7 @@ bower_components
 .lock-wscript
 
 # Compiled binary addons (http://nodejs.org/api/addons.html)
+build
 build/Release
 
 # Dependency directories
@@ -67,3 +68,8 @@ node_modules/
 
 # Test and backup files
 src/components/AppWithRoutes
+# packages
+package-lock-backup.json
+yarn.lock
+
+

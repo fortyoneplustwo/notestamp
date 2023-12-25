@@ -16,6 +16,7 @@ import Modal from './Modal.js'
 import escapeHtml from 'escape-html'
 import { jsPDF } from 'jspdf'
 import '../Editor.css'
+import { saveProject } from '../api.js'
 
 const HOTKEYS = {
   'mod+b': 'bold',
@@ -27,7 +28,11 @@ const HOTKEYS = {
   'mod+l': 'forwardTenSecs'
 }
 
+<<<<<<< HEAD
 const TextEditor = ({ user=null, content=null, onCreateStamp, onSave }) => {
+=======
+const TextEditor = ({ project, onCreateStamp }) => {
+>>>>>>> 76b74cf148c2104cf67f4a6d7053453f4ce4d7d5
   const fileUploadModalRef = useRef(null)
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
@@ -44,11 +49,18 @@ const TextEditor = ({ user=null, content=null, onCreateStamp, onSave }) => {
     []
   )
 
+<<<<<<< HEAD
   // replace contents of editor with content (type: stmp)
   useEffect(() => {
     // TODO: save should only appear in color when a project has been modified
     if (content) {
       const newNodes = JSON.parse(content)
+=======
+  // Replace contents of editor with project prop
+  useEffect(() => {
+    if (project) {
+      const newNodes = JSON.parse(project.stmp)
+>>>>>>> 76b74cf148c2104cf67f4a6d7053453f4ce4d7d5
       // fix: focus the editor to ensure all nodes get removed
       Transforms.select(editor, {
         anchor: Editor.start(editor, []),
@@ -63,7 +75,11 @@ const TextEditor = ({ user=null, content=null, onCreateStamp, onSave }) => {
       }
       Transforms.insertNodes(editor, newNodes)
     }
+<<<<<<< HEAD
   }, [content, editor])
+=======
+  }, [project, editor])
+>>>>>>> 76b74cf148c2104cf67f4a6d7053453f4ce4d7d5
 
   // Paste contents of submitted .stmp file into the editor
   const handleOpenFile = (file, modal) => {
@@ -94,7 +110,7 @@ const TextEditor = ({ user=null, content=null, onCreateStamp, onSave }) => {
     }
   }
 
-  // Override copy event to skip copying stamps
+  // Skip over stamps when copying
   const handleCopy = event => {
     event.preventDefault();
     const { selection } = editor
@@ -107,7 +123,7 @@ const TextEditor = ({ user=null, content=null, onCreateStamp, onSave }) => {
     }
   }
 
-  // Override paste function to prevent '\n' from inserting new paragraphs
+  // Prevent pasting a newline from inserting a paragraph node
   const handlePaste = event => {
     event.preventDefault()
     const clipboardData = event.clipboardData
@@ -146,6 +162,10 @@ const TextEditor = ({ user=null, content=null, onCreateStamp, onSave }) => {
               onClick={() => { fileUploadModalRef.current.showModal() }} />
             <ActionButton action='copy' icon="content_copy" description="Copy all text to clipboard" />
             <ActionButton action='download' icon="download" description="Download project file (.stmp)" />
+<<<<<<< HEAD
+=======
+            {project && <ActionButton action='save' icon="save" description="Save project" options={{ title: project.title }} />}
+>>>>>>> 76b74cf148c2104cf67f4a6d7053453f4ce4d7d5
             <ActionButton action='pdf' icon="picture_as_pdf" description="Export to PDF document" />
             {user && <ActionButton action='save' icon="save" description="Save changes"
               onClick={onSave}/>}
@@ -157,7 +177,6 @@ const TextEditor = ({ user=null, content=null, onCreateStamp, onSave }) => {
           renderLeaf={renderLeaf}
           placeholder={'Press <Enter> to insert a stamp.\nPress <Shift + Enter> to escape stamping.'}
           spellCheck={true}
-          autoFocus={true}
           onCopy={handleCopy}
           onPaste={handlePaste}
           onKeyDown={(event) => { onKeyDown(event, onCreateStamp, editor) }}
@@ -233,7 +252,7 @@ const onKeyDown = (event, onCreateStamp, editor) => {
   }
 }
 
-// Recursive algorithm that takes in an editor and returns its text nodes as html
+// Recursive algorithm that consumes an editor and returns its text nodes as html
 const toHtml = node => {
   if (Text.isText(node)) {
     let string = escapeHtml(node.text)
@@ -263,6 +282,7 @@ const toHtml = node => {
   }
 }
 
+// Download stmp file
 const downloadJSON = (jsonObject, fileName) => {
   const jsonString = JSON.stringify(jsonObject, null, 2)
   const blob = new Blob([jsonString], { type: 'application/json' })
@@ -274,8 +294,23 @@ const downloadJSON = (jsonObject, fileName) => {
   URL.revokeObjectURL(url)
 }
 
+<<<<<<< HEAD
 const toggleAction = (editor, action) => {
   if (action === 'download') {
+=======
+// Action button handlers (from toolbar)
+const toggleAction = (editor, action, options = null) => {
+  if (action === 'save') {
+    if (options) {
+      const json = localStorage.getItem('content')
+      saveProject(options.title, json)
+        .then(_ => {
+          console.log('save sucessful')
+        })
+    }
+  }
+  else if (action === 'download') {
+>>>>>>> 76b74cf148c2104cf67f4a6d7053453f4ce4d7d5
     const json = JSON.parse(localStorage.getItem('content'))
     downloadJSON(json, null) 
   }
@@ -304,7 +339,7 @@ const toggleAction = (editor, action) => {
   }
 }
 
-// Toggle text formatting on current selection
+// Toggle mark on current selection
 const toggleMark = (editor, format) => {
   const isActive = isMarkActive(editor, format)
 
@@ -341,13 +376,35 @@ const withInlines = editor => {
 ///  Components  ///////////////
 ////////////////////////////////
 
+<<<<<<< HEAD
 const ActionButton = ({ action, icon, description, ...props }) => {
+=======
+const OpenFileButton = ({ icon, description, modal }) => {
+  return (
+    <Button
+      title={description}
+      onMouseDown={() => {
+        modal.current.showModal()
+      }}
+    >
+      <Icon>{icon}</Icon>
+    </Button>
+  )
+}
+
+const ActionButton = ({ action, icon, description, options = null}) => {
+>>>>>>> 76b74cf148c2104cf67f4a6d7053453f4ce4d7d5
   const editor = useSlate()
   return (
     <Button
       title={description}
+<<<<<<< HEAD
       onClick={() => {
         toggleAction(editor, action)
+=======
+      onMouseDown={() => {
+        options ? toggleAction(editor, action, options) : toggleAction(editor, action)
+>>>>>>> 76b74cf148c2104cf67f4a6d7053453f4ce4d7d5
       }}
       {...props}
     >
