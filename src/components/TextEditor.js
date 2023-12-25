@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useRef } from 'react'
+import React, { useMemo, useCallback, useRef, useEffect } from 'react'
 import { isKeyHotkey } from 'is-hotkey'
 import { Editable, withReact, useSlate } from 'slate-react'
 import * as SlateReact from 'slate-react'
@@ -12,7 +12,7 @@ import { withHistory } from 'slate-history'
 import isHotkey from 'is-hotkey'
 import { EventEmitter } from './EventEmitter.js'
 import { Toolbar, Button, Icon } from './Toolbar.js'
-import FileUpload from './FileUpload.js'
+import Modal from './Modal.js'
 import escapeHtml from 'escape-html'
 import { jsPDF } from 'jspdf'
 import '../Editor.css'
@@ -27,7 +27,7 @@ const HOTKEYS = {
   'mod+l': 'forwardTenSecs'
 }
 
-const TextEditor = ({ onCreateStamp }) => {
+const TextEditor = ({ user=null, content=null, onCreateStamp, onSave }) => {
   const fileUploadModalRef = useRef(null)
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
@@ -44,9 +44,30 @@ const TextEditor = ({ onCreateStamp }) => {
     []
   )
 
+  // replace contents of editor with content (type: stmp)
+  useEffect(() => {
+    // TODO: save should only appear in color when a project has been modified
+    if (content) {
+      const newNodes = JSON.parse(content)
+      // fix: focus the editor to ensure all nodes get removed
+      Transforms.select(editor, {
+        anchor: Editor.start(editor, []),
+        focus: Editor.end(editor, []),
+      })
+      Transforms.removeNodes(editor)
+      // if editor is empty remove the default empty paragraph node
+      if (editor.children.length > 0 
+        && editor.children[0].type === 'paragraph' 
+        && editor.children[0].children[0].text === '') {
+        Transforms.removeNodes(editor, { at: [0] })
+      }
+      Transforms.insertNodes(editor, newNodes)
+    }
+  }, [content, editor])
+
   // Paste contents of submitted .stmp file into the editor
   const handleOpenFile = (file, modal) => {
-    modal.current.close() 
+    fileUploadModalRef.current.close() 
     if (file) {
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -109,7 +130,11 @@ const TextEditor = ({ onCreateStamp }) => {
       }}
     >
       <div className='editor-container'>
-        <FileUpload ref={fileUploadModalRef} onSubmit={handleOpenFile} type='.stmp' />
+        <Modal ref={fileUploadModalRef}>
+          <form onChange={e => { handleOpenFile(e.target.files[0]) }}>
+            <input type='file' accept='.stmp' />
+          </form>
+        </Modal>
         <Toolbar>
           <div className='toolbar-btn-container'>
             <MarkButton format='bold' icon="format_bold" description='Bold (Ctrl+B)' />
@@ -117,10 +142,13 @@ const TextEditor = ({ onCreateStamp }) => {
             <MarkButton format='underline' icon="format_underlined" description="Underline (Ctrl+U)"/>
             <MarkButton format='code' icon="code" description="Code (Ctrl+`)"/>
             <div className='toolbar-btn-separator'></div>
-            <OpenFileButton icon="folder_open" description="Open .stmp file" modal={fileUploadModalRef} />
+            <ActionButton action='upload' icon="folder_open" description="Open .stmp file" 
+              onClick={() => { fileUploadModalRef.current.showModal() }} />
             <ActionButton action='copy' icon="content_copy" description="Copy all text to clipboard" />
-            <ActionButton action='save' icon="save" description="Save as .stmp file" />
+            <ActionButton action='download' icon="download" description="Download project file (.stmp)" />
             <ActionButton action='pdf' icon="picture_as_pdf" description="Export to PDF document" />
+            {user && <ActionButton action='save' icon="save" description="Save changes"
+              onClick={onSave}/>}
           </div>
         </Toolbar>
         <Editable
@@ -138,8 +166,6 @@ const TextEditor = ({ onCreateStamp }) => {
     </SlateReact.Slate>
   )
 }
-
-
 
 ////////////////////////////////
 ///  METHODS  //////////////////
@@ -249,7 +275,7 @@ const downloadJSON = (jsonObject, fileName) => {
 }
 
 const toggleAction = (editor, action) => {
-  if (action === 'save') {
+  if (action === 'download') {
     const json = JSON.parse(localStorage.getItem('content'))
     downloadJSON(json, null) 
   }
@@ -315,27 +341,15 @@ const withInlines = editor => {
 ///  Components  ///////////////
 ////////////////////////////////
 
-const OpenFileButton = ({ icon, description, modal }) => {
-  return (
-    <Button
-      title={description}
-      onMouseDown={() => {
-        modal.current.showModal()
-      }}
-    >
-      <Icon>{icon}</Icon>
-    </Button>
-  )
-}
-
-const ActionButton = ({ action, icon, description}) => {
+const ActionButton = ({ action, icon, description, ...props }) => {
   const editor = useSlate()
   return (
     <Button
       title={description}
-      onMouseDown={() => {
+      onClick={() => {
         toggleAction(editor, action)
       }}
+      {...props}
     >
       <Icon>{icon}</Icon>
     </Button>

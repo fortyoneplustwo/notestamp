@@ -5,7 +5,7 @@ import '../YoutubePlayer.css'
 import '../Button.css'
 
 const YoutubePlayer = React.forwardRef((props, ref) => {
-  const { closeComponent } = props
+  const { closeComponent, src } = props
   let playerInstanceRef = useRef(null)
   let currentVideoRef = useRef(null)
   const [youtubeUrl, setYoutubeUrl] = useState('')
@@ -17,19 +17,27 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
   useEffect(() => {
   // Parent component can use this controller using ref
     const controller = {
-      getState: function (data = null) {
-        return currentVideoRef.current.getCurrentTime()
+      getState: function (_) {
+        return {
+          value: currentVideoRef.current ? currentVideoRef.current.getCurrentTime() : null,
+          type: 'youtube',
+          src: youtubeUrl
+        }
       },
       setState: function (newState) {
-        currentVideoRef.current.seekTo(newState, true)
+        if (currentVideoRef) currentVideoRef.current.seekTo(newState, true)
       }
     } 
     ref.current = controller
-  }, [ref])
+  }, [ref, youtubeUrl])
 
   ////////////////////////////////
   /// Initialize youtube player //
   ////////////////////////////////
+
+  useEffect(() => {
+    if (src) setYoutubeUrl(src)
+  }, [src])
 
   const onYouTubeIframeAPIReady = () => {
     // Need to destroy existing player instance before loading a new video
@@ -89,7 +97,8 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
   ////////////////////////////////
   return (
     <div className='media-component-container'>
-      <div className='back-btn-container'><BackButton handler={closeComponent} /></div>
+      <div className='back-btn-container'><BackButton handler={closeComponent} />
+      </div>
       <div className='youtube-media-container'>
         <div className='form-container'>
           <form onSubmit={handleSubmitUrl} className='form'>

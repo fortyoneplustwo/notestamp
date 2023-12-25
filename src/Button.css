@@ -11,6 +11,20 @@
   cursor: pointer;
 }
 
+.nav-btn {
+  background: transparent;
+  color: var(--main-accent-color);
+  border: 0;
+  margin-right: 2em;
+  padding: 0;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.nav-btn:hover {
+  text-decoration: underline;
+}
+
 .searchbar-submit-btn {
   background: var(--main-accent-color);
   color: black;
