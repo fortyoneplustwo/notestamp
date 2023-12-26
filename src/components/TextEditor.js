@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useRef, useEffect } from 'react'
+import React, { useMemo, useCallback, useRef, useEffect, useState } from 'react'
 import { isKeyHotkey } from 'is-hotkey'
 import { Editable, withReact, useSlate } from 'slate-react'
 import * as SlateReact from 'slate-react'
@@ -27,7 +27,7 @@ const HOTKEYS = {
   'mod+l': 'forwardTenSecs'
 }
 
-const TextEditor = ({ user=null, content=null, onCreateStamp, onSave }) => {
+const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => {
   const fileUploadModalRef = useRef(null)
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
@@ -159,7 +159,7 @@ const TextEditor = ({ user=null, content=null, onCreateStamp, onSave }) => {
           spellCheck={true}
           onCopy={handleCopy}
           onPaste={handlePaste}
-          onKeyDown={(event) => { onKeyDown(event, onCreateStamp, editor) }}
+          onKeyDown={(event) => { onKeyDown(event, onRequestStampData, editor) }}
         />
       </div>
     </SlateReact.Slate>
@@ -171,7 +171,7 @@ const TextEditor = ({ user=null, content=null, onCreateStamp, onSave }) => {
 ////////////////////////////////
 
 // Keyboard events
-const onKeyDown = (event, onCreateStamp, editor) => {
+const onKeyDown = (event, onRequestStampData, editor) => {
   const { nativeEvent } = event
 // Handle formatting hotkeys. TODO reimplement this. it's really slow
   for (const hotkey in HOTKEYS) {
@@ -197,7 +197,7 @@ const onKeyDown = (event, onCreateStamp, editor) => {
   }
   // on enter: insert badge
   else if (isKeyHotkey('enter', nativeEvent)) {
-    const { label, value } = onCreateStamp(new Date())
+    const { label, value } = onRequestStampData(new Date())
     event.preventDefault()
     // *save marks then restore after all transforms have been performed
     const marks = Editor.marks(editor)

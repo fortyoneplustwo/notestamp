@@ -1,11 +1,7 @@
 import './App.css'
 import TextEditor from './components/TextEditor.js'
 import React, { useState, useRef, useEffect } from 'react'
-import YoutubePlayer from './components/YoutubePlayer.js'
 import { EventEmitter } from './components/EventEmitter.js'
-import AudioRecorder from './components/AudioRecorder'
-import AudioPlayer from './components/AudioPlayer.js'
-import PdfReader from './components/PdfReader'
 import './Button.css'
 import { Icon } from './components/Toolbar'
 import DonateButton from './components/DonateButton'
@@ -14,6 +10,7 @@ import Login from './components/Login'
 import Dashboard from './components/Dashboard'
 import { deleteProject, getProjectData, logOut, saveProject } from './api'
 import Modal from './components/Modal'
+import Media from './components/Media'
 
 const App = () => {
   const readerRef = useRef(null)
@@ -35,14 +32,9 @@ const App = () => {
   const [showLogoutButton, setShowLogoutButton] = useState(false)
   const saveModalRef = useRef(null)
 
-  const [youtubeUrl, setYoutubeUrl] = useState('')
-  const [audioSource, setAudioSource] = useState(null)
-  const [pdfSource, setPdfSource] = useState(null)
-  const [showYoutubePlayer, setShowYoutubePlayer] = useState(false)
-  const [showAudioPlayer, setShowAudioPlayer] = useState(false)
-  const [showAudioRecorder, setShowAudioRecorder] = useState(false)
-  const [showPdfWorker, setShowPdfWorker] = useState(false)
+  const [showMedia, setShowMedia] = useState(null)
   const [readerState, setReaderState] = useState(null)
+
 
   ///////////////////////////////////
   ///  METHODS  (user logged in) ////
@@ -80,9 +72,13 @@ const App = () => {
             metadata: { ...metadata },
             content: content,
           })
-          if (project.metadata.type === 'youtube') {
-            setYoutubeUrl(metadata.link)
-            setShowYoutubePlayer(true)
+          if (project.metadata.type) {
+            setReaderState({
+              type: project.metadata.type,
+              src: project.metadata.link
+            })
+            console.log(readerState)
+            setShowMedia(true)
           }
           // Handle open for other media formats here
         } 
@@ -91,11 +87,19 @@ const App = () => {
 
   // take snapshot of reader state and show show save modal
   const handleCaptureReaderState = () => {
-    const { type, src } = readerRef.current ? readerRef.current.getState() : null
-    setReaderState({
-      type: type ? type : '',
-      src: src ? src : ''
-    })
+    const state = readerRef.current ? readerRef.current.getState() : null
+    if (!state) {
+      setReaderState({
+        type: 'none',
+        src: ''
+      })
+    } else {
+      const { type, src } = state
+      setReaderState({
+        type: type ? type : '',
+        src: src ? src : ''
+      })
+    }
     saveModalRef.current.showModal()
   }
 
@@ -145,31 +149,36 @@ const App = () => {
 
   // close media handler
   const handleBackToHomepage = () => {
-    setShowAudioPlayer(false)
-    setShowYoutubePlayer(false)
-    setShowAudioRecorder(false)
-    setShowPdfWorker(false)
+    setShowMedia(false)
   }
 
   // Upload pdf file
   const handleOpenPdfFile = file => {
     pdfUploadModalRef.current.close()
-    setPdfSource(file)
-    setShowPdfWorker(true)
+    setReaderState({
+      type: 'pdf',
+      src: file
+    })
+    setShowMedia(true)
   }
 
   // Upload audio file
   const handleOpenAudioFile = file => {
     audioUploadModalRef.current.close()
-    setAudioSource(window.URL.createObjectURL(file)) 
-    setShowAudioPlayer(true)
+    setReaderState({
+      type: 'audio',
+      src: window.URL.createObjectURL((file))
+    })
+    setShowMedia(true)
   }
 
   // Dispatched when recorder stopped
   EventEmitter.subscribe('recorder-stopped', data => { 
-    setShowAudioPlayer(true)
-    setAudioSource(data)
-    setShowAudioRecorder(false)
+    setReaderState({
+      type: 'audio',
+      src: data
+    })
+    setShowMedia(true)
   })
 
   // When a stamp is clicked, seek reader to the stamp's value
@@ -184,16 +193,16 @@ const App = () => {
   //    value: Any or Null // value = null aborts stamp insertio
   // }
   const setStampData = (dateStampDataRequested) => { 
-    if (showAudioPlayer) {
+    if (readerState.type === 'audio') {
       const currentTime = readerRef.current.getState()
       return { label: currentTime ? formatTime(currentTime) : null, value: currentTime }
-    } else if (showAudioRecorder) {
+    } else if (readerState.type === 'recorder') {
       const currentTime = readerRef.current.getState(dateStampDataRequested)
       return { label: currentTime ? formatTime(currentTime) : null, value: currentTime }    
-    } else if (showPdfWorker) {
+    } else if (readerState.type === 'pdf') {
       const currentPage = readerRef.current.getState()
       return { label: currentPage ? 'p. ' + currentPage : null, value: currentPage}
-    } else if (showYoutubePlayer) {
+    } else if (readerState.type === 'youtube') {
       const currentTime = readerRef.current.getState().value
       return { label: currentTime ? formatTime(currentTime) : null, value: currentTime }    
     } else {
@@ -219,7 +228,12 @@ const App = () => {
     <div className='App-canvas'>
           <div className='App-reader-container'>
             <Modal ref={saveModalRef}>
-              <form onSubmit={e => {e.preventDefault(); handleSaveProject(e.target.elements.filename.value)}}>
+              <form onSubmit={e => {
+                e.preventDefault()
+                handleSaveProject(e.target.elements.filename.value)
+              }}>
+                <p>Name your project</p>
+                <br></br>
                 <input type='text' name='filename' />
                 <button type='submit'>save</button>
               </form>
@@ -234,6 +248,7 @@ const App = () => {
                 <input type='file' accept='application/pdf*' />
               </form>
             </Modal>
+
             <header className='App-header'>
               <span style={{ fontFamily: 'Mosk, sans-serif', fontWeight: 'bold' }}>notestamp</span>
               {showLoginButton && 
@@ -255,18 +270,21 @@ const App = () => {
                 </button>
               }
             </header>
-            {
-              !showYoutubePlayer && 
-              !showAudioRecorder && 
-              !showAudioPlayer && 
-              !showPdfWorker && 
+
+            { !showMedia &&
               !showLoginForm &&
               <div className='reader-homepage'>
                 <div>
                   <nav>
-                    <ul style={{margin: '0', padding: '10px'}}>
+                    <ul style={{margin: '0', padding: '0 10px 10px 10px'}}>
                       <button className='nav-btn' 
-                        onClick={() => { setShowYoutubePlayer(true) }}>
+                        onClick={() => { 
+                          setReaderState({
+                            type: 'youtube',
+                            src: ''
+                          })
+                        setShowMedia(true)
+                      }}>
                           Play YouTube video
                       </button>
                       <button className='nav-btn' 
@@ -274,7 +292,10 @@ const App = () => {
                           Open audio file
                       </button>
                       <button className='nav-btn' 
-                        onClick={() => setShowAudioRecorder(true)}>
+                        onClick={() => {
+                          setReaderState({ type: 'recorder' })
+                          setShowMedia(true)
+                        }}>
                           Record audio
                       </button>
                       <button className='nav-btn' 
@@ -297,43 +318,26 @@ const App = () => {
                   successCallback={handleLoggedIn} />
               </div>
             }
-            {showYoutubePlayer && 
+            {showMedia &&
               <div className='reader-media-container'>
-                <YoutubePlayer ref={readerRef} 
-                  src={youtubeUrl}
-                  closeComponent={handleBackToHomepage} />
+                <Media ref={readerRef} 
+                  type={readerState.type}
+                  src={readerState.src} 
+                  onClose={handleBackToHomepage} />
               </div>
             }
-            {showAudioPlayer && 
-              <div className='reader-media-container'>
-                <AudioPlayer src={audioSource} 
-                  ref={readerRef} 
-                  closeComponent={handleBackToHomepage} />
-              </div>
-            }
-            {showAudioRecorder && 
-              <div className='reader-media-container'>
-                <AudioRecorder ref={readerRef} 
-                  closeComponent={handleBackToHomepage} />
-              </div>
-            }
-            {showPdfWorker && 
-              <div className='reader-media-container'>
-                <PdfReader ref={readerRef} 
-                  src={pdfSource} 
-                  closeComponent={handleBackToHomepage} />
-              </div>
-            }
+
           <footer className='App-footer'>
             <p>Buy me coffee?</p> &nbsp;&nbsp;&nbsp;  
             <DonateButton />
           </footer>
           </div>
+
           <div className='App-writer-container'>
             <div className='editor-container'>
               <TextEditor 
                 user={user}
-                onCreateStamp={setStampData} 
+                onRequestStampData={setStampData} 
                 onSave={handleCaptureReaderState}
                 content={project?project.content:null} />
             </div>

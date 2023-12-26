@@ -3,7 +3,6 @@ import { EventEmitter } from './EventEmitter.js'
 import BackButton from './BackButton.js'
 import '../MediaComponent.css'
 import '../AudioRecorder.css'
-import '../Button.css'
 
 // Variables needed to calculate timestamp
 // Defined outside of component to prevent reset on re-renders
@@ -11,7 +10,7 @@ let dateWhenRecLastActive = new Date()
 let dateWhenRecLastInactive = dateWhenRecLastActive
 let recDuration = 0
 
-const AudioRecorder = React.forwardRef(({ closeComponent }, ref) => {
+const AudioRecorder = React.forwardRef((props, ref) => {
   const mediaRecorder = useRef(null)
   const chunks = useRef(null)
 
@@ -124,13 +123,10 @@ const AudioRecorder = React.forwardRef(({ closeComponent }, ref) => {
   ////////////////////////////////
 
   return (
-    <div className='media-component-container'>
-      <div className='back-btn-container'><BackButton handler={closeComponent} /></div>
       <div className='audio-rec-btn-container'>
         {showRecControls && <button className='recorder-btn' ref={recordButtonRef} onClick={toggleRecord}>{recordButtonText}</button>}
         {showRecControls && <button ref={stopButtonRef} className='recorder-btn recorder-stop-btn' style={{ background: 'lightgray'}} disabled={stopButtonDisabled} onClick={toggleStop}>Stop</button>}
       </div>
-    </div>
   )
 })
 

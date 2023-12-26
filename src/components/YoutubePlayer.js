@@ -1,11 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
-import BackButton from './BackButton';
 import '../MediaComponent.css'
 import '../YoutubePlayer.css'
 import '../Button.css'
 
-const YoutubePlayer = React.forwardRef((props, ref) => {
-  const { closeComponent, src } = props
+const YoutubePlayer = React.forwardRef(({ src }, ref) => {
   let playerInstanceRef = useRef(null)
   let currentVideoRef = useRef(null)
   const [youtubeUrl, setYoutubeUrl] = useState('')
@@ -29,14 +27,15 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
       }
     } 
     ref.current = controller
-  }, [ref, youtubeUrl])
+  }, [ref])
 
   ////////////////////////////////
   /// Initialize youtube player //
   ////////////////////////////////
 
   useEffect(() => {
-    if (src) setYoutubeUrl(src)
+    console.log('src = ', src)
+    setYoutubeUrl(src)
   }, [src])
 
   const onYouTubeIframeAPIReady = () => {
@@ -66,14 +65,14 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
   }
 
   // Load the YouTube API script if not already loaded
-  if (window.YT && window.YT.Player) {  
-    onYouTubeIframeAPIReady();
-  } else {
-    const tag = document.createElement('script');
-    tag.src = 'https://www.youtube.com/iframe_api';
-    const firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-  }
+    if (window.YT && window.YT.Player) {  
+      onYouTubeIframeAPIReady();
+    } else {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
 
   ////////////////////////////////
   /// Helpers ////////////////////
@@ -96,9 +95,6 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
   /// JSX ////////////////////////
   ////////////////////////////////
   return (
-    <div className='media-component-container'>
-      <div className='back-btn-container'><BackButton handler={closeComponent} />
-      </div>
       <div className='youtube-media-container'>
         <div className='form-container'>
           <form onSubmit={handleSubmitUrl} className='form'>
@@ -113,7 +109,6 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
         </div>
         <div id="youtube-player"></div>
       </div>
-    </div>
   )
 })
 
