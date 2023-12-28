@@ -57,7 +57,7 @@ const MyCustomMediaComponent React.forwardRef((props, ref) => {
 *Note: your component must pass a forward ref that points to the controller.*
 
 ## Media Renderer
-Add your custom component to the children of the `MediaRenderer` component. This essentially makes the app aware of your custom component.
+Add your custom component as a child of the `MediaRenderer` component. This essentially makes the app aware of your custom component.
 
 ```
 const Media = React.forwardRef(({ type=null, src=null, onClose}, ref) => {
@@ -72,10 +72,6 @@ const Media = React.forwardRef(({ type=null, src=null, onClose}, ref) => {
       <div className='back-btn-container'>
         <BackButton handler={onClose} />
       </div>
-      {type === 'youtube' && <YoutubePlayer ref={controller} src={src} />}
-      {type === 'audio' && <AudioPlayer ref={controller} src={src} />}
-      {type === 'pdf' && <PdfReader ref={controller} src={src} />}
-      {type === 'recorder' && <AudioRecorder ref={controller} />}
       {type === 'my_custom_type' <MyCustomComponent ref={controller} src={src} />}
     </div>
   )
@@ -90,20 +86,8 @@ Your stamps can now hold your custom component's state, but you have to tell the
 
 ```
 const setStampData = (dateStampDataRequested) => { 
-    if (mediaRef.current) { // make sure the media ref is actually available
-      if (readerState.type === 'audio') {
-        const currentTime = mediaRef.current.getState()
-        return { label: formatTime(currentTime), value: currentTime ? currentTime : null }
-      } else if (readerState.type === 'recorder') {
-        const currentTime = mediaRef.current.getState(dateStampDataRequested)
-        return { label: formatTime(currentTime), value: currentTime ? currentTime : null }    
-      } else if (readerState.type === 'pdf') {
-        const currentPage = mediaRef.current.getState()
-        return { label: currentPage ? 'p. ' + currentPage : null, value: currentPage}
-      } else if (readerState.type === 'youtube') {
-        const currentTime = mediaRef.current.getState().value
-        return { label: formatTime(currentTime), value: currentTime ? currentTime : null }    
-      } else if (readerState.type === 'my_custom_type') {
+    if (mediaRef.current) { // make sure the media ref is actually available  
+      if (readerState.type === 'my_custom_type') {
          const my_value = mediaRef.current.getState()
          const my_label = // additional processing on value
          return { label: my_label, value: my_value }
@@ -117,15 +101,17 @@ const setStampData = (dateStampDataRequested) => {
 ```
 
 ## Fire the event to render your component
-Example: add a button to the navigation bar in `App` that will call these two events.
+Example: add a button to the navigation bar in `App` with the following on click handler:
 
 ```
-setReaderState({
-    type: 'my_custom_type',
-    src: 'my_custom_media_source' // required if you want your component to launch with a src input
-                                  // e.g. a youtube link
-})
-setShowMedia(true)
+const handleOnCClick = () => {
+  setReaderState({
+      type: 'my_custom_type',
+      src: 'my_custom_media_source' // required if you want your component to launch with a src input
+                                    // e.g. a youtube link
+  })
+  setShowMedia(true)
+}
 ```
 
 # Install
