@@ -1,6 +1,6 @@
 import './App.css'
 import TextEditor from './components/TextEditor.js'
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef } from 'react'
 import { EventEmitter } from './components/EventEmitter.js'
 import './Button.css'
 import { Icon } from './components/Toolbar'
@@ -13,10 +13,10 @@ import Modal from './components/Modal'
 import Media from './components/Media'
 
 const App = () => {
-  const readerRef = useRef(null)
+  const mediaRef = useRef(null)
   const audioUploadModalRef = useRef(null)
   const pdfUploadModalRef = useRef(null)
-// User session data. These can be updated only
+  // User session data. These can be updated only
   // after a successful login
   const [user, setUser] = useState(null)
   const [project, setProject] = useState({
@@ -87,7 +87,7 @@ const App = () => {
 
   // take snapshot of reader state and show show save modal
   const handleCaptureReaderState = () => {
-    const state = readerRef.current ? readerRef.current.getState() : null
+    const state = mediaRef.current ? mediaRef.current.getState() : null
     if (!state) {
       setReaderState({
         type: 'none',
@@ -149,6 +149,7 @@ const App = () => {
 
   // close media handler
   const handleBackToHomepage = () => {
+    mediaRef.current = null
     setShowMedia(false)
   }
 
@@ -184,27 +185,31 @@ const App = () => {
   // When a stamp is clicked, seek reader to the stamp's value
   EventEmitter.subscribe('stamp-clicked', data => {
     const stampValue = data[1]
-    if (readerRef.current) readerRef.current.setState(stampValue)
+    if (mediaRef.current) mediaRef.current.setState(stampValue)
   })
 
-  // Return value must be: 
-  // { 
-  //    label: String or Null,
-  //    value: Any or Null // value = null aborts stamp insertio
+  // Return value must be an object with keys
+  // {
+  //    label: String or null       String rendered inside of the stamp
+  //    value: Any or Null          Actual stamp value
   // }
   const setStampData = (dateStampDataRequested) => { 
-    if (readerState.type === 'audio') {
-      const currentTime = readerRef.current.getState()
-      return { label: currentTime ? formatTime(currentTime) : null, value: currentTime }
-    } else if (readerState.type === 'recorder') {
-      const currentTime = readerRef.current.getState(dateStampDataRequested)
-      return { label: currentTime ? formatTime(currentTime) : null, value: currentTime }    
-    } else if (readerState.type === 'pdf') {
-      const currentPage = readerRef.current.getState()
-      return { label: currentPage ? 'p. ' + currentPage : null, value: currentPage}
-    } else if (readerState.type === 'youtube') {
-      const currentTime = readerRef.current.getState().value
-      return { label: currentTime ? formatTime(currentTime) : null, value: currentTime }    
+    if (mediaRef.current) { // make sure the media ref is actually available
+      if (readerState.type === 'audio') {
+        const currentTime = mediaRef.current.getState()
+        return { label: formatTime(currentTime), value: currentTime ? currentTime : null }
+      } else if (readerState.type === 'recorder') {
+        const currentTime = mediaRef.current.getState(dateStampDataRequested)
+        return { label: formatTime(currentTime), value: currentTime ? currentTime : null }    
+      } else if (readerState.type === 'pdf') {
+        const currentPage = mediaRef.current.getState()
+        return { label: currentPage ? 'p. ' + currentPage : null, value: currentPage}
+      } else if (readerState.type === 'youtube') {
+        const currentTime = mediaRef.current.getState().value
+        return { label: formatTime(currentTime), value: currentTime ? currentTime : null }    
+      } else {
+        return { label: null, value: null }
+      }
     } else {
       return { label: null, value: null }
     }
@@ -212,6 +217,7 @@ const App = () => {
 
   // format time to MM:SS
   function formatTime(seconds) {
+    if (!seconds) return null
     seconds = Math.round(seconds)
     const minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
@@ -320,7 +326,7 @@ const App = () => {
             }
             {showMedia &&
               <div className='reader-media-container'>
-                <Media ref={readerRef} 
+                <Media ref={mediaRef} 
                   type={readerState.type}
                   src={readerState.src} 
                   onClose={handleBackToHomepage} />
