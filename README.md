@@ -1,52 +1,37 @@
 # Description
-A single page application for desktop that synchronizes your notes to media using stamps.
+A single page React application for desktop that synchronizes your notes to media using stamps. 
 
-# Features
-- Media reader: Youtube player, audio recorder, audio player, pdf reader. 
+When writing notes to a media component, stamps will appear to the left of each line linking it to the media's current state. Click a stamp and seek the media to the requested state.
+Currently supported media components are youtube video, audio player, audio recorder and pdf viewer.
 
-- Rich text editor: Press `<enter>` to insert a stamp then click it to seek the media to the stamp value.
+# Motivation
+- To build a tool that facilitates note taking and transcribing university lectures.
+- To provide a framework for extending the application to synchronize with custom media components.
+
+The latest commits have made it easier to implement custom media components. For example, if your university hosts videos on a video platform other than youtube, you can implement a media component that works with their platform and integrate it into the app.
+
+# Goals for this project
+- Features that do not necessitate an internet connection should work even when the device is offline.
+- The framework for adding custom media components should balance simplicity and customizability.
+- Core features must be accessible i.e. users should neither be required to install software no create an account. The app should work with what is available to most people.
+
 
 # Demo
 [notestamp.com](https://notestamp.com)
 
-# Project goals 
-- Must be lightweight and work fast.
-- Although being a web app, it must reach the level of a native app experience or as close as possible.
-
 # Design & implementation
-The app is divided into two columns: a reader and a writer.
-The reader handles browsing and media playing while the writer always displays a text editor for user input.
-This layout remains constant throughout the entire app.
 
-The design highlights the prime focus of this app: note taking. No matter what you are doing in the reader,
-the editor is always available for input in the writer.
+## UI
+- **Left pane** displays the app's pages including the media component: Currently supported components are youtube player, audio recorder, audio player, and pdf viewer.
+- **Right pane** displays a rich text editor that persits through the entire application: Press `<enter>` to insert a stamp then click it to seek the media to the stamp value.
 
-## Stack
-- React
-- [Slate](https://docs.slatejs.org/) (editor framework)
-- [React-PDF](https://www.npmjs.com/package/react-pdf)
+Page navigation and media viewing takes place in the left pane, so its view changes frequently and experiences side effects. In contrast the right pane remains relatively stable, always displaying a text editor ready for input.
 
-## Design pattern
-According to the design, the reader's view can change frequently and experience side effects whereas the writer remains relatively stable by only displaying a text editor for input.
-The design requirement suggests low coupling between the reader and writer, so I opted
-to follow the mediator pattern. The main app component being the mediator while the reader and writer components are its children.
+This suggests low coupling between the reader and writer. The main component acts as mediator for synchronization between the media component and the text editor.
 
-## Component hierarchy 
-- Mediator: Maintains a `ref` (pointer) to the reader.
-  - Reader: Attaches  `ref` to the media's component's controller
-     - Media: Either youtube, audio player, audio recorder or pdf viewer.
-     - Dashboard: Displays user's saved projects.
-     - Login and register forms
-  - Writer: Displays a rich text editor and toolbar.
+The main component has two children: the left and right pane. The media component is attached to a `ref` defined in the main component. The other child is the text editor.
 
-## Logic 
-**User presses `<enter>` inside the editor**: a callback executes in the mediator. The mediator gets the reader's state through the media controller
-and returns it to the writer for stamp insertion.
-
-**User clicks a stamp**: the writer emits a custom event to the mediator.
-The mediator updates the reader's state through the media controller.
-
-## Editor
+## Custom text editor (using [Slate](https://docs.slatejs.org/) framework)
 I implemented a custom rich text editor that can support clickable stamps. Will probably release this as a react component at some point.
 
 ## Timestamp algorithm ##
@@ -54,38 +39,14 @@ The Recording API does not provide a query for the length of the audio being rec
 algorithm to compute a stamp's value (in this case a timestamp) in O(1). See more details in [timestamp](https://github.com/fortyoneplustwo/timestamp)
 repository (an early version of notestamp).
 
-## API 
-The front-end is responsible for hydrating the components with user session data. I debated using NextJS for SSR, but decided that
-CSR was more approrpiate because:
-- Navigation speed is much faster.
-- Losing an internet connection does not 'break' the application as you can still navigate to the
-  features that work offline.
-
-# Takeaways
-- Using `ref` for the media components was appropriate since we need to perform real time updates and data requests on these components.
-- I like how unopiniated React is. It made it easy to implement and integrade a custom even emitter for a special case of child-to-parent communication.
-- The mediator pattern is good to achieve low coupling and extensibility. It made it easy to add more components to the reader without breaking the writer.
-- Abstracting communication with the media components using a controller has made it easy to integrate different media formats which have different stamp values.
-  E.g. pdf viewer returns current page number whereas audio player returns current time.
-- It might be a good idea to use a context provider to allow separation of concerns i.e. props for UI logic and context provider for user data.
-
-# Were the project goals acheived?
-
-Yes.
-
-- Minimal use of ready made react components and strict use of vanilla css have kept the bundle size small.
-- CSR rendering allows for fast app navigation.
-- Your notes are stored in local storage. Never lose your unsaved notes since they persist even across device restarts.
+# How to integrate a custom component?
 
 
-# Getting Started with Create React App
-
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-## Install
-
+# Install
 `npm install`
 
 `npm start`
+
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 
