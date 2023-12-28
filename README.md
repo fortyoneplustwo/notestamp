@@ -30,7 +30,7 @@ I implemented a dynamic programming algorithm to compute the timestamp in O(1). 
 repository (an early version of notestamp).
 
 # How to integrate a custom media component?
-Just write your React component the way you want it to display in the left pane. The app handles synchronization for you. All you have to do is pass to implement a `controller` through which the main app will communicate with your custom component.
+Just write your React component the way you want it to display in the left pane with the addition of a `controller` through which the main app will communicate with your custom component.
 
 ## Controller
 Implement a `controller` within your component like so:
