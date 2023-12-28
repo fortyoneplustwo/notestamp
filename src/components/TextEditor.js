@@ -28,9 +28,11 @@ const HOTKEYS = {
 }
 
 const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => {
+  const [internalClipboard, setInternalClipboard] = useState([])
   const fileUploadModalRef = useRef(null)
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
+
   const editor = useMemo(() => withInlines(withReact(withHistory(createEditor()))), [])
 
   const initialValue = useMemo(
@@ -44,6 +46,9 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
     []
   )
 
+  ////////////////////////////////////////////////////////////////////
+  // For logged in users only
+  //
   // replace contents of editor with content (type: stmp)
   useEffect(() => {
     // TODO: save should only appear in color when a project has been modified
@@ -64,9 +69,10 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
       Transforms.insertNodes(editor, newNodes)
     }
   }, [content, editor])
+  //////////////////////////////////////////////////////////////////
 
   // Paste contents of submitted .stmp file into the editor
-  const handleOpenFile = (file, modal) => {
+  const handleOpenFile = file => {
     fileUploadModalRef.current.close() 
     if (file) {
       const reader = new FileReader()
@@ -94,25 +100,39 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
     }
   }
 
-  // Skip over stamps when copying
+  // Override copy 
+  // Copy nodes to internal clipboard and text to device clipboard
   const handleCopy = event => {
     event.preventDefault();
     const { selection } = editor
     if (selection) {
-      let textContent = ''
-      for (const [node] of Editor.nodes(editor, { at: selection })) {
-        if ('text' in node) textContent += node.text
-      }
-      event.clipboardData.setData('text/plain', textContent)
+      const [paragraph] = editor.getFragment()
+      const copiedTextNodes = paragraph.children.filter(node => 'text' in node)
+      const copiedText = copiedTextNodes.reduce((text, node) => text += node.text, '')
+      event.clipboardData.setData('text/plain', copiedText)
+      setInternalClipboard(copiedTextNodes)
     }
   }
 
-  // Prevent pasting a newline from inserting a paragraph node
+  // Override paste
+  // Paste nodes from internal clipboard if the 
+  // state of internal clipboard = state of device clipboard.
+  // Otherwise paste contents actual clipboard
   const handlePaste = event => {
     event.preventDefault()
-    const clipboardData = event.clipboardData
-    const pastedText = clipboardData.getData('text/plain')
-    Transforms.insertText(editor, pastedText)
+    const internalClipboardToText = internalClipboard.reduce((textAcc, node) => textAcc + node.text, '') 
+    console.log(internalClipboard)
+    console.log(internalClipboardToText)
+    const deviceClipboardData = event.clipboardData.getData('Text')
+    console.log(deviceClipboardData)
+    if (internalClipboardToText === deviceClipboardData) {
+      for (const node of internalClipboard) {
+        Transforms.insertNodes(editor, { ...node })
+      }
+    }
+    else {
+      Transforms.insertText(editor, deviceClipboardData.toString())
+    }
   }
 
   ////////////////////////////////
@@ -195,30 +215,39 @@ const onKeyDown = (event, onRequestStampData, editor) => {
     Transforms.insertText(editor, '\n')
     return
   }
-  // on enter: insert badge
+  // on enter: insert stamp
   else if (isKeyHotkey('enter', nativeEvent)) {
     const { label, value } = onRequestStampData(new Date())
     event.preventDefault()
-    // *save marks then restore after all transforms have been performed
-    const marks = Editor.marks(editor)
-    // abort insertion of badge if value not assigned
-    if (!value) { 
+
+    // save marks on current selection 
+    const marks = Editor.marks(editor) // *
+
+    if (!value) { // abort insertion of stamp if stamp value is null
       Transforms.insertText(editor, '\n')
-      return
+      for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
+      return 
     } 
+
+    // If editor is not empty, insert new line before stamp
     const content = editor.children
     const editorIsEmpty = content.length === 1 
       && content[0].children.length === 1 
       && content[0].children[0].text === ''
-    if (!editorIsEmpty) Transforms.insertText(editor, '\n')
-    const caretPathBeforeInsert = editor.selection.focus.path
-    Transforms.insertNodes(editor, { 
+    if (!editorIsEmpty) {
+      Transforms.insertText(editor, '\n')
+    }
+
+    // Insert stamp
+    const caretPathBeforeInsert = editor.selection.focus.path // **
+    Transforms.insertNodes(editor, {
       type: 'stamp', 
       label: label, 
       value: value,
       children: [{ text: '' }] 
     })
-    // fix to place the caret after the newly inserted badge
+
+    // ** (fix) Manually set caret path to after the newly inserted stamp node
     const caretPathAfterInsert = {
       path: [caretPathBeforeInsert[0], caretPathBeforeInsert[1] + 2], offset: 0
     }
@@ -227,8 +256,9 @@ const onKeyDown = (event, onRequestStampData, editor) => {
         focus: caretPathAfterInsert
       }
     ))
-    // *restore marks
+    // * (fix) restore marks
     for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
+    return
   }
 }
 
@@ -323,11 +353,14 @@ const isMarkActive = (editor, format) => {
 // Returns an editor that supports inline elements
 const withInlines = editor => {
   const {
+    isVoid,
     isInline,
     isElementReadOnly,
     isSelectable,
   } = editor
-  // overriding these methods to define badge behaviour
+  // overriding these methods to define stamp behaviour
+  editor.isVoid = element => 
+    ['stamp'].includes(element.type) || isVoid(element)
   editor.isInline = element => 
     ['stamp'].includes(element.type) || isInline(element)
   editor.isElementReadOnly = element => 
@@ -373,16 +406,27 @@ const MarkButton = ({ format, icon, description }) => {
 }
 
 const Element = props => {
-  const { attributes, children, element } = props
+  const { children, element } = props
   switch (element.type) {
     case 'stamp':
-      return <Badge {...props} />
+      return <Stamp {...props} />
     default:
-      return <p {...attributes}>{children}</p>
+      return <Paragraph {...props}>{children}</Paragraph>
   }
 }
 
-const Badge = ({ attributes, children, element }) => {
+const Paragraph = ({ attributes, children }) => {
+  return (
+    <p 
+      {...attributes}
+      style={{ margin: '0', padding: '0' }}
+    >
+      { children }
+    </p>
+  )
+}
+
+const Stamp = ({ attributes, children, element }) => {
   return (
     <span
       {...attributes}
