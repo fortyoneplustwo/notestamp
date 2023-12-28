@@ -77,7 +77,6 @@ const App = () => {
               type: project.metadata.type,
               src: project.metadata.link
             })
-            console.log(readerState)
             setShowMedia(true)
           }
           // Handle open for other media formats here

@@ -121,10 +121,7 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
   const handlePaste = event => {
     event.preventDefault()
     const internalClipboardToText = internalClipboard.reduce((textAcc, node) => textAcc + node.text, '') 
-    console.log(internalClipboard)
-    console.log(internalClipboardToText)
     const deviceClipboardData = event.clipboardData.getData('Text')
-    console.log(deviceClipboardData)
     if (internalClipboardToText === deviceClipboardData) {
       for (const node of internalClipboard) {
         Transforms.insertNodes(editor, { ...node })
