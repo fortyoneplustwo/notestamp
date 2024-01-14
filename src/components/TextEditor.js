@@ -242,10 +242,16 @@ const onKeyDown = (event, onRequestStampData, editor) => {
       return 
     } 
 
-    // If current block contains either a stamp node or some text
+    // If current block contains either a stamp node or a non-empty text node
     // then insert a similar block with an empty text node
-    const lastChild = block.children.length - 1
-    if (block.children.length >= 1 && block.children[lastChild].text !== '') {
+    const stampFound = block.children.reduce(
+      (accumulator, node) => {
+        return accumulator || ('type' in node ? node.type === 'stamp' : false)
+      },
+      false
+    )
+    const lastChild = block.children.length - 1 // lastChild always contains the text content
+    if (stampFound || block.children[lastChild].text !== '') {
       Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
     }
 
