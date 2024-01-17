@@ -27,7 +27,7 @@ const HOTKEYS = {
   'mod+j': 'rewindTenSecs',
   'mod+l': 'forwardTenSecs'
 }
-  const LIST_TYPES = ['numbered-list', 'bulleted-list']
+const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
 const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => {
   const [internalClipboard, setInternalClipboard] = useState([])
@@ -104,30 +104,70 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
   }
 
   // Override copy 
-  // Copy nodes to internal clipboard and text to device clipboard
+  // Copy nodes to editor clipboard and text to device clipboard
   const handleCopy = event => {
-    event.preventDefault();
+    event.preventDefault()
     const { selection } = editor
     if (selection) {
-      const [paragraph] = editor.getFragment()
-      const copiedTextNodes = paragraph.children.filter(node => 'text' in node)
-      const copiedText = copiedTextNodes.reduce((text, node) => text += node.text, '')
-      event.clipboardData.setData('text/plain', copiedText)
-      setInternalClipboard(copiedTextNodes)
+      const fragment = editor.getFragment()
+
+      // Each item in copiedLines is an array that contains the text nodes of a single line
+      const copiedLines = []
+      for (const block of fragment) {
+        if (block.type === 'paragraph') {
+          const line = block.children.map(child => {
+            return child
+          })
+          copiedLines.push(line)
+        } else { // list block
+          for (const listItem of block.children) {
+            const line = listItem.children.map(child => {
+              return child
+            })
+            copiedLines.push(line)
+          }
+        }
+      }
+      
+      // join the copied lines into a single string
+      const copiedLinesToString = copiedLines.reduce((acc, line) => {
+        return acc 
+          + (line.reduce((acc, textNode) => {
+            return acc + textNode.text
+          }, '')) 
+          + '\n'
+      }, '')
+
+      event.clipboardData.setData('text/plain', copiedLinesToString)
+      setInternalClipboard(copiedLines)
     }
   }
 
   // Override paste
-  // Paste nodes from internal clipboard if the 
-  // state of internal clipboard = state of device clipboard.
-  // Otherwise paste contents actual clipboard
+  // Paste nodes from internal clipboard if
+  // contents of editor clipboard = contents of device clipboard.
+  // Otherwise paste contents device clipboard
   const handlePaste = event => {
     event.preventDefault()
-    const internalClipboardToText = internalClipboard.reduce((textAcc, node) => textAcc + node.text, '') 
+
+    // convert editor clipboard to string
+    const internalClipboardToText = internalClipboard.reduce((acc, line) => {
+      return acc 
+        + (line.reduce((acc, textNode) => {
+          return acc + textNode.text
+        }, '')) 
+        + '\n'
+    }, '')
+
     const deviceClipboardData = event.clipboardData.getData('Text')
     if (internalClipboardToText === deviceClipboardData) {
-      for (const node of internalClipboard) {
-        Transforms.insertNodes(editor, { ...node })
+      for (let i = 0; i < internalClipboard.length; i++) {
+        for (const textNode of internalClipboard[i]) {
+          Transforms.insertNodes(editor, { ...textNode })
+        }
+        if (i < internalClipboard.length - 1) {
+          Transforms.insertNodes(editor, { text: '\n'})
+        }
       }
     }
     else {
@@ -242,16 +282,16 @@ const onKeyDown = (event, onRequestStampData, editor) => {
       return 
     } 
 
-    // If current block contains either a stamp node or a non-empty text node
-    // then insert a similar block with an empty text node
+    // If current block contains either a stamp node or a non-empty text node,
+    // then insert a block of similar type with an empty text node
     const stampFound = block.children.reduce(
       (accumulator, node) => {
         return accumulator || ('type' in node ? node.type === 'stamp' : false)
       },
       false
     )
-    const lastChild = block.children.length - 1 // lastChild always contains the text content
-    if (stampFound || block.children[lastChild].text !== '') {
+    const textNode = block.children[block.children.length - 1]
+    if (stampFound || textNode.text !== '') {
       Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
     }
 
@@ -325,6 +365,7 @@ const downloadJSON = (jsonObject, fileName) => {
   link.click()
   URL.revokeObjectURL(url)
 }
+
 const toggleBlock = (editor, format) => {
   const isActive = isBlockActive(
     editor,
