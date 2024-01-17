@@ -16,6 +16,7 @@ const App = () => {
   const mediaRef = useRef(null)
   const audioUploadModalRef = useRef(null)
   const pdfUploadModalRef = useRef(null)
+
   // User session data. These can be updated only
   // after a successful login
   const [user, setUser] = useState(null)
@@ -281,7 +282,7 @@ const App = () => {
               <div className='reader-homepage'>
                 <div>
                   <nav>
-                    <ul style={{margin: '0', padding: '0 10px 10px 10px'}}>
+                    <ul style={{margin: '0', padding: '0 10px 10px 0'}}>
                       <button className='nav-btn' 
                         onClick={() => { 
                           setReaderState({
