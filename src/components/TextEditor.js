@@ -201,8 +201,8 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
             <MarkButton format='italic' icon="format_italic" description="Italic (Ctrl+I)"/>
             <MarkButton format='underline' icon="format_underlined" description="Underline (Ctrl+U)"/>
             <MarkButton format='code' icon="code" description="Code (Ctrl+`)"/>
-            <BlockButton format="numbered-list" icon="format_list_numbered" />
-            <BlockButton format="bulleted-list" icon="format_list_bulleted" />
+            <BlockButton format="numbered-list" icon="format_list_numbered" description="Toggle numbered list (Ctrl+Shift+8)" />
+            <BlockButton format="bulleted-list" icon="format_list_bulleted" description="Toggle bulleted list (Ctrl+Shift+9)"/>
             <div className='toolbar-btn-separator'></div>
             <ActionButton action='upload' icon="folder_open" description="Open .stmp file" 
               onClick={() => { fileUploadModalRef.current.showModal() }} />
@@ -262,6 +262,16 @@ const onKeyDown = (event, onRequestStampData, editor) => {
     for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
     return 
   }
+  // on mod+shift+8 toggle numbered-list
+  else if (isHotkey('mod+shift+8', nativeEvent)) {
+    event.preventDefault()
+    toggleBlock(editor, 'numbered-list')
+  }
+  // on mod+shift+9 toggle bulleted-list
+  else if (isHotkey('mod+shift+9', nativeEvent)) {
+    event.preventDefault()
+    toggleBlock(editor, 'bulleted-list')
+  }
   // on enter: insert stamp
   else if (isKeyHotkey('enter', nativeEvent)) {
     const { label, value } = onRequestStampData(new Date())
@@ -269,7 +279,7 @@ const onKeyDown = (event, onRequestStampData, editor) => {
 
     // Get the block that wraps our current selection
     const { selection } = editor
-    const startPath = Editor.start(editor, selection);
+    const startPath = Editor.start(editor, selection)
     const [block] = Editor.parent(editor, startPath)
 
     // save marks on current selection 
@@ -493,10 +503,11 @@ const ActionButton = ({ action, icon, description, ...props }) => {
   )
 }
 
-const BlockButton = ({ format, icon }) => {
+const BlockButton = ({ format, icon, description }) => {
   const editor = useSlate()
   return (
     <Button
+      title={description}
       active={isBlockActive(
         editor,
         format
