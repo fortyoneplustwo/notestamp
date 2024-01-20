@@ -1,10 +1,15 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import '../MediaComponent.css'
 import '../AudioPlayer.css'
 
 const AudioPlayer = React.forwardRef((props, ref) => {
   const { src } = props
   const playerRef = useRef(null)
+  
+  const handleOpenAudioFile = file => {
+    console.log(file)
+    playerRef.current.src = window.URL.createObjectURL(file)
+  }
 
   ////////////////////////////////
   /// Initialize controller //////
@@ -30,13 +35,19 @@ const AudioPlayer = React.forwardRef((props, ref) => {
   ////////////////////////////////
 
   useEffect(() => {
-    playerRef.current.src = src
+    if (src) playerRef.current.src = src
   }, [src])
 
   return (
-      <div className='audio-media-container'>
+      <div className='audio-media-container' >
+        <div className='back-btn-container'>
+          {!src && 
+            <form onChange={ e => playerRef.current.src = window.URL.createObjectURL(e.target.files[0]) }>
+              <input type='file' accept='audio/*' />
+            </form>
+          }
+        </div>
         <audio controls ref={playerRef} />
-        <a href={src} download="audio_recording.ogg" className='audio-download-link'>Download</a>
       </div>
   )
 })

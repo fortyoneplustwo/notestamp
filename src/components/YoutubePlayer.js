@@ -94,6 +94,7 @@ const YoutubePlayer = React.forwardRef(({ src }, ref) => {
   ////////////////////////////////
   /// JSX ////////////////////////
   ////////////////////////////////
+
   return (
       <div className='youtube-media-container'>
         <div className='form-container'>

@@ -153,26 +153,6 @@ const App = () => {
     setShowMedia(false)
   }
 
-  // Upload pdf file
-  const handleOpenPdfFile = file => {
-    pdfUploadModalRef.current.close()
-    setReaderState({
-      type: 'pdf',
-      src: file
-    })
-    setShowMedia(true)
-  }
-
-  // Upload audio file
-  const handleOpenAudioFile = file => {
-    audioUploadModalRef.current.close()
-    setReaderState({
-      type: 'audio',
-      src: window.URL.createObjectURL((file))
-    })
-    setShowMedia(true)
-  }
-
   // Dispatched when recorder stopped
   EventEmitter.subscribe('recorder-stopped', data => { 
     setReaderState({
@@ -289,24 +269,33 @@ const App = () => {
                             type: 'youtube',
                             src: ''
                           })
-                        setShowMedia(true)
+                          setShowMedia(true)
                       }}>
-                          Play YouTube video
+                        YouTube
                       </button>
-                      <button className='nav-btn' 
-                        onClick={() => audioUploadModalRef.current.showModal()}>
-                          Open audio file
+                      <button className='nav-btn'
+                        onClick={() => {
+                          setReaderState({
+                            type: 'audio',
+                            src: ''
+                          })
+                          setShowMedia(true)
+                      }}>
+                        Audio player
                       </button>
                       <button className='nav-btn' 
                         onClick={() => {
                           setReaderState({ type: 'recorder' })
                           setShowMedia(true)
                         }}>
-                          Record audio
+                        Recorder
                       </button>
                       <button className='nav-btn' 
-                        onClick={() => pdfUploadModalRef.current.showModal()}>
-                          Open PDF document
+                        onClick={() => {
+                          setReaderState({ type: 'pdf' })
+                          setShowMedia(true)
+                      }}>
+                        PDF
                       </button>
                     </ul>
                   </nav>
