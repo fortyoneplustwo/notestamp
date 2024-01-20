@@ -14,8 +14,6 @@ import Media from './components/Media'
 
 const App = () => {
   const mediaRef = useRef(null)
-  const audioUploadModalRef = useRef(null)
-  const pdfUploadModalRef = useRef(null)
 
   // User session data. These can be updated only
   // after a successful login
@@ -222,16 +220,6 @@ const App = () => {
                 <br></br>
                 <input type='text' name='filename' />
                 <button type='submit'>save</button>
-              </form>
-            </Modal>
-            <Modal ref={audioUploadModalRef} >
-              <form onChange={e => { handleOpenAudioFile(e.target.files[0]) }}>
-                <input type='file' accept='audio/*' />
-              </form>
-            </Modal>
-            <Modal ref={pdfUploadModalRef} >
-              <form onChange={e => { handleOpenPdfFile(e.target.files[0]) }}>
-                <input type='file' accept='application/pdf*' />
               </form>
             </Modal>
 
