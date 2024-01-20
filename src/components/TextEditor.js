@@ -6,7 +6,8 @@ import {
   Editor,
   Transforms,
   createEditor,
-  Text
+  Text,
+  Element as SlateElement
 } from 'slate'
 import { withHistory } from 'slate-history'
 import isHotkey from 'is-hotkey'
@@ -26,6 +27,7 @@ const HOTKEYS = {
   'mod+j': 'rewindTenSecs',
   'mod+l': 'forwardTenSecs'
 }
+  const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
 const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => {
   const [internalClipboard, setInternalClipboard] = useState([])
@@ -34,6 +36,7 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
 
   const editor = useMemo(() => withInlines(withReact(withHistory(createEditor()))), [])
+
 
   const initialValue = useMemo(
     () => 
@@ -158,6 +161,8 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
             <MarkButton format='italic' icon="format_italic" description="Italic (Ctrl+I)"/>
             <MarkButton format='underline' icon="format_underlined" description="Underline (Ctrl+U)"/>
             <MarkButton format='code' icon="code" description="Code (Ctrl+`)"/>
+            <BlockButton format="numbered-list" icon="format_list_numbered" />
+            <BlockButton format="bulleted-list" icon="format_list_bulleted" />
             <div className='toolbar-btn-separator'></div>
             <ActionButton action='upload' icon="folder_open" description="Open .stmp file" 
               onClick={() => { fileUploadModalRef.current.showModal() }} />
@@ -206,36 +211,51 @@ const onKeyDown = (event, onRequestStampData, editor) => {
     for(const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true)
     return
   } 
-  // on shift + enter: create new line without stamp
+  // on shift + enter: insert a block of same type without a stamp
   else if (isHotkey('shift+enter', nativeEvent)) {
     event.preventDefault()
-    Transforms.insertText(editor, '\n')
-    return
+    const { selection } = editor
+    const startPath = Editor.start(editor, selection);
+    const [block] = Editor.parent(editor, startPath)
+    const marks = Editor.marks(editor) // *
+    Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
+    for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
+    return 
   }
   // on enter: insert stamp
   else if (isKeyHotkey('enter', nativeEvent)) {
     const { label, value } = onRequestStampData(new Date())
     event.preventDefault()
 
+    // Get the block that wraps our current selection
+    const { selection } = editor
+    const startPath = Editor.start(editor, selection);
+    const [block] = Editor.parent(editor, startPath)
+
     // save marks on current selection 
     const marks = Editor.marks(editor) // *
-
-    if (!value) { // abort insertion of stamp if stamp value is null
-      Transforms.insertText(editor, '\n')
+    
+    // abort insertion of stamp if stamp value is null
+    if (!value) { 
+      Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
       for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
       return 
     } 
 
-    // If editor is not empty, insert new line before stamp
-    const content = editor.children
-    const editorIsEmpty = content.length === 1 
-      && content[0].children.length === 1 
-      && content[0].children[0].text === ''
-    if (!editorIsEmpty) {
-      Transforms.insertText(editor, '\n')
+    // If current block contains either a stamp node or a non-empty text node
+    // then insert a similar block with an empty text node
+    const stampFound = block.children.reduce(
+      (accumulator, node) => {
+        return accumulator || ('type' in node ? node.type === 'stamp' : false)
+      },
+      false
+    )
+    const lastChild = block.children.length - 1 // lastChild always contains the text content
+    if (stampFound || block.children[lastChild].text !== '') {
+      Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
     }
 
-    // Insert stamp
+    // Proceed with stamp insertion
     const caretPathBeforeInsert = editor.selection.focus.path // **
     Transforms.insertNodes(editor, {
       type: 'stamp', 
@@ -244,15 +264,20 @@ const onKeyDown = (event, onRequestStampData, editor) => {
       children: [{ text: '' }] 
     })
 
-    // ** (fix) Manually set caret path to after the newly inserted stamp node
+    // ** (fix) After insertion the caret mysteriously disappears.
+    // Force caret position to after newly inserted node.
+    const path = [...caretPathBeforeInsert]
+    path[path.length-1] = caretPathBeforeInsert[path.length-1] + 2
     const caretPathAfterInsert = {
-      path: [caretPathBeforeInsert[0], caretPathBeforeInsert[1] + 2], offset: 0
+      path: path, offset: 0
     }
+
     Transforms.select(editor, ({
         anchor: caretPathAfterInsert,
         focus: caretPathAfterInsert
       }
     ))
+
     // * (fix) restore marks
     for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
     return
@@ -300,6 +325,30 @@ const downloadJSON = (jsonObject, fileName) => {
   link.click()
   URL.revokeObjectURL(url)
 }
+const toggleBlock = (editor, format) => {
+  const isActive = isBlockActive(
+    editor,
+    format
+  )
+  const isList = LIST_TYPES.includes(format)
+
+  Transforms.unwrapNodes(editor, {
+    match: n =>
+      !Editor.isEditor(n) &&
+      SlateElement.isElement(n) &&
+      LIST_TYPES.includes(n.type),
+    split: true,
+  })
+  const newProperties = {
+    type: isActive ? 'paragraph' : isList ? 'list-item' : format,
+  }
+  Transforms.setNodes(editor, newProperties)
+
+  if (!isActive && isList) {
+    const block = { type: format, children: [] }
+    Transforms.wrapNodes(editor, block)
+  }
+}
 
 const toggleAction = (editor, action) => {
   if (action === 'download') {
@@ -340,6 +389,23 @@ const toggleMark = (editor, format) => {
   } else {
     Editor.addMark(editor, format, true)
   }
+}
+
+const isBlockActive = (editor, format, blockType = 'type') => {
+  const { selection } = editor
+  if (!selection) return false
+
+  const [match] = Array.from(
+    Editor.nodes(editor, {
+      at: Editor.unhangRange(editor, selection),
+      match: n =>
+        !Editor.isEditor(n) &&
+        SlateElement.isElement(n) &&
+        n[blockType] === format,
+    })
+  )
+
+  return !!match
 }
 
 const isMarkActive = (editor, format) => {
@@ -386,6 +452,24 @@ const ActionButton = ({ action, icon, description, ...props }) => {
   )
 }
 
+const BlockButton = ({ format, icon }) => {
+  const editor = useSlate()
+  return (
+    <Button
+      active={isBlockActive(
+        editor,
+        format
+      )}
+      onMouseDown={event => {
+        event.preventDefault()
+        toggleBlock(editor, format)
+      }}
+    >
+      <Icon>{icon}</Icon>
+    </Button>
+  )
+}
+
 const MarkButton = ({ format, icon, description }) => {
   const editor = useSlate()
   return (
@@ -403,10 +487,28 @@ const MarkButton = ({ format, icon, description }) => {
 }
 
 const Element = props => {
-  const { children, element } = props
+  const { children, element, attributes } = props
   switch (element.type) {
     case 'stamp':
       return <Stamp {...props} />
+    case 'bulleted-list':
+      return (
+        <ul {...attributes}>
+          {children}
+        </ul>
+      )
+     case 'list-item':
+      return (
+        <li {...attributes}>
+          {children}
+        </li>
+      )
+    case 'numbered-list':
+      return (
+        <ol {...attributes}>
+          {children}
+        </ol>
+      )
     default:
       return <Paragraph {...props}>{children}</Paragraph>
   }
@@ -418,7 +520,7 @@ const Paragraph = ({ attributes, children }) => {
       {...attributes}
       style={{ margin: '0', padding: '0' }}
     >
-      { children }
+      {children}
     </p>
   )
 }
