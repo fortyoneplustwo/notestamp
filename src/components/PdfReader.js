@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Document, Page } from 'react-pdf'
 import { pdfjs } from 'react-pdf'
 import '../Button.css'
@@ -9,19 +9,23 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 const PdfReader = React.forwardRef((props, ref) => {
   const [source, setSource] = useState(null)
-  const [pageNumber, setPageNumber] = useState(1)
+  const [pageNumber, setPageNumber] = useState(null)
+  const pageNumberRef = useRef(null)
   const [pageScale, setPageScale] = useState(1)
 
+
+  useEffect(() => { pageNumberRef.current = pageNumber }, [pageNumber])
 
   ////////////////////////////////
   /// Initialize controller //////
   ////////////////////////////////
 
   useEffect(()=> {
-    // Parent component can use this controller using ref
     const controller = {
       getState: function () {
-        return pageNumber
+        // NOTE: Closures always return the initial value of a state variable.
+        // Returning the ref ensures we grab the current state.
+        return pageNumberRef.current
       },
       setState: function (newState) {
         setPageNumber(newState)
@@ -34,7 +38,7 @@ const PdfReader = React.forwardRef((props, ref) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', overflow: 'scroll', gap: '10px' }}>
       <div style={{ width: '100%' }}>
-        <form onChange={e => { setSource(e.target.files[0]) }} style={{ display: 'inline' }}>
+        <form onChange={e => { setSource(e.target.files[0]); setPageNumber(1) }} style={{ display: 'inline' }}>
           <input type='file' accept='application/pdf' />
         </form>
         <button style={{ float: 'right' }} onClick={() => { setPageNumber(pageNumber + 1) }}>Next</button>
