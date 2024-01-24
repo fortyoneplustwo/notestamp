@@ -59,7 +59,7 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
       getState: function (dateStampRequested) {
         // Return current media state to be stored inside the a new stamp here
       },
-      setState: function (newState) {
+      setState: function (stampValue) {
         // Update the media element within your component to newState here
       }
     } 
