@@ -1,65 +1,79 @@
 # Description
 A single page React application for desktop that synchronizes your notes to media using stamps. 
 
-- **Left pane** displays media: Currently supported media are youtube player, audio recorder, audio player, and pdf viewer.
-- **Right pane** displays a rich text editor: Press `<enter>` to insert a stamp at the start of a line. Clicking the stamp brings the media back to the state when the stamp was created.
+- **Left pane** displays media. Currently supported media components are YouYube player, audio recorder, audio player, and PDF reader.
+- **Right pane** displays a rich text editor. Press `<enter>` to insert a stamp at the start of a line. Clicking a particular stamp brings state the media back to when the stamp was inserted (e.g. timestamp for audio/video media and page number for pdf media).
 
 # Motivation
 - To build a tool that facilitates note taking and transcribing university lectures.
-- To provide a framework for extending the application to synchronize with custom media components.
-- To contribute to open source.
-
-The latest commits have made it easier to implement custom media components. For example, if your university hosts videos on a video platform other than youtube, you can implement a media component that works with their platform and integrate it into the app.
+- To contruct an intuitive framework should you want to extend the application with your own custom media components. For example, if your university hosts lecture videos on a platform other than YouTube, you are able to implement and integrate a compatible custom component.
+- To contribute to the open source software community.
 
 # Goals 
 - Features that do not necessitate an internet connection should work even when the device is offline.
-- The framework for adding custom media components should balance simplicity and customizability.
-- Core features must be accessible i.e. users should neither be required to install software nor create an account to use the app.
+- The framework for implementing custom media components should balance simplicity and customizability.
+- Core features must be accessible without having to register an account.
 
-# Implementation details
-
+# Implementation
 ## Stack
 React, Slate, React-PDF.
 
 ## Custom text editor
-The app uses a custom rich text editor I built using [Slate](https://docs.slatejs.org/). It can support clickable timestamps next to text, but it's pretty basic right now. Ability to add lists (with bullets and timestamps) is currently under development. I'd like to implement collaborative editing at some point.
+The application uses a custom rich text editor I built using [Slate](https://docs.slatejs.org/). It can support clickable timestamps alongside text.
 
-## Timestamp algorithm for audio recorder ##
-The Media Recorder API does not have a query to capture a timestamp while recording, so
+Eventually I want the editor to support:
+- Header blocks
+- Code blocks with syntax highlighting
+- Collaborative editing (will require account registration)
+
+## Timestamp algorithm for the audio recorder ##
+The MediaStream Recording API I used to implement the recorder does not allow users to query the current time while recording. To circumvent this, 
 I implemented a dynamic programming algorithm to compute the timestamp in O(1). See more details in [timestamp](https://github.com/fortyoneplustwo/timestamp)
 repository (an early version of notestamp).
 
-# How to integrate a custom media component?
-Just write your React component the way you want it to display in the left pane with the addition of a `controller` through which the main app will communicate with your custom component.
+### Algorithm
+  - Keep track of 2 variables `dateWhenRecLastActive` and `dateWhenRecLastInactive`. Update them whenever the audio recorder is active (started/resumed) & inactive (paused/stopped).
+  - Update the audio recording's duration, `recDuration`, each time the recorder goes inactive.
+  - Mark the date, `dateNoteTaken`, whenever the user starts typing a note in the editor. The timestamp can be computed using the following computation:
 
-## Controller
-Implement a `controller` within your component like so:
-```
-const MyCustomMediaComponent React.forwardRef((props, ref) => {
+  ```javascript
+   if dateWhenRecLastActive > dateWhenRecLastInactive then
+    timestamp = recDuration + (dateNoteTaken - dateWhenRecLastInactive)
+   else 
+    timestamp = recDuration
+   ```
+
+# How to integrate your custom media component?
+- Build your custom media component as a React component with a `forward ref`.
+- Within your component, implement a `controller` object and point the `ref` to it. This `controller` enables the application to communicate with your comopnent for synchronizing with notes.
+
+## Step 1
+### Custom media component example
+
+```javascript
+const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 
   useEffect(() => {
-    // Parent component can use this controller using ref
     const controller = {
-      getState: function (data = null) {
-        // return current media state to be stored inside the a new stamp
+      getState: function (dateStampRequested) {
+        // Return current media state to be stored inside the a new stamp here
       },
       setState: function (newState) {
-        // update media state to newState
+        // Update the media element within your component to newState here
       }
     } 
-    ref.current = controller // point ref to controller
+    ref.current = controller
   }, [ref])
 ```
-`getState(optionalArgument)`: Returns the state of your component that you want to store inside a stamp e.g. `currentTime` of youtube video.
+`getState(dateStampRequested)`: Called by the application when the user wants to insert a stamp. It should return the media state that you would like to store inside the stamp e.g. `currentTime` of youtube video. `dateStampRequested` is a `Date` object which you may or may not need.
 
-`setState(stampValue)`: Sets the state of your component to `stampValue`.
+`setState(stampValue)`: Called by the application when a user clicks a stamp. This method should set the state of your media to `stampValue`. `stampValue` is extracted from the stamp that was clicked and its type will be the same as that which was returned by `getState`.
 
-*Note: your component must pass a forward ref that points to the controller.*
+## Step 2
+### Add your component to Media.js
+Add your custom component to the list of children of the `Media` component. This essentially makes the app aware of your custom component.
 
-## Media Renderer
-Add your custom component as a child of the `MediaRenderer` component. This essentially makes the app aware of your custom component.
-
-```
+```javascript
 const Media = React.forwardRef(({ type=null, src=null, onClose}, ref) => {
   const controller = useRef(null)
   
@@ -79,7 +93,8 @@ const Media = React.forwardRef(({ type=null, src=null, onClose}, ref) => {
 ```
 Replace `my_custom_type` with a unique identifier for your component and `MyCustomComponent` with the name of your component.
 
-## Set stamp data
+## Step 3
+### Set stamp data
 In this step you will implement a return value for `setStampData(dateStampRequested)` in `App`. This is where you call the `getState()` method on your controller. Its pointer is stored in `mediaRef`.
 
 Your stamps can now hold your custom component's state, but you have to tell the app what to actually display within the stamp itself by setting a `label`. For youtube videos, the stamp `value` holds the number of seconds, but the `label` holds the value formatted to `hh:mm`.
@@ -100,15 +115,16 @@ const setStampData = (dateStampDataRequested) => {
 }
 ```
 
-## Fire the event to render your component
-Example: add a button to the navigation bar in `App` with the following on click handler:
+##Step 4
+### Fire the event to render your component
+Example: adding a button to the navigation bar within `App.js`
 
 ```
 const handleOnCClick = () => {
   setReaderState({
       type: 'my_custom_type',
       src: 'my_custom_media_source' // required if you want your component to launch with a src input
-                                    // e.g. a youtube link
+                                    // e.g. a link
   })
   setShowMedia(true)
 }
