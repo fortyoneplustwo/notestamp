@@ -100,7 +100,7 @@ In this step you will implement a return value for `setStampData(dateStampReques
 
 Your stamps can now hold your custom component's state, but you have to tell the app what to actually display within the stamp itself by setting a `label`. For youtube videos, the stamp `value` holds the number of seconds, but the `label` holds the value formatted to `hh:mm`.
 
-```
+```javascript
 const setStampData = (dateStampDataRequested) => { 
     if (mediaRef.current) { // make sure the media ref is actually available  
       if (readerState.type === 'my_custom_type') {
@@ -116,11 +116,11 @@ const setStampData = (dateStampDataRequested) => {
 }
 ```
 
-##Step 4
+## Step 4
 ### Fire the event to render your component
 Example: adding a button to the navigation bar within `App.js`
 
-```
+``` javascript
 const handleOnCClick = () => {
   setReaderState({
       type: 'my_custom_type',
