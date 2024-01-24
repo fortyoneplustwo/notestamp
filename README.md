@@ -37,10 +37,11 @@ repository (an early version of notestamp).
   - Mark the date, `dateNoteTaken`, whenever the user starts typing a note in the editor. The timestamp can be computed using the following computation:
 
   ```javascript
-   if dateWhenRecLastActive > dateWhenRecLastInactive then
+   if (dateWhenRecLastActive > dateWhenRecLastInactive) {
     timestamp = recDuration + (dateNoteTaken - dateWhenRecLastInactive)
-   else 
+  } else {
     timestamp = recDuration
+  }
    ```
 
 # How to integrate your custom media component?
