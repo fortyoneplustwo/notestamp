@@ -26,7 +26,7 @@ Eventually I want the editor to support:
 - Code blocks with syntax highlighting
 - Collaborative editing (will require account registration)
 
-## Timestamp algorithm for the audio recorder ##
+## Dynamic algorithm for the audio recorder 
 The MediaStream Recording API I used to implement the recorder does not allow users to query the current time while recording. To circumvent this, 
 I implemented a dynamic programming algorithm to compute the timestamp in O(1). See more details in [timestamp](https://github.com/fortyoneplustwo/timestamp)
 repository (an early version of notestamp).
