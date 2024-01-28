@@ -46,7 +46,7 @@ repository (an early version of notestamp).
 
 # How to integrate your custom media component?
 - Build your custom media component as a React component with a `forward ref`.
-- Within your component, implement a `controller` object and point the `ref` to it. This `controller` enables the application to communicate with your comopnent for synchronizing with notes.
+- Within your component, implement a `controller` object and point the `ref` to it. This `controller` enables the application to communicate with your component for synchronizing with notes.
 
 ## Step 1
 ### Custom media component example
@@ -66,9 +66,9 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
     ref.current = controller
   }, [ref])
 ```
-`getState(dateStampRequested)`: Called by the application when the user wants to insert a stamp. It should return the media state that you would like to store inside the stamp e.g. `currentTime` of youtube video. `dateStampRequested` is a `Date` object which you may or may not need.
+- `getState(dateStampRequested)`: Called by the application when the user wants to insert a stamp. It should return the media state that you would like to store inside the stamp e.g. `currentTime` of youtube video. `dateStampRequested` is a `Date` object which you may or may not need.
 
-`setState(stampValue)`: Called by the application when a user clicks a stamp. This method should set the state of your media to `stampValue`. `stampValue` is extracted from the stamp that was clicked and its type will be the same as that which was returned by `getState`.
+- `setState(stampValue)`: Called by the application when a user clicks a stamp. This method should set the state of your media to `stampValue`. `stampValue` is extracted from the stamp that was clicked and its type will be the same as that which was returned by `getState`.
 
 ## Step 2
 ### Add your component to Media.js
