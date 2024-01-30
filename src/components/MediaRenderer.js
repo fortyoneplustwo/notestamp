@@ -2,12 +2,11 @@ import React, {useEffect, useRef} from 'react'
 import AudioPlayer from './AudioPlayer'
 import PdfReader from './PdfReader'
 import YoutubePlayer from './YoutubePlayer'
-import BackButton from './BackButton'
 import AudioRecorder from './AudioRecorder'
 import '../MediaComponent.css'
 import '../Button.css'
 
-const Media = React.forwardRef(({ type=null, src=null, onClose}, ref) => {
+const MediaRenderer = React.forwardRef(({ type=null, src=null}, ref) => {
   const controller = useRef(null)
   
   useEffect(() => {
@@ -16,9 +15,6 @@ const Media = React.forwardRef(({ type=null, src=null, onClose}, ref) => {
 
   return (
     <div className='media-component-container'>
-      <div className='back-btn-container'>
-        <BackButton handler={onClose} />
-      </div>
       {type === 'youtube' && <YoutubePlayer ref={controller} src={src} />}
       {type === 'audio' && <AudioPlayer ref={controller} src={src} />}
       {type === 'pdf' && <PdfReader ref={controller} src={src} />}
@@ -27,4 +23,4 @@ const Media = React.forwardRef(({ type=null, src=null, onClose}, ref) => {
   )
 })
 
-export default Media
+export default MediaRenderer

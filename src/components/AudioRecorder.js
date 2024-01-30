@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { EventEmitter } from './EventEmitter.js'
-import BackButton from './BackButton.js'
 import '../MediaComponent.css'
-import '../AudioRecorder.css'
+import '../Background.css'
+import { Icon } from './Toolbar.js'
 
 // Variables needed to calculate timestamp
 // Defined outside of component to prevent reset on re-renders
@@ -18,6 +18,8 @@ const AudioRecorder = React.forwardRef((props, ref) => {
   const stopButtonRef = useRef(null)
 
   const [recordButtonText, setRecordButtonText] = useState('Record')
+  const [recordButtonIcon, setRecordButtonIcon] = useState('radio_button_checked')
+  const [recordButtonClassName, setRecordButtonClassname] = useState('')
   const [stopButtonDisabled, setStopButtonDisabled] = useState(true)
   const [showRecControls, setShowRecControls] = useState(true)
 
@@ -104,12 +106,15 @@ const AudioRecorder = React.forwardRef((props, ref) => {
       mediaRecorder.current.start()
       setStopButtonDisabled(false)
       setRecordButtonText('Pause')
+      setRecordButtonClassname('blink')
     } else if (mediaRecorder.current.state === 'recording') {
       mediaRecorder.current.pause()
       setRecordButtonText('Resume')
+      setRecordButtonClassname('')
     } else {
       mediaRecorder.current.resume()
       setRecordButtonText('Pause')
+      setRecordButtonClassname('blink')
     }
   }
 
@@ -123,9 +128,43 @@ const AudioRecorder = React.forwardRef((props, ref) => {
   ////////////////////////////////
 
   return (
-      <div className='audio-rec-btn-container'>
-        {showRecControls && <button className='recorder-btn' ref={recordButtonRef} onClick={toggleRecord}>{recordButtonText}</button>}
-        {showRecControls && <button ref={stopButtonRef} className='recorder-btn recorder-stop-btn' style={{ background: 'lightgray'}} disabled={stopButtonDisabled} onClick={toggleStop}>Stop</button>}
+      <div className='grid-background'
+        style={{ display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          flexGrow: '1',
+          gap: '0.5em'
+      }}>
+        {showRecControls 
+          && <button className='recorder-btn' 
+                ref={recordButtonRef} 
+                onClick={toggleRecord}
+              >
+              <Icon className={recordButtonClassName}>{recordButtonIcon}</Icon>
+              <span style={{ display: 'inline-flex',
+                justifyContent: 'center',
+                width: '5em' 
+              }}>
+                {recordButtonText}
+              </span>
+          </button>
+        }
+        {showRecControls 
+          && <button ref={stopButtonRef} 
+                className='recorder-btn' 
+                style={{ background: 'gray' }}
+                disabled={stopButtonDisabled} 
+                onClick={toggleStop}
+              >
+              <Icon>stop_circle</Icon>
+              <span style={{ display: 'inline-flex',
+                justifyContent: 'center',
+                width: '5em' 
+              }}>
+                Stop
+              </span>
+          </button>
+        }
       </div>
   )
 })

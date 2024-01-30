@@ -2,8 +2,8 @@ import React from 'react'
 
 const WelcomeMessage = () => {
   return (
-    <div style={{ display: 'flex', flexGrow: '1', overflow: 'scroll', justifyContent: 'center', alignItems: 'center' }}>
-      <div style={{ overflow: 'scroll', textJustify: 'inter-word', width: '80%' }}>
+    <div style={{ display: 'flex', flexGrow: '1', overflow: 'scroll', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+      <div style={{ textJustify: 'inter-word', width: '80%', color: 'black' }}>
         <p style={{ whiteSpace: 'pre-wrap' }}>
           Welcome to <strong>notestamp</strong>, a web app that synchronizes your notes to media.
         </p>
@@ -11,11 +11,11 @@ const WelcomeMessage = () => {
         <p style={{ whiteSpace: 'pre-wrap' }}>Instructions:</p>
         <ul>
           <li>When recording or viewing media, press <code>&lt;enter&gt;</code> to insert a stamp.</li>
-          <li>Press <code>&lt;shift + enter&gt;</code> to avoid stamping.</li>
+          <li>Press <code>&lt;shift + enter&gt;</code> to escape stamping.</li>
           <li>Click a stamp and instantly seek the media to the stamp value.</li>
           <li>Your notes persist across page reloads unless you clear the browser cache.</li>
           <li>Save your project as a .stmp file, stamps included.</li>
-          <li>Export your notes to a .pdf file, stamps excluded.</li>
+          <li>Export your notes to a .pdf file, stamps excluded (temporarily disabled to fix bugs).</li>
           <li>Open your project back into the editor for further editing.</li>
         </ul>
         <br></br>
@@ -27,7 +27,9 @@ const WelcomeMessage = () => {
         <p style={{ whiteSpace: 'pre-wrap' }}>
           Features in development:
           <ul>
-            <li>Cloud storage (subscription based plan)</li>
+            <li>Cloud storage</li>
+            <li>Collaborative editing</li>
+            <li>Dark Mode</li>
           </ul>
         </p>
       </div>
