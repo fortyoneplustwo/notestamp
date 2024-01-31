@@ -7,7 +7,7 @@ A single page React application for desktop that synchronizes your notes to medi
 # Motivation
 - To build a tool that facilitates note taking and transcribing university lectures.
 - To contruct an intuitive framework should you want to extend the application with your own custom media components. For example, if your university hosts lecture videos on a platform other than YouTube, you are able to implement and integrate a compatible custom component.
-- To contribute to the open source software community.
+- To contribute to open source software.
 
 # Goals 
 - Features that do not necessitate an internet connection should work even when the device is offline.
@@ -117,19 +117,18 @@ const setStampData = (dateStampDataRequested) => {
 ```
 
 ## Step 4
-### Fire the event to render your component
-Example: adding a button to the navigation bar within `App.js`
+### Add a shortcut for your media component in the navigation bar
+Find the `mediaShortcuts` array in `App.js` and add a new object that describes your component.
 
 ``` javascript
-const handleOnCClick = () => {
-  setReaderState({
-      type: 'my_custom_type',
-      src: 'my_custom_media_source' // required if you want your component to launch with a src input
-                                    // e.g. a link
-  })
-  setShowMedia(true)
-}
+const mediaShortcuts = [
+  // ...default shotcuts,
+  { label: 'shotcut_name', type: 'unique_identifier', src: 'media_initial_source' }
+]
 ```
+- `label`: Required field. It represents the text that will show in the navigation menu.
+- `type`: The unique identifier for your component. It's the same one that used in `MediaRenderer.js`
+- `src`: If your component opens with a default initial media value, this field provides the source e.g. a link. Otherwise, the value should be an empty string.
 
 # Install
 `npm install`
