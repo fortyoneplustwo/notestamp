@@ -10,12 +10,14 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 const PdfReader = React.forwardRef((_, ref) => {
   const [source, setSource] = useState(null)
-  const [pageNumber, setPageNumber] = useState(1)
+  const [pageNumber, setPageNumber] = useState(null)
   const pageNumberRef = useRef(null)
   const [pageScale, setPageScale] = useState(1)
 
 
   useEffect(() => { pageNumberRef.current = pageNumber }, [pageNumber])
+
+  useEffect(() => { source ? setPageNumber(1) : setPageNumber(null) }, [source])
 
   ////////////////////////////////
   /// Initialize controller //////
