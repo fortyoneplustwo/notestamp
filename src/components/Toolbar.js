@@ -65,10 +65,10 @@ export const Button = React.forwardRef(
           cursor: pointer;
           color: ${reversed
             ? active
-              ? 'white'
+              ? 'orangered'
               : '#aaa'
             : active
-            ? 'black'
+            ? 'orangered'
             : '#ccc'};
         `
       )}
@@ -88,7 +88,8 @@ export const Toolbar = React.forwardRef(
         className,
         css`
           position: relative;
-          padding: 1px 1px 17px 1px;
+          /* padding: 1px 1px 17px 1px; */
+          padding: 1px;
           width: 100%;
           /* margin: 0 -20px; */
           /* border-bottom: 2px solid #eee; */

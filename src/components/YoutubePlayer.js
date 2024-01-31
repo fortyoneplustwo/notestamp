@@ -2,6 +2,9 @@ import React, { useRef, useState, useEffect } from 'react';
 import '../MediaComponent.css'
 import '../YoutubePlayer.css'
 import '../Button.css'
+import '../Background.css'
+import { Icon } from './Toolbar';
+import { WithToolbar, Toolbar } from './MediaComponents'
 
 const YoutubePlayer = React.forwardRef(({ src }, ref) => {
   let playerInstanceRef = useRef(null)
@@ -27,14 +30,13 @@ const YoutubePlayer = React.forwardRef(({ src }, ref) => {
       }
     } 
     ref.current = controller
-  }, [ref])
+  }, [youtubeUrl, ref])
 
   ////////////////////////////////
   /// Initialize youtube player //
   ////////////////////////////////
 
   useEffect(() => {
-    console.log('src = ', src)
     setYoutubeUrl(src)
   }, [src])
 
@@ -60,7 +62,6 @@ const YoutubePlayer = React.forwardRef(({ src }, ref) => {
   function onPlayerReady(event) {
     // Player is ready to be controlled
     // You can use 'event.target' to access the player object
-    // Pass player object as a ref so it can be controlled by the parent
     currentVideoRef.current = event.target
   }
 
@@ -96,20 +97,31 @@ const YoutubePlayer = React.forwardRef(({ src }, ref) => {
   ////////////////////////////////
 
   return (
-      <div className='youtube-media-container'>
-        <div className='form-container'>
-          <form onSubmit={handleSubmitUrl} className='form'>
+      <WithToolbar>
+        <Toolbar style={{ display: 'flex', justifyContent: 'center' }}>
+          <form onSubmit={handleSubmitUrl}>
             <input
               type="text"
               name="inputField"
               placeholder="Enter YouTube link"
-              className='form-input'
+              style={{ width: '400px' }}
             />
-            <button type="submit" className='searchbar-submit-btn'>Play</button>
+            <button type='submit' style={{ marginLeft: '3px' }}>
+              Play
+            </button>
           </form>
+        </Toolbar>
+        <div 
+          className='grid-background' 
+          style={{
+            display: 'flex',
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            flex: '1' 
+          }}>
+          <div id="youtube-player"></div>
         </div>
-        <div id="youtube-player"></div>
-      </div>
+      </WithToolbar>
   )
 })
 

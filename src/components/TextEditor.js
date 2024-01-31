@@ -189,7 +189,7 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
         }
       }}
     >
-      <div className='editor-container'>
+      <div className='text-editor-container'>
         <Modal ref={fileUploadModalRef}>
           <form onChange={e => { handleOpenFile(e.target.files[0]) }}>
             <input type='file' accept='.stmp' />
@@ -206,9 +206,8 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
             <div className='toolbar-btn-separator'></div>
             <ActionButton action='upload' icon="folder_open" description="Open .stmp file" 
               onClick={() => { fileUploadModalRef.current.showModal() }} />
-            <ActionButton action='copy' icon="content_copy" description="Copy all text to clipboard" />
             <ActionButton action='download' icon="download" description="Download project file (.stmp)" />
-            <ActionButton action='pdf' icon="picture_as_pdf" description="Export to PDF document" />
+            {/*<ActionButton action='pdf' icon="picture_as_pdf" description="Download as .pdf document" />*/}
             {user && <ActionButton action='save' icon="save" description="Save changes"
               onClick={onSave}/>}
           </div>
@@ -359,6 +358,12 @@ const toHtml = node => {
       return `<p>${children}</p>`
     case 'link':
       return `<a href="${escapeHtml(node.url)}">${children}</a>`
+    case 'bulleted-list':
+      return `<ul>${children}</ul>`
+    case 'numbered-list':
+      return `<ol>${children}</ol>`
+    case 'list-item':
+      return `<li><p>${children}</p></li>`
     default:
       return children
   }
@@ -415,18 +420,18 @@ const toggleAction = (editor, action) => {
     navigator.clipboard.writeText(textContent)
   }
   else if (action === 'pdf') {
-    const result = toHtml(editor)
+    const editorContent = toHtml(editor)
+    console.log(editorContent)
     // Default export is a4 paper, portrait, using millimeters for units
     const doc = new jsPDF();
-    doc.html(result, {
+    doc.html(editorContent, {
       callback: function(doc) {
-          // Save the PDF
           doc.save('document.pdf');
       },
-      x: 15,
-      y: 15,
-      width: 170, //target width in the PDF document
-      windowWidth: 650, //window width in CSS pixels
+      // x: 15,
+      // y: 15,
+      // width: 170, //target width in the PDF document
+      // windowWidth: 650, //window width in CSS pixels
     })
   }
 }

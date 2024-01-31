@@ -1,7 +1,8 @@
-.editor-container {
+.text-editor-container {
   display: flex;
   flex-direction: column;
-  width: 100%;
+  /* display: grid; */
+  /* grid-template-rows: 50px 1fr; */
   height: 100%;
 }
 
@@ -10,6 +11,7 @@
   display: flex !important;
   flex-direction: row !important;
   gap: 30px !important;
+  padding: 10px;
 }
 
 .toolbar-btn-separator {
@@ -18,28 +20,22 @@
 }
 
 .editor { 
-  /* font-family: Times New Roman, monospace ,serif; */
-  font-family: Outfit;
   tab-size: 2;
-  /* font-weight: 300; */
   background: white;
-  outline: none;
+  outline: 1px solid lightgray;
   color: black;
-  width: 99%; /* < 100% to allow room for scrollbar */
+  width: 99%; /* Should be < 100% to allow some room to show the scrollbar */
   height: 100%;
   padding: 5px;
-  /* scroll: auto; */
-  align-self: center;
   overflow: auto;
-  box-shadow: rgba(17, 17, 26, 0.05) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 0px 8px;
-  overflow-x: hidden;
+  overflow-x: hidden; /* Force disable horizontal scrollbar */
 }
 
 .badge {
   font-family: Helvetica;
   font-weight: bold;
   background-color: transparent;
-  color: tomato;
+  color: orangered;
   text-align: center;
   padding-right: 1em; /* used to be 10px */
   padding-top: 0;

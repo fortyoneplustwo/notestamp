@@ -4,5 +4,9 @@
   --header-bg-color: #1D2021;
   --main-accent-color: #e1a400;
   --sub-accent-color: 'lightgray';
-  color-scheme: dark;
+  /* color-scheme: dark; */
+}
+
+::selection {
+  background: orangered;
 }

@@ -1,15 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { WithToolbar, Toolbar } from './MediaComponents'
 import '../MediaComponent.css'
-import '../AudioPlayer.css'
+import '../Background.css'
 
 const AudioPlayer = React.forwardRef((props, ref) => {
   const { src } = props
   const playerRef = useRef(null)
-  
-  const handleOpenAudioFile = file => {
-    console.log(file)
-    playerRef.current.src = window.URL.createObjectURL(file)
-  }
 
   ////////////////////////////////
   /// Initialize controller //////
@@ -39,16 +35,22 @@ const AudioPlayer = React.forwardRef((props, ref) => {
   }, [src])
 
   return (
-      <div className='audio-media-container' >
-        <div className='back-btn-container'>
-          {!src && 
-            <form onChange={ e => playerRef.current.src = window.URL.createObjectURL(e.target.files[0]) }>
+      <WithToolbar>
+        { !src
+          && <Toolbar>
+            <form style={{ color: 'black' }} onChange={ e => {
+              playerRef.current.src = window.URL.createObjectURL(e.target.files[0])
+            }}>
               <input type='file' accept='audio/*' />
             </form>
-          }
+          </Toolbar>
+        }
+        <div 
+          className='grid-background' 
+          style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: '1' }}>
+          <audio style={{ colorScheme: 'dark' }} controls ref={playerRef} />
         </div>
-        <audio controls ref={playerRef} />
-      </div>
+      </WithToolbar>
   )
 })
 
