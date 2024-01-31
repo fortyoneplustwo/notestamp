@@ -128,7 +128,7 @@ const mediaShortcuts = [
 ```
 - `label`: Required field. It represents the text that will show in the navigation menu.
 - `type`: The unique identifier for your component. It's the same one that used in `MediaRenderer.js`
-- `src`: If your component opens with a default initial media value, this field provides the source e.g. a link. Otherwise, the value should be an empty string.
+- `src`: If your component opens with some default initial media, this field provides the source e.g. a link. Otherwise, the value should be an empty string.
 
 # Install
 `npm install`
