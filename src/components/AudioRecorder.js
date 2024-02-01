@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { EventEmitter } from './EventEmitter.js'
-import '../MediaComponent.css'
 import '../Background.css'
 import { Icon } from './Toolbar.js'
+import { formatTime } from '../modules/formatTime.js'
 
 // Variables needed to calculate timestamp
 // Defined outside of component to prevent reset on re-renders
@@ -10,7 +10,7 @@ let dateWhenRecLastActive = new Date()
 let dateWhenRecLastInactive = dateWhenRecLastActive
 let recDuration = 0
 
-const AudioRecorder = React.forwardRef((props, ref) => {
+const AudioRecorder = React.forwardRef((_, ref) => {
   const mediaRecorder = useRef(null)
   const chunks = useRef(null)
 
@@ -18,7 +18,6 @@ const AudioRecorder = React.forwardRef((props, ref) => {
   const stopButtonRef = useRef(null)
 
   const [recordButtonText, setRecordButtonText] = useState('Record')
-  const [recordButtonIcon, setRecordButtonIcon] = useState('radio_button_checked')
   const [recordButtonClassName, setRecordButtonClassname] = useState('')
   const [stopButtonDisabled, setStopButtonDisabled] = useState(true)
   const [showRecControls, setShowRecControls] = useState(true)
@@ -40,7 +39,10 @@ const AudioRecorder = React.forwardRef((props, ref) => {
           timestamp = recDuration
         }
         timestamp = Math.floor(timestamp / 1000)
-        return timestamp
+        return {
+          label: formatTime(timestamp),
+          value: timestamp ? timestamp : null
+        }
       },
       setState: function (_) {}
     } 
@@ -66,7 +68,7 @@ const AudioRecorder = React.forwardRef((props, ref) => {
           // handle ondataavailable event
           mediaRecorder.current.ondataavailable = (e) => {
             chunks.current.push(e.data)
-          }
+         }
           // handle onresume event
           mediaRecorder.current.onresume = () => {
             dateWhenRecLastActive = new Date()
@@ -132,7 +134,7 @@ const AudioRecorder = React.forwardRef((props, ref) => {
         style={{ display: 'flex', 
           justifyContent: 'center', 
           alignItems: 'center', 
-          flexGrow: '1',
+          height: '100%',
           gap: '0.5em'
       }}>
         {showRecControls 
@@ -140,7 +142,7 @@ const AudioRecorder = React.forwardRef((props, ref) => {
                 ref={recordButtonRef} 
                 onClick={toggleRecord}
               >
-              <Icon className={recordButtonClassName}>{recordButtonIcon}</Icon>
+              <Icon className={recordButtonClassName}>radio_button_checked</Icon>
               <span style={{ display: 'inline-flex',
                 justifyContent: 'center',
                 width: '5em' 

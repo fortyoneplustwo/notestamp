@@ -31,14 +31,14 @@ const App = () => {
   const [showLogoutButton, setShowLogoutButton] = useState(false)
   const saveModalRef = useRef(null)
 
+  // Non-user-specific state variables
   const [showMedia, setShowMedia] = useState(null)
   const [mediaState, setMediaState] = useState(null)
-
   const mediaShortcuts = [
-    { label: 'YouTube Player', type: 'youtube', src: '' },
-    { label: 'Audio Player', type: 'audio', src: '' },
-    { label: 'Sound Recorder', type: 'recorder', src: '' },
-    { label: 'PDF Reader', type: 'pdf', src: '' }
+    { label: 'YouTube Player', type: 'youtube', path: './YoutubePlayer.js' },
+    { label: 'Audio Player', type: 'audio', path: './AudioPlayer.js' },
+    { label: 'Sound Recorder', type: 'recorder', path: './AudioRecorder.js' },
+    { label: 'PDF Reader', type: 'pdf', path: './PdfReader.js' }
   ]
 
 
@@ -158,8 +158,8 @@ const App = () => {
     setShowMedia(false)
   }
 
-  const openMedia = (label, type, src) => {
-    setMediaState({ label: label, type: type, src: src })
+  const openMedia = (label, type, src, path) => {
+    setMediaState({ label: label, type: type, src: src, path: path })
     setShowMedia(true)
   }
 
@@ -168,6 +168,10 @@ const App = () => {
     setMediaState({
       label: 'Audio Player',
       type: 'audio',
+      path: './AudioPlayer',
+      // src field is unique to this scenario
+      // because we want to load the Audio Player
+      // with the recording from the Sound Recorder
       src: data
     })
     setShowMedia(true)
@@ -179,42 +183,18 @@ const App = () => {
     if (mediaRef.current) mediaRef.current.setState(stampValue)
   })
 
-  // Return value must be an object with keys
+  // Return value must be an object
   // {
   //    label: String or null       String rendered inside of the stamp
   //    value: Any or Null          Actual stamp value
   // }
-  const setStampData = (dateStampDataRequested) => { 
+  const getStampDataFromMedia = (dateStampDataRequested) => { 
     if (mediaRef.current) { // make sure the media ref is actually available
-      if (mediaState.type === 'audio') {
-        const currentTime = mediaRef.current.getState()
-        return { label: formatTime(currentTime), value: currentTime ? currentTime : null }
-      } else if (mediaState.type === 'recorder') {
-        const currentTime = mediaRef.current.getState(dateStampDataRequested)
-        return { label: formatTime(currentTime), value: currentTime ? currentTime : null }    
-      } else if (mediaState.type === 'pdf') {
-        const currentPage = mediaRef.current.getState()
-        return { label: currentPage ? 'p. ' + currentPage : null, value: currentPage}
-      } else if (mediaState.type === 'youtube') {
-        const currentTime = mediaRef.current.getState().value
-        return { label: formatTime(currentTime), value: currentTime ? currentTime : null }    
-      } else {
-        return { label: null, value: null }
-      }
+      const stampData = mediaRef.current.getState(dateStampDataRequested)
+      return stampData ? stampData : { label: null, value: null }
     } else {
       return { label: null, value: null }
     }
-  }
-
-  // format time to MM:SS
-  function formatTime(seconds) {
-    if (!seconds) return null
-    seconds = Math.round(seconds)
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    const formattedTime =
-      `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
-    return formattedTime
   }
   
   ////////////////////////////////
@@ -281,7 +261,7 @@ const App = () => {
           <div className='editor-container'>
             <TextEditor 
               user={user}
-              onRequestStampData={setStampData} 
+              onRequestStampData={getStampDataFromMedia} 
               onSave={handleCaptureReaderState}
               content={project?project.content:null} />
           </div>

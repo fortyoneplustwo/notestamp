@@ -28,14 +28,20 @@ const PdfReader = React.forwardRef((_, ref) => {
       getState: function () {
         // NOTE: Closures always return the initial value of a state variable.
         // Returning the ref ensures we grab the current state.
-        return pageNumberRef.current
+        if (source && pageNumberRef.current) {
+          const pageNum = pageNumberRef.current
+          return {
+            label: pageNum ? `p. ${pageNum}` : null,
+            value: pageNum ? pageNum : null
+          } 
+        }
       },
       setState: function (newState) {
         setPageNumber(newState)
       }
     } 
     ref.current = controller
-  }, [pageNumber, ref])
+  }, [pageNumber, source, ref])
 
 
   return (

@@ -6,7 +6,7 @@ const Nav = ({ items, onClick }) => {
     <nav style={{ padding: '2px 10px 2px 10px' }}>
       <ul style={{ margin: '0', padding: '0', justifySelf: 'center' }}>
         {items.map((item, index) => {
-          return <MediaShortcut key={index} type={item.type} src={item.src} onClick={onClick}>
+          return <MediaShortcut key={index} onClick={onClick} {...item} >
             { item.label }
           </MediaShortcut>
         })}

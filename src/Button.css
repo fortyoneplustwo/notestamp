@@ -1,20 +1,8 @@
 @import './GlobalStyles.css';
 
-.media-option-btn {
-  background: var(--main-accent-color);
-  color: black;
-  width: 12em;
-  border: none;
-  border-radius: 0.5em;
-  padding: 0.5em;
-  font-weight: bold;
-  cursor: pointer;
-}
-
 .nav-btn {
   background: transparent;
   font-family: Mosk, sans-serif;
-  /* color: var(--main-accent-color); */
   color: white;
   border: 0;
   margin-right: 2em;
@@ -27,20 +15,9 @@
   text-decoration: underline;
 }
 
-.searchbar-submit-btn {
-  background: var(--main-accent-color);
-  color: black;
-  width: fit-content;
-  border: none;
-  padding: 0 1.5em 0 1.5em;
-  font-weight: bold;
-  cursor: pointer;
-}
-
 .recorder-btn {
   background: orangered;
   color: white;
-  /* width: 7em; */
   border: none;
   border-radius: 0.5em;
   padding: 0.5em;

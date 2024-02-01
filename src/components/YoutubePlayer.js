@@ -1,10 +1,7 @@
-import React, { useRef, useState, useEffect } from 'react';
-import '../MediaComponent.css'
-import '../YoutubePlayer.css'
-import '../Button.css'
+import React, { useRef, useState, useEffect } from 'react'
 import '../Background.css'
-import { Icon } from './Toolbar';
 import { WithToolbar, Toolbar } from './MediaComponents'
+import { formatTime } from '../modules/formatTime'
 
 const YoutubePlayer = React.forwardRef(({ src }, ref) => {
   let playerInstanceRef = useRef(null)
@@ -19,10 +16,14 @@ const YoutubePlayer = React.forwardRef(({ src }, ref) => {
   // Parent component can use this controller using ref
     const controller = {
       getState: function (_) {
-        return {
-          value: currentVideoRef.current ? currentVideoRef.current.getCurrentTime() : null,
-          type: 'youtube',
-          src: youtubeUrl
+        if (currentVideoRef.current) {
+          const currentTime = currentVideoRef.current.getCurrentTime()
+          return { 
+            label: formatTime(currentTime),
+            value: currentTime ? currentTime : null
+          }
+        } else {
+          return null
         }
       },
       setState: function (newState) {

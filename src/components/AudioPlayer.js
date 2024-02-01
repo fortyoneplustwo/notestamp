@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { WithToolbar, Toolbar } from './MediaComponents'
-import '../MediaComponent.css'
 import '../Background.css'
+import { formatTime } from '../modules/formatTime'
 
 const AudioPlayer = React.forwardRef((props, ref) => {
   const { src } = props
@@ -14,8 +14,16 @@ const AudioPlayer = React.forwardRef((props, ref) => {
   useEffect(() => {
     // Parent component can use this controller using ref
     const controller = {
-      getState: function (data = null) {
-        return playerRef.current.currentTime
+      getState: function (_) {
+        if (playerRef.current) {
+          const currentTime = playerRef.current.currentTime
+          return { 
+            label: formatTime(currentTime),
+            value: currentTime ? currentTime : null 
+          }
+        } else {
+          return null
+        }
       },
       setState: function (newState) {
         playerRef.current.currentTime = newState
