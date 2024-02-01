@@ -101,29 +101,8 @@ const Media = React.forwardRef(({ type=null, src=null, onClose}, ref) => {
 ```
 Replace `my_custom_type` with a unique identifier for your component and `MyCustomComponent` with the name of your component.
 
+
 ## Step 3
-### Set stamp data
-In this step you will implement a return value for `setStampData(dateStampRequested)` in `App`. This is where you call the `getState()` method on your controller. Its pointer is stored in `mediaRef`.
-
-Your stamps can now hold your custom component's state, but you have to tell the app what to actually display within the stamp itself by setting a `label`. For youtube videos, the stamp `value` holds the number of seconds, but the `label` holds the value formatted to `hh:mm`.
-
-```javascript
-const setStampData = (dateStampDataRequested) => { 
-    if (mediaRef.current) { // make sure the media ref is actually available  
-      if (readerState.type === 'my_custom_type') {
-         const my_value = mediaRef.current.getState()
-         const my_label = // additional processing on value
-         return { label: my_label, value: my_value }
-      } else {
-        return { label: null, value: null }
-      }
-    } else {
-      return { label: null, value: null }
-    }
-}
-```
-
-## Step 4
 ### Add a shortcut for your media component in the navigation bar
 Find the `mediaShortcuts` array in `App.js` and add a new object that describes your component.
 
