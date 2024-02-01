@@ -94,6 +94,7 @@ const Media = React.forwardRef(({ type=null, src=null, onClose}, ref) => {
       <div className='back-btn-container'>
         <BackButton handler={onClose} />
       </div>
+      // Add your component here
       {type === 'my_custom_type' <MyCustomComponent ref={controller} src={src} />}
     </div>
   )
