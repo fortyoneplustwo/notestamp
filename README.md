@@ -49,7 +49,7 @@ repository (an early version of notestamp).
 - Within your component, implement a `controller` object and point the `ref` to it. This `controller` enables the application to communicate with your component for synchronizing with notes.
 
 ## Step 1
-### Custom media component example
+### Implement a controller in your component
 
 ```javascript
 const MyCustomMediaComponent = React.forwardRef((props, ref) => {
