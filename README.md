@@ -73,7 +73,7 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
   - `value` is the state of the media when the `getState()` method was called e.g. current time (in seconds) of the video media.
   - `label` is the string representation of `value` that will be displayed inside the stamp e.g. current time (in seconds) converted to a string in `hh:mm` format.
 
-  **Important:** If the either `getState()` or `value` evaluate to `null`, then the stamp insertion will be aborted. You may use this to your advantage to skip stamp insertion when certain conditions are met.
+  **Important:** If either `getState()` or `value` evaluate to `null`, then the stamp insertion will be aborted. You may use this to your advantage to skip stamp insertion when certain conditions are met.
   
 - `setState(stampValue)`: Called by the application when a user clicks a stamp. This method should set the state of your media to `stampValue`. `stampValue` is extracted from the stamp that was clicked and its type will be the same as that which was returned by `getState`.
 
