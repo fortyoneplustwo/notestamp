@@ -31,7 +31,7 @@ The MediaStream Recording API I used to implement the recorder does not allow us
 I implemented a dynamic programming algorithm to compute the timestamp in O(1). See more details in [timestamp](https://github.com/fortyoneplustwo/timestamp)
 repository (an early version of notestamp).
 
-### Algorithm
+### Algorithm details
   - Keep track of 2 variables `dateWhenRecLastActive` and `dateWhenRecLastInactive`. Update them whenever the audio recorder is active (started/resumed) & inactive (paused/stopped).
   - Update the audio recording's duration, `recDuration`, each time the recorder goes inactive.
   - Mark the date, `dateNoteTaken`, whenever the user starts typing a note in the editor. The timestamp can be computed using the following computation:
@@ -44,7 +44,7 @@ repository (an early version of notestamp).
   }
    ```
 
-# How to integrate your custom media component?
+# How to integrate your custom media component
 - Build your custom media component as a React component with a `forward ref`.
 - Within your component, implement a `controller` object and point the `ref` to it. This `controller` enables the application to communicate with your component for synchronizing with notes.
 
