@@ -66,6 +66,9 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
     } 
     ref.current = controller
   }, [ref])
+
+// Rest of the component logic goes here...
+}
 ```
 - `getState(dateStampRequested)`: Called by the application when the user wants to insert a stamp. It should return the media state that you would like to store inside the stamp e.g. `currentTime` of youtube video. `dateStampRequested` is a `Date` object which you may or may not need.
 
