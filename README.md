@@ -47,6 +47,7 @@ repository (an early version of notestamp).
 # How to integrate your custom media component
 - Build your custom media component as a React component with a `forward ref`.
 - Within your component, implement a `controller` object and point the `ref` to it. This `controller` enables the application to communicate with your component for synchronizing with notes.
+- Define your custom component in `NonCoreMediaComponents.js`.
 
 ## Step 1
 ### Implement a controller in your component
@@ -81,45 +82,22 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 - `setState(stampValue)`: Called by the application when a user clicks a stamp. This method should set the state of your media to `stampValue`. `stampValue` is extracted from the stamp that was clicked and its type will be the same as that which was returned by `getState`.
 
 ## Step 2
-### Add your component to Media.js
-Add your custom component to the list of children of the `Media` component. This essentially makes the app aware of your custom component.
+### Define your custom media component in `NonCoreMediaComponents.js`
+
+Add an object to the `myMediaComponents` array that describes your custom media component. The application will integrate it into its default components for you.
+
+The object must define the following keys:
+- `label`: The text to display as the shortcut to your component inside the navigation bar. Clicking on it will open your media component.
+- `path`: The path to your media component relative to the /src/components directory.
+- `type`: Pick a unique identifier for your component. It cannot take values: youtube, audio, recorder, pdf because these are already being used by the default media components.
+
+**Example**: Say you implement a custom component that plays videos from Vimeo.
 
 ```javascript
-const Media = React.forwardRef(({ type=null, src=null, onClose}, ref) => {
-  const controller = useRef(null)
-  
-  useEffect(() => {
-    ref.current = controller.current
-  }, [ref, type, src, controller])
-
-  return (
-    <div className='media-component-container'>
-      <div className='back-btn-container'>
-        <BackButton handler={onClose} />
-      </div>
-      // Add your component here
-      {type === 'my_custom_type' <MyCustomComponent ref={controller} src={src} />}
-    </div>
-  )
-})
-```
-Replace `my_custom_type` with a unique identifier for your component and `MyCustomComponent` with the name of your component.
-
-
-## Step 3
-### Add a shortcut for your media component in the navigation bar
-Find the `mediaShortcuts` array in `App.js` and add a new object that describes your component.
-
-``` javascript
-const mediaShortcuts = [
-  // ...default shotcuts,
-  { label: 'shotcut_name', type: 'unique_identifier', src: 'media_initial_source' }
+const myMediaComponents = [
+  { label: 'Vimeo Player', path: './VimeoPlayer', type: 'vimeo' }
 ]
 ```
-- `label`: Required field. It represents the text that will show in the navigation menu.
-- `type`: The unique identifier for your component. It's the same one that used in `MediaRenderer.js`
-- `src`: If your component opens with some default initial media, this field provides the source e.g. a link. Otherwise, the value should be an empty string.
-
 # Install
 `npm install`
 
