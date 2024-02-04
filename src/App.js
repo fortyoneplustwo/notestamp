@@ -1,6 +1,6 @@
 import './App.css'
 import TextEditor from './components/TextEditor.js'
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { EventEmitter } from './components/EventEmitter.js'
 import './Button.css'
 import WelcomeMessage from './components/WelcomeMessage'
@@ -11,12 +11,17 @@ import Modal from './components/Modal'
 import MediaRenderer from './components/MediaRenderer'
 import Nav from './components/Nav'
 import MediaTitleBar from './components/MediaTitleBar'
+import { myMediaComponents } from './components/NonCoreMediaComponents'
 
 const App = () => {
+
+  //////////////////////////
+  ///  State variables  ////
+  //////////////////////////
+
   const mediaRef = useRef(null)
 
-  // User session data. These can be updated only
-  // after a successful login
+  // User session data. Updated only after a successful login
   const [user, setUser] = useState(null)
   const [project, setProject] = useState({
     metadata: {
@@ -31,20 +36,28 @@ const App = () => {
   const [showLogoutButton, setShowLogoutButton] = useState(false)
   const saveModalRef = useRef(null)
 
-  // Non-user-specific state variables
+  // Non-user-specific variables
   const [showMedia, setShowMedia] = useState(null)
   const [mediaState, setMediaState] = useState(null)
-  const mediaShortcuts = [
+  const [mediaComponents, setMediaComponents] = useState([
     { label: 'YouTube Player', type: 'youtube', path: './YoutubePlayer.js' },
     { label: 'Audio Player', type: 'audio', path: './AudioPlayer.js' },
     { label: 'Sound Recorder', type: 'recorder', path: './AudioRecorder.js' },
     { label: 'PDF Reader', type: 'pdf', path: './PdfReader.js' }
-  ]
+  ])
 
+  ////////////////////////////////
+  ///  Initialization  ///////////
+  ////////////////////////////////
 
-  ///////////////////////////////////
-  ///  METHODS  (user logged in) ////
-  ///////////////////////////////////
+  // Import non-core components
+  useEffect(() => {
+    setMediaComponents([...mediaComponents, ...myMediaComponents])
+  }, [])
+
+  /////////////////////////////////
+  ///  METHODS  (user session) ////
+  /////////////////////////////////
 
   const handleLoggedIn = user => {
           setUser({
@@ -137,7 +150,6 @@ const App = () => {
       })
   }
 
-
   ///////////////////////////////////
   ///  METHODS (no login required) //
   ///////////////////////////////////
@@ -158,8 +170,8 @@ const App = () => {
     setShowMedia(false)
   }
 
-  const openMedia = (label, type, src, path) => {
-    setMediaState({ label: label, type: type, src: src, path: path })
+  const openMedia = (label, type, path) => {
+    setMediaState({ label: label, type: type, path: path })
     setShowMedia(true)
   }
 
@@ -208,7 +220,7 @@ const App = () => {
           <span className='nav-bar'>
             { showMedia
               ? <MediaTitleBar title={mediaState.label} onClose={handleBackToHomepage} />
-              : <Nav items={mediaShortcuts} onClick={openMedia} />
+              : <Nav items={mediaComponents} onClick={openMedia} />
             }
           </span>
       </header>

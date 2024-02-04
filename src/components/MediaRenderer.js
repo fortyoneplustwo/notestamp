@@ -1,22 +1,36 @@
-import React, {useEffect, useRef} from 'react'
-import AudioPlayer from './AudioPlayer'
-import PdfReader from './PdfReader'
-import YoutubePlayer from './YoutubePlayer'
-import AudioRecorder from './AudioRecorder'
+import React, {useEffect, useRef, Suspense} from 'react'
+import { myMediaComponents } from './NonCoreMediaComponents'
 
-const MediaRenderer = React.forwardRef(({ type=null, src=null}, ref) => {
+// Import core components
+const mediaComponentMap = {
+  audio: React.lazy(() => import('./AudioPlayer')),
+  pdf: React.lazy(() => import('./PdfReader')),
+  youtube: React.lazy(() => import('./YoutubePlayer')),
+  recorder: React.lazy(() => import('./AudioRecorder'))
+}
+
+// Import non-core components
+myMediaComponents.forEach(obj => {
+  const key = obj.type
+  const value = React.lazy(() => import(`${obj.path}`))
+  mediaComponentMap[key] = value
+})
+
+console.log(mediaComponentMap)
+
+const MediaRenderer = React.forwardRef(({ type=null, src=null }, ref) => {
   const controller = useRef(null)
-  
+  const MediaComponentToRender = mediaComponentMap[type]
+
   useEffect(() => {
     ref.current = controller.current
   }, [ref, type, src, controller])
 
   return (
-    <div style={{ height: '100%' }}>
-      {type === 'youtube' && <YoutubePlayer ref={controller} src={src} />}
-      {type === 'audio' && <AudioPlayer ref={controller} src={src} />}
-      {type === 'pdf' && <PdfReader ref={controller} src={src} />}
-      {type === 'recorder' && <AudioRecorder ref={controller} />}
+    <div style={{ height: '100%', overflow: 'hidden' }}>
+      <Suspense fallback={<div>Loading...</div>}>
+        <MediaComponentToRender ref={ref} src={src}  />
+      </Suspense>
     </div>
   )
 })
