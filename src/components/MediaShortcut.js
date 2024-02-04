@@ -5,7 +5,9 @@ const MediaShortcut = (props) => {
   const { type, path, onClick, children } = props
 
   return (
-    <button onClick={() => { onClick(children, type, path) }} className='nav-btn'>
+    <button  className='nav-btn'
+      onClick={() => { onClick(children, type, path) }}
+    >
       { children }
     </button>
   )

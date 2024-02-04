@@ -271,6 +271,26 @@ const onKeyDown = (event, onRequestStampData, editor) => {
     event.preventDefault()
     toggleBlock(editor, 'bulleted-list')
   }
+  // on backspace: fixes disappearing caret on block deletion
+  else if (isKeyHotkey('backspace', nativeEvent)) {
+    // Get the block that wraps our current selection
+    const { selection } = editor
+    const startPath = Editor.start(editor, selection)
+    const [block] = Editor.parent(editor, startPath)
+
+    // Fix: manually delete empty block to make sure caret appears at the 
+    // end of previous block after delete operation 
+    // Make sure not to delete last remaining block
+    if (editor.children.length > 1 
+      || (editor.children.length === 1 
+        && block.type === 'list-item' 
+        && editor.children[0].children.length > 1)) {
+      if (block.children.length === 1 && block.children[0].text === '') {
+        event.preventDefault()
+        Transforms.removeNodes(editor, { at: startPath }) 
+      }
+    }
+  }
   // on enter: insert stamp
   else if (isKeyHotkey('enter', nativeEvent)) {
     const { label, value } = onRequestStampData(new Date())
