@@ -31,7 +31,7 @@ The MediaStream Recording API I used to implement the recorder does not allow us
 I implemented a dynamic programming algorithm to compute the timestamp in O(1). See more details in [timestamp](https://github.com/fortyoneplustwo/timestamp)
 repository (an early version of notestamp).
 
-### Algorithm
+### Algorithm details
   - Keep track of 2 variables `dateWhenRecLastActive` and `dateWhenRecLastInactive`. Update them whenever the audio recorder is active (started/resumed) & inactive (paused/stopped).
   - Update the audio recording's duration, `recDuration`, each time the recorder goes inactive.
   - Mark the date, `dateNoteTaken`, whenever the user starts typing a note in the editor. The timestamp can be computed using the following computation:
@@ -44,12 +44,12 @@ repository (an early version of notestamp).
   }
    ```
 
-# How to integrate your custom media component?
+# How to integrate your custom media component
 - Build your custom media component as a React component with a `forward ref`.
 - Within your component, implement a `controller` object and point the `ref` to it. This `controller` enables the application to communicate with your component for synchronizing with notes.
 
 ## Step 1
-### Custom media component example
+### Implement a controller in your component
 
 ```javascript
 const MyCustomMediaComponent = React.forwardRef((props, ref) => {
@@ -57,7 +57,8 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
   useEffect(() => {
     const controller = {
       getState: function (dateStampRequested) {
-        // Return current media state to be stored inside the a new stamp here
+        // Return media state that will be stored inside the stamp
+        return { label: label, value: value }
       },
       setState: function (stampValue) {
         // Update the media element within your component to newState here
@@ -65,9 +66,18 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
     } 
     ref.current = controller
   }, [ref])
+
+// Rest of the component logic goes here...
+}
 ```
 - `getState(dateStampRequested)`: Called by the application when the user wants to insert a stamp. It should return the media state that you would like to store inside the stamp e.g. `currentTime` of youtube video. `dateStampRequested` is a `Date` object which you may or may not need.
 
+  The return value must be an object of type `{ label: String or Null, value: Any or Null }`.
+  - `value` is the state of the media when the `getState()` method was called e.g. current time (in seconds) of the video media.
+  - `label` is the string representation of `value` that will be displayed inside the stamp e.g. current time (in seconds) converted to a string in `hh:mm` format.
+
+  **Important:** If either `getState()` or `value` evaluate to `null`, then the stamp insertion will be aborted. You may use this to your advantage to skip stamp insertion when certain conditions are met.
+  
 - `setState(stampValue)`: Called by the application when a user clicks a stamp. This method should set the state of your media to `stampValue`. `stampValue` is extracted from the stamp that was clicked and its type will be the same as that which was returned by `getState`.
 
 ## Step 2
@@ -87,6 +97,7 @@ const Media = React.forwardRef(({ type=null, src=null, onClose}, ref) => {
       <div className='back-btn-container'>
         <BackButton handler={onClose} />
       </div>
+      // Add your component here
       {type === 'my_custom_type' <MyCustomComponent ref={controller} src={src} />}
     </div>
   )
@@ -94,29 +105,8 @@ const Media = React.forwardRef(({ type=null, src=null, onClose}, ref) => {
 ```
 Replace `my_custom_type` with a unique identifier for your component and `MyCustomComponent` with the name of your component.
 
+
 ## Step 3
-### Set stamp data
-In this step you will implement a return value for `setStampData(dateStampRequested)` in `App`. This is where you call the `getState()` method on your controller. Its pointer is stored in `mediaRef`.
-
-Your stamps can now hold your custom component's state, but you have to tell the app what to actually display within the stamp itself by setting a `label`. For youtube videos, the stamp `value` holds the number of seconds, but the `label` holds the value formatted to `hh:mm`.
-
-```javascript
-const setStampData = (dateStampDataRequested) => { 
-    if (mediaRef.current) { // make sure the media ref is actually available  
-      if (readerState.type === 'my_custom_type') {
-         const my_value = mediaRef.current.getState()
-         const my_label = // additional processing on value
-         return { label: my_label, value: my_value }
-      } else {
-        return { label: null, value: null }
-      }
-    } else {
-      return { label: null, value: null }
-    }
-}
-```
-
-## Step 4
 ### Add a shortcut for your media component in the navigation bar
 Find the `mediaShortcuts` array in `App.js` and add a new object that describes your component.
 
