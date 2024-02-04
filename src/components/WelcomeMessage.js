@@ -26,11 +26,9 @@ const WelcomeMessage = () => {
         <br></br>
         <p style={{ whiteSpace: 'pre-wrap' }}>
           Features in development:
-          <ul>
-            <li>Cloud storage</li>
-            <li>Collaborative editing</li>
-            <li>Dark Mode</li>
-          </ul>
+          <li>Cloud storage</li>
+          <li>Collaborative editing</li>
+          <li>Dark Mode</li>
         </p>
       </div>
     </div>

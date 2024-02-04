@@ -16,8 +16,6 @@ myMediaComponents.forEach(obj => {
   mediaComponentMap[key] = value
 })
 
-console.log(mediaComponentMap)
-
 const MediaRenderer = React.forwardRef(({ type=null, src=null }, ref) => {
   const controller = useRef(null)
   const MediaComponentToRender = mediaComponentMap[type]
