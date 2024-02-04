@@ -34,11 +34,11 @@ repository (an early version of notestamp).
 ### Algorithm details
   - Keep track of 2 variables `dateWhenRecLastActive` and `dateWhenRecLastInactive`. Update them whenever the audio recorder is active (started/resumed) & inactive (paused/stopped).
   - Update the audio recording's duration, `recDuration`, each time the recorder goes inactive.
-  - Mark the date, `dateNoteTaken`, whenever the user starts typing a note in the editor. The timestamp can be computed using the following computation:
+  - Mark the date, `dateStampRequested`, whenever the user attemps to insert a stamp. The timestamp can be computed using the following computation:
 
   ```javascript
    if (dateWhenRecLastActive > dateWhenRecLastInactive) {
-    timestamp = recDuration + (dateNoteTaken - dateWhenRecLastInactive)
+    timestamp = recDuration + (dateStampRequested - dateWhenRecLastInactive)
   } else {
     timestamp = recDuration
   }
