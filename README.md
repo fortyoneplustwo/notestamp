@@ -84,7 +84,7 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 ## Step 2
 ### Declare your custom media component in `NonCoreMediaComponents.js`
 
-Add an object to the `myMediaComponents` array that describes your custom media component. The application will integrate it into its default components for you.
+Add an object to the `myMediaComponents` array that describes your custom media component. The application will integrate it for you.
 
 The object must define the following keys:
 - `label`: The text to display as the shortcut to your component inside the navigation bar. Clicking on it will open your media component.
