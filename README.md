@@ -82,7 +82,7 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 - `setState(stampValue)`: Called by the application when a user clicks a stamp. This method should set the state of your media to `stampValue`. `stampValue` is extracted from the stamp that was clicked and its type will be the same as that which was returned by `getState`.
 
 ## Step 2
-### Define your custom media component in `NonCoreMediaComponents.js`
+### Declare your custom media component in `NonCoreMediaComponents.js`
 
 Add an object to the `myMediaComponents` array that describes your custom media component. The application will integrate it into its default components for you.
 
