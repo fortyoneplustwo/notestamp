@@ -45,7 +45,7 @@ repository (an early version of notestamp).
    ```
 
 # How to integrate your custom media component
-- Build your custom media component as a React component with a `forward ref`.
+- Create a React component file with a `forward ref` in `/src/components`
 - Within your component, implement a `controller` object and point the `ref` to it. This `controller` enables the application to communicate with your component for synchronizing with notes.
 - Define your custom component in `NonCoreMediaComponents.js`.
 
