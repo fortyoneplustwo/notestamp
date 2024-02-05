@@ -89,7 +89,7 @@ Add an object to the `myMediaComponents` array that describes your custom media 
 The object must define the following keys:
 - `label`: The text to display as the shortcut to your component inside the navigation bar. Clicking on it will open your media component.
 - `path`: The path to your media component relative to the /src/components directory.
-- `type`: Pick a unique identifier for your component. It cannot take values: youtube, audio, recorder, pdf because these are already being used by the default media components.
+- `type`: Pick a unique identifier for your component. It cannot be named 'youtube', 'audio', 'recorder' nor 'pdf' because these are already being used by the default media components.
 
 **Example**: Say you implement a custom component that plays videos from Vimeo.
 
