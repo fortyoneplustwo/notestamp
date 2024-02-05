@@ -81,6 +81,27 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
   
 - `setState(stampValue)`: Called by the application when a user clicks a stamp. This method should set the state of your media to `stampValue`. `stampValue` is extracted from the stamp that was clicked and its type will be the same as that which was returned by `getState`.
 
+### (Optional) Add a toolbar to your component
+If you media component needs a toolbar, we provide a wrapper container together with a toolbar component that matches the design language of the application. These components are of higher-order, so you may override their default props e.g. passing your own `style` Of course, you may implement your own toolbar if you wish.
+
+```javascript
+import { WithToolbar, Toolbar } from './MediaComponents'
+
+const myCustomMediaComponent = React.forwardRef((_, ref) => {
+
+  // JSX
+  return (
+    <WithToolbar>
+      <Toolbar>
+        // Add your toolbar elements here e.g. buttons, inputs, etc.
+      </Toolbar>
+      // Component JSX goes here...
+    </WithToolbar>
+  )
+}
+```
+See `YoutubePlayer.js`, `AudioPlayer.js` and `PdfReader.js` in `/src/components` for example usage of the Toolbar component.
+
 ## Step 2
 ### Declare your custom media component in `NonCoreMediaComponents.js`
 
