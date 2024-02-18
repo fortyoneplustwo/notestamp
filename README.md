@@ -34,18 +34,18 @@ repository (an early version of notestamp).
 ### Algorithm details
   - Keep track of 2 variables `dateWhenRecLastActive` and `dateWhenRecLastInactive`. Update them whenever the audio recorder is active (started/resumed) & inactive (paused/stopped).
   - Update the audio recording's duration, `recDuration`, each time the recorder goes inactive.
-  - Mark the date, `dateNoteTaken`, whenever the user starts typing a note in the editor. The timestamp can be computed using the following computation:
+  - Mark the date, `dateStampRequested`, whenever the user attemps to insert a stamp. The timestamp can be computed using the following computation:
 
   ```javascript
    if (dateWhenRecLastActive > dateWhenRecLastInactive) {
-    timestamp = recDuration + (dateNoteTaken - dateWhenRecLastInactive)
+    timestamp = recDuration + (dateStampRequested - dateWhenRecLastInactive)
   } else {
     timestamp = recDuration
   }
    ```
 
 # How to integrate your custom media component
-- Build your custom media component as a React component with a `forward ref`.
+- Create a React component file with a `forward ref` in `/src/components`
 - Within your component, implement a `controller` object and point the `ref` to it. This `controller` enables the application to communicate with your component for synchronizing with notes.
 - Define your custom component in `NonCoreMediaComponents.js`.
 
@@ -81,15 +81,36 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
   
 - `setState(stampValue)`: Called by the application when a user clicks a stamp. This method should set the state of your media to `stampValue`. `stampValue` is extracted from the stamp that was clicked and its type will be the same as that which was returned by `getState`.
 
-## Step 2
-### Define your custom media component in `NonCoreMediaComponents.js`
+### (Optional) Add a toolbar to your component
+If you would like to add a toolbar, we provide a wrapper container together with a toolbar component that matches the design language of the application. These components are of higher-order, so you may override their default props e.g. passing your own `style` Of course, you may implement your own toolbar if you wish.
 
-Add an object to the `myMediaComponents` array that describes your custom media component. The application will integrate it into its default components for you.
+```javascript
+import { WithToolbar, Toolbar } from './MediaComponents'
+
+const myCustomMediaComponent = React.forwardRef((_, ref) => {
+
+  // JSX
+  return (
+    <WithToolbar>
+      <Toolbar>
+        // Add your toolbar elements here e.g. buttons, inputs, etc.
+      </Toolbar>
+      // Component JSX goes here...
+    </WithToolbar>
+  )
+}
+```
+See `YoutubePlayer.js`, `AudioPlayer.js` and `PdfReader.js` in `/src/components` for example usage of the Toolbar component.
+
+## Step 2
+### Declare your custom media component in `NonCoreMediaComponents.js`
+
+Add an object to the `myMediaComponents` array that describes your custom media component. The application will integrate it for you.
 
 The object must define the following keys:
 - `label`: The text to display as the shortcut to your component inside the navigation bar. Clicking on it will open your media component.
 - `path`: The path to your media component relative to the /src/components directory.
-- `type`: Pick a unique identifier for your component. It cannot take values: youtube, audio, recorder, pdf because these are already being used by the default media components.
+- `type`: Pick a unique identifier for your component. It cannot be named 'youtube', 'audio', 'recorder' nor 'pdf' because these are already being used by the default media components.
 
 **Example**: Say you implement a custom component that plays videos from Vimeo.
 
