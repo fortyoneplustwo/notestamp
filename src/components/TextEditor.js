@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useRef, useEffect, useState } from 'react'
+import React, { useMemo, useCallback, useRef, useEffect, useState, useImperativeHandle } from 'react'
 import { isKeyHotkey } from 'is-hotkey'
 import { Editable, withReact, useSlate } from 'slate-react'
 import * as SlateReact from 'slate-react'
@@ -7,7 +7,8 @@ import {
   Transforms,
   createEditor,
   Text,
-  Element as SlateElement
+  Element as SlateElement,
+  Point
 } from 'slate'
 import { withHistory } from 'slate-history'
 import isHotkey from 'is-hotkey'
@@ -23,13 +24,10 @@ const HOTKEYS = {
   'mod+i': 'italic',
   'mod+u': 'underline',
   'mod+`': 'code',
-  'mod+k': 'playPause',
-  'mod+j': 'rewindTenSecs',
-  'mod+l': 'forwardTenSecs'
 }
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
-const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => {
+const TextEditor = React.forwardRef(({ getStampData, onContentChange }, ref) => {
   const [internalClipboard, setInternalClipboard] = useState([])
   const fileUploadModalRef = useRef(null)
   const renderElement = useCallback(props => <Element {...props} />, [])
@@ -37,9 +35,12 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
 
   const editor = useMemo(() => withInlines(withReact(withHistory(createEditor()))), [])
 
+  ////////////////////////////////
+  ///  INITIALIZATION  ///////////
+  ////////////////////////////////
 
   const initialValue = useMemo(
-    () => 
+    () =>
       JSON.parse(localStorage.getItem('content')) || [
         {
           type: 'paragraph',
@@ -49,30 +50,30 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
     []
   )
 
-  ////////////////////////////////////////////////////////////////////
-  // For logged in users only
-  //
-  // replace contents of editor with content (type: stmp)
   useEffect(() => {
-    // TODO: save should only appear in color when a project has been modified
-    if (content) {
-      const newNodes = JSON.parse(content)
-      // fix: focus the editor to ensure all nodes get removed
-      Transforms.select(editor, {
-        anchor: Editor.start(editor, []),
-        focus: Editor.end(editor, []),
-      })
-      Transforms.removeNodes(editor)
-      // if editor is empty remove the default empty paragraph node
-      if (editor.children.length > 0 
-        && editor.children[0].type === 'paragraph' 
-        && editor.children[0].children[0].text === '') {
-        Transforms.removeNodes(editor, { at: [0] })
+    onContentChange(initialValue[0].children)
+  }, [])
+
+  useImperativeHandle(ref, () => {
+    return {
+      setContent: newContent => {
+        const newNodes = JSON.parse(newContent)
+        // Select entire content to ensure all nodes get removed
+        Transforms.select(editor, {
+          anchor: Editor.start(editor, []),
+          focus: Editor.end(editor, []),
+        })
+        Transforms.unwrapNodes(editor)
+        Transforms.removeNodes(editor)
+        Transforms.insertNodes(editor, newNodes)
       }
-      Transforms.insertNodes(editor, newNodes)
     }
-  }, [content, editor])
-  //////////////////////////////////////////////////////////////////
+  }, [editor])
+
+
+  /////////////////////////
+  ///  METHODS  ///////////
+  /////////////////////////
 
   // Paste contents of submitted .stmp file into the editor
   const handleOpenFile = file => {
@@ -175,9 +176,9 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
     }
   }
 
-  ////////////////////////////////
-  ///  JSX  //////////////////////
-  ////////////////////////////////
+  //////////////
+  ///  JSX  ////
+  //////////////
 
   return (
     <SlateReact.Slate editor={editor} initialValue={initialValue}
@@ -185,6 +186,7 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
         const isAstChange = editor.operations.some(op => 'set_selection' !== op.type)
         if (isAstChange) {
           const content = JSON.stringify(value)
+          onContentChange(content)
           localStorage.setItem('content', content)
         }
       }}
@@ -208,8 +210,6 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
               onClick={() => { fileUploadModalRef.current.showModal() }} />
             <ActionButton action='download' icon="download" description="Download project file (.stmp)" />
             {/*<ActionButton action='pdf' icon="picture_as_pdf" description="Download as .pdf document" />*/}
-            {user && <ActionButton action='save' icon="save" description="Save changes"
-              onClick={onSave}/>}
           </div>
         </Toolbar>
         <Editable
@@ -220,19 +220,19 @@ const TextEditor = ({ user=null, content=null, onRequestStampData, onSave }) => 
           spellCheck={true}
           onCopy={handleCopy}
           onPaste={handlePaste}
-          onKeyDown={(event) => { onKeyDown(event, onRequestStampData, editor) }}
+          onKeyDown={(event) => { onKeyDown(event, getStampData, editor) }}
         />
       </div>
     </SlateReact.Slate>
   )
-}
+})
 
 ////////////////////////////////
 ///  METHODS  //////////////////
 ////////////////////////////////
 
 // Keyboard events
-const onKeyDown = (event, onRequestStampData, editor) => {
+const onKeyDown = (event, getStampData, editor) => {
   const { nativeEvent } = event
 // Handle formatting hotkeys. TODO reimplement this. it's really slow
   for (const hotkey in HOTKEYS) {
@@ -278,6 +278,8 @@ const onKeyDown = (event, onRequestStampData, editor) => {
     const startPath = Editor.start(editor, selection)
     const [block] = Editor.parent(editor, startPath)
 
+    if (selection.isFocused && Point.compare(selection.anchor, selection.focus)) return
+
     // Fix: manually delete empty block to make sure caret appears at the 
     // end of previous block after delete operation 
     // Make sure not to delete last remaining block
@@ -293,7 +295,7 @@ const onKeyDown = (event, onRequestStampData, editor) => {
   }
   // on enter: insert stamp
   else if (isKeyHotkey('enter', nativeEvent)) {
-    const { label, value } = onRequestStampData(new Date())
+    const { label, value } = getStampData(new Date())
     event.preventDefault()
 
     // Get the block that wraps our current selection

@@ -2,13 +2,12 @@
 
 .nav-btn {
   background: transparent;
-  font-family: Mosk, sans-serif;
   color: white;
   border: 0;
-  margin-right: 2em;
+  margin-right: 1.75em;
   padding: 0;
-  font-weight: bold;
   cursor: pointer;
+  font-weight: bold;
 }
 
 .nav-btn:hover {

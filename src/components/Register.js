@@ -24,8 +24,6 @@ const Register = ({ onCancel, successCallback }) => {
 
   return (
     <div>
-      <h3>Create account</h3>
-      <br />
       <form onSubmit={handleSubmit} style={{ display: 'flex', justifyContent: 'center'}} >
         <div style={{ display: 'flex', flexDirection: 'column'}}>
           <label>

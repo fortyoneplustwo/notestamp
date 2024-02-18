@@ -1,14 +1,15 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect, useImperativeHandle } from 'react'
 import { EventEmitter } from './EventEmitter.js'
 import '../Background.css'
 import { Icon } from './Toolbar.js'
 import { formatTime } from '../modules/formatTime.js'
 
-// Variables needed to calculate timestamp
-// Defined outside of component to prevent reset on re-renders
-let dateWhenRecLastActive = new Date()
-let dateWhenRecLastInactive = dateWhenRecLastActive
-let recDuration = 0
+// Variables needed to calculate timestamp.
+// Declared outside of component so they remain unaffected by re-renders.
+// Initialized below when component mounts.
+let dateWhenRecLastActive
+let dateWhenRecLastInactive
+let recDuration
 
 const AudioRecorder = React.forwardRef((_, ref) => {
   const mediaRecorder = useRef(null)
@@ -20,19 +21,17 @@ const AudioRecorder = React.forwardRef((_, ref) => {
   const [recordButtonText, setRecordButtonText] = useState('Record')
   const [recordButtonClassName, setRecordButtonClassname] = useState('')
   const [stopButtonDisabled, setStopButtonDisabled] = useState(true)
-  const [showRecControls, setShowRecControls] = useState(true)
 
   ////////////////////////////////
   /// Initialize controller //////
   ////////////////////////////////
   
-  useEffect(() => {
-  // Parent component can use this controller using ref
-    const controller = {
-      getState: function (data) {
+  useImperativeHandle(ref, () => {
+    return {
+      getState: data => {
         const dateStampDataRequested = data
         let timestamp = null
-        // If statement checks if the recorder was stopped while still recording
+        // If-statement checks if the recorder was stopped while still recording
         if (dateWhenRecLastActive > dateWhenRecLastInactive) {
           timestamp = recDuration + (dateStampDataRequested - dateWhenRecLastActive)
         } else {
@@ -44,48 +43,43 @@ const AudioRecorder = React.forwardRef((_, ref) => {
           value: timestamp ? timestamp : null
         }
       },
-      setState: function (_) {}
+      setState: () => {},
+      getMetadata: () => { return null }
     } 
-    ref.current = controller
-  }, [ref])
+  }, [])
 
   ////////////////////////////////
   /// Initialize recorder  ///////
   ////////////////////////////////
 
-  const initPlayer = () =>{
+  const initPlayer = () => {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !mediaRecorder.current) {
       navigator.mediaDevices
         .getUserMedia({ audio: true, })
         // Success callback: Register event listeners
         .then((stream) => {
           mediaRecorder.current = new MediaRecorder(stream)
-          // handle onstart event
           mediaRecorder.current.onstart = () => {
             chunks.current = []
             dateWhenRecLastActive = new Date()
           }
-          // handle ondataavailable event
           mediaRecorder.current.ondataavailable = (e) => {
             chunks.current.push(e.data)
-         }
-          // handle onresume event
+          }
           mediaRecorder.current.onresume = () => {
             dateWhenRecLastActive = new Date()
             mediaRecorder.current.requestData()
           }
-          // handle onpause event
           mediaRecorder.current.onpause = () => {
             dateWhenRecLastInactive = new Date()
             recDuration += (dateWhenRecLastInactive - dateWhenRecLastActive)
           }
-          // handle onstop event
           mediaRecorder.current.onstop = () => {
             dateWhenRecLastInactive = new Date()
             recDuration += (dateWhenRecLastInactive - dateWhenRecLastActive)
             const blob = new Blob(chunks.current, {type: "audio/ogg; codecs=opus"})
             const audioURL = window.URL.createObjectURL(blob)
-            EventEmitter.dispatch('recorder-stopped', audioURL)
+            EventEmitter.dispatch('open-media-with-src', { type: 'audio', src: audioURL })
           }
         })
         // Error callback
@@ -97,14 +91,19 @@ const AudioRecorder = React.forwardRef((_, ref) => {
     }
   }
 
-  useEffect(() => { initPlayer() }, [])
+  useEffect(() => { 
+    dateWhenRecLastActive = new Date()
+    dateWhenRecLastInactive = dateWhenRecLastActive
+    recDuration = 0
+    initPlayer() 
+  }, [])
 
   ////////////////////////////////
   ///  Methods  //////////////////
   ////////////////////////////////
   
   const toggleRecord = () => {
-    if(mediaRecorder.current.state === 'inactive') {
+    if (mediaRecorder.current.state === 'inactive') {
       mediaRecorder.current.start()
       setStopButtonDisabled(false)
       setRecordButtonText('Pause')
@@ -122,7 +121,6 @@ const AudioRecorder = React.forwardRef((_, ref) => {
 
   const toggleStop = () => {
     mediaRecorder.current.stop()
-    setShowRecControls(false)
   }
 
   ////////////////////////////////
@@ -130,44 +128,40 @@ const AudioRecorder = React.forwardRef((_, ref) => {
   ////////////////////////////////
 
   return (
-      <div className='grid-background'
-        style={{ display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100%',
-          gap: '0.5em'
-      }}>
-        {showRecControls 
-          && <button className='recorder-btn' 
-                ref={recordButtonRef} 
-                onClick={toggleRecord}
-              >
-              <Icon className={recordButtonClassName}>radio_button_checked</Icon>
-              <span style={{ display: 'inline-flex',
-                justifyContent: 'center',
-                width: '5em' 
-              }}>
-                {recordButtonText}
-              </span>
-          </button>
-        }
-        {showRecControls 
-          && <button ref={stopButtonRef} 
-                className='recorder-btn' 
-                style={{ background: 'gray' }}
-                disabled={stopButtonDisabled} 
-                onClick={toggleStop}
-              >
-              <Icon>stop_circle</Icon>
-              <span style={{ display: 'inline-flex',
-                justifyContent: 'center',
-                width: '5em' 
-              }}>
-                Stop
-              </span>
-          </button>
-        }
-      </div>
+    <div className='diagonal-background'
+      style={{ display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100%',
+        gap: '0.5em'
+    }}>
+      <button className='recorder-btn' 
+        ref={recordButtonRef} 
+        onClick={toggleRecord}
+      >
+        <Icon className={recordButtonClassName}>radio_button_checked</Icon>
+        <span style={{ display: 'inline-flex',
+          justifyContent: 'center',
+          width: '5em' 
+        }}>
+          {recordButtonText}
+        </span>
+      </button>
+      <button ref={stopButtonRef} 
+        className='recorder-btn' 
+        style={{ background: 'gray' }}
+        disabled={stopButtonDisabled} 
+        onClick={toggleStop}
+      >
+        <Icon>stop_circle</Icon>
+        <span style={{ display: 'inline-flex',
+          justifyContent: 'center',
+          width: '5em' 
+        }}>
+          Stop
+        </span>
+      </button>
+    </div>
   )
 })
 

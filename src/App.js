@@ -6,12 +6,13 @@ import './Button.css'
 import WelcomeMessage from './components/WelcomeMessage'
 import Login from './components/Login'
 import Dashboard from './components/Dashboard'
-import { deleteProject, getProjectData, logOut, saveProject } from './api'
+import * as api from './api'
 import Modal from './components/Modal'
 import MediaRenderer from './components/MediaRenderer'
 import Nav from './components/Nav'
 import MediaTitleBar from './components/MediaTitleBar'
 import { myMediaComponents } from './components/NonCoreMediaComponents'
+import { Icon } from './components/Toolbar'
 
 const App = () => {
 
@@ -19,26 +20,24 @@ const App = () => {
   ///  State variables  ////
   //////////////////////////
 
-  const mediaRef = useRef(null)
+  const mediaControllerRef = useRef(null)
+  const textEditorRef = useRef(null)
+  const attachMediaController = controller => mediaControllerRef.current = controller
 
   // User session data. Updated only after a successful login
   const [user, setUser] = useState(null)
-  const [project, setProject] = useState({
-    metadata: {
-      title: '',
-      type: '',
-      link: ''
-    },
-    content: ''
-  })
+  const [projectSnapshot, setProjectSnapshot] = useState(null)
+  const [requestedProject, setRequestedProject] = useState(null)
   const [showLoginForm, setShowLoginForm] = useState(false)
   const [showLoginButton, setShowLoginButton] = useState(true)
   const [showLogoutButton, setShowLogoutButton] = useState(false)
   const saveModalRef = useRef(null)
+  const unsavedChangesModalRef = useRef(null)
 
   // Non-user-specific variables
   const [showMedia, setShowMedia] = useState(null)
-  const [mediaState, setMediaState] = useState(null)
+  const [mediaRendererProps, setMediaRendererProps] = useState(null)
+  const [editorContent, setEditorContent] = useState('')
   const [mediaComponents, setMediaComponents] = useState([
     { label: 'YouTube Player', type: 'youtube', path: './YoutubePlayer.js' },
     { label: 'Audio Player', type: 'audio', path: './AudioPlayer.js' },
@@ -60,86 +59,63 @@ const App = () => {
   /////////////////////////////////
 
   const handleLoggedIn = user => {
-          setUser({
-            email: user.email,
-            directory: user.directory
-          })
-          setShowLoginForm(false)
-          setShowLogoutButton(true)
+    setUser({
+      email: user.email,
+      directory: user.directory
+    })
+    setShowLoginForm(false)
+    setShowLogoutButton(true)
   }
 
-  const handleLogoutBtnClicked = () => {
-    logOut()
-      .then(result => {
-        if (result) {
-          // reset user session data
-          setShowLoginButton(true)
-          setShowLogoutButton(false)
-          setUser(null)
-          setProject(null)
-          setMediaState(null)
-        }
-      })
-  }
-
-  const handleOpenProject = title => {
-    getProjectData(title)
-    .then(data => {
-        if (data) {
-          const { metadata, content } = data
-          setProject({ 
-            metadata: { ...metadata },
-            content: content,
-          })
-          if (project.metadata.type) {
-            setMediaState({
-              type: project.metadata.type,
-              src: project.metadata.link
-            })
-            setShowMedia(true)
-          }
-          // Handle open for other media formats here
-        } 
-      })
-  }
-
-  // take snapshot of reader state and show show save modal
-  const handleCaptureReaderState = () => {
-    const state = mediaRef.current ? mediaRef.current.getState() : null
-    if (!state) {
-      setMediaState({
-        type: 'none',
-        src: ''
-      })
-    } else {
-      const { type, src } = state
-      setMediaState({
-        type: type ? type : '',
-        src: src ? src : ''
-      })
+  const handleOpenProject = async title => {
+    try {
+      const result = await api.getProjectData(title)
+      if (result === null) {
+        throw new Error('Error fetching project')
+      } else {
+        const { metadata, content } = result
+        setRequestedProject({ 
+          metadata: {...metadata},
+          content: content,
+        })
+        setShowMedia(() => {
+          setMediaRendererProps({ ...metadata })
+          return true 
+        })
+        textEditorRef.current.setContent(content)
+      }
+    } catch (error) {
+      console.error(error)
     }
-    saveModalRef.current.showModal()
   }
 
-  // Handle save project
+  const handleStageChanges = () => {
+    const metadata = mediaControllerRef.current ? mediaControllerRef.current.getMetadata() : null
+    if (!metadata) return
+    setProjectSnapshot({ metadata: { ...metadata }, content: editorContent })
+  }
+
   const handleSaveProject = filename => {
-    const content = localStorage.getItem('content')
+    if (!filename) return
     saveModalRef.current.close()
-    saveProject({ 
-      title: filename,
-      type: mediaState.type,
-      link: mediaState.src
-    }, content)
+    api.saveProject({ 
+      ...projectSnapshot.metadata,
+      title: filename
+    }, editorContent)
       .then(dir => {
         if (dir) setUser({
           ...user,
           directory: dir
         })
       })
+    setRequestedProject({ 
+      metadata: {...projectSnapshot.metadata}, 
+      content: projectSnapshot.content 
+    })
   }
 
   const handleDeleteProject = title => {
-    deleteProject(title)
+    api.deleteProject(title)
       .then(newDir => {
         if (newDir) {
           setUser({
@@ -150,9 +126,27 @@ const App = () => {
       })
   }
 
-  ///////////////////////////////////
-  ///  METHODS (no login required) //
-  ///////////////////////////////////
+  const handleLogOut = () => {
+    api.logOut()
+      .then(result => {
+        if (result) {
+          // reset user session data
+          setShowLoginButton(true)
+          setShowLogoutButton(false)
+          setUser(null)
+          setRequestedProject({
+            metadata: { title: '', type: '', src: '' },
+            content: ''
+          })
+          setProjectSnapshot(null)
+          handleBackToHomepage()
+        }
+      })
+  }
+
+  ////////////////////////////////////
+  ///  METHODS (no login required) ///
+  ////////////////////////////////////
 
   const handleCancelLogin = () => {
     setShowLoginForm(false)  
@@ -164,54 +158,80 @@ const App = () => {
     setShowLoginButton(false)
   }
 
-  // close media handler
+  const handleEditorContentChange = content => {
+    setEditorContent(content)
+  }
+
   const handleBackToHomepage = () => {
-    mediaRef.current = null
-    setShowMedia(false)
+    setShowMedia((_) => {
+      if (user && requestedProject) {
+        const currMetadata = mediaControllerRef.current 
+          ? mediaControllerRef.current.getMetadata() 
+          : null 
+        const currContent = editorContent
+
+        let projectModified = false
+        if (currMetadata) {
+          if (requestedProject['content'] !== currContent) projectModified = true
+          for (const key in requestedProject.metadata) {
+            if (requestedProject.metadata[key] !== currMetadata[key]) projectModified = true
+          }
+        }
+
+        if (projectModified) {
+          unsavedChangesModalRef.current.showModal()
+          return true
+        }
+      }
+      return false
+    }) 
   }
 
-  const openMedia = (label, type, path) => {
-    setMediaState({ label: label, type: type, path: path })
-    setShowMedia(true)
-  }
-
-  // Dispatched when recorder stopped
-  EventEmitter.subscribe('recorder-stopped', data => { 
-    setMediaState({
-      label: 'Audio Player',
-      type: 'audio',
-      path: './AudioPlayer',
-      // src field is unique to this scenario
-      // because we want to load the Audio Player
-      // with the recording from the Sound Recorder
-      src: data
+  const handleCreateNewProject = (label, type) => {
+    setShowMedia(() => {
+      setRequestedProject(null)
+      setMediaRendererProps({ label: label, type: type, src: '' })
+      return true
     })
-    setShowMedia(true)
-  })
+  }
 
-  // When a stamp is clicked, seek reader to the stamp's value
-  EventEmitter.subscribe('stamp-clicked', data => {
-    const stampValue = data[1]
-    if (mediaRef.current) mediaRef.current.setState(stampValue)
-  })
-
-  // Return value must be an object
+  // Called when a stamp in inserted. Return value must be an object.
   // {
   //    label: String or null       String rendered inside of the stamp
   //    value: Any or Null          Actual stamp value
   // }
-  const getStampDataFromMedia = (dateStampDataRequested) => { 
-    if (mediaRef.current) { // make sure the media ref is actually available
-      const stampData = mediaRef.current.getState(dateStampDataRequested)
+  const getStampDataFromMedia = dateStampRequested => { 
+    if (mediaControllerRef.current) {
+      const stampData = mediaControllerRef.current.getState(dateStampRequested)
       return stampData ? stampData : { label: null, value: null }
     } else {
       return { label: null, value: null }
     }
   }
   
-  ////////////////////////////////
-  ///  JSX  //////////////////////
-  ////////////////////////////////
+  ////////////////////////
+  ///  EVENT LISTENERS ///
+  ////////////////////////
+
+  // Dispatched from a media component (usually one that captures media e.g. sound recorder)
+  // to open the captured media in a different media component (e.g. audio player)
+  EventEmitter.subscribe('open-media-with-src', data => { 
+    setMediaRendererProps({
+      label: 'Audio Player',
+      type: data.type,
+      src: data.src
+    })
+    setShowMedia(true)
+  })
+
+  EventEmitter.subscribe('stamp-clicked', data => {
+    const stampValue = data[1]
+    if (mediaControllerRef.current) mediaControllerRef.current.setState(stampValue)
+  })
+
+  ////////////////
+  ///  JSX  //////
+  ////////////////
 
   return (
     <div className='app-container'>
@@ -219,8 +239,37 @@ const App = () => {
           <span className='logo'>notestamp</span>
           <span className='nav-bar'>
             { showMedia
-              ? <MediaTitleBar title={mediaState.label} onClose={handleBackToHomepage} />
-              : <Nav items={mediaComponents} onClick={openMedia} />
+              ? <MediaTitleBar
+                  label={mediaRendererProps.label}
+                  title={requestedProject?requestedProject.metadata.title:''}
+                  onClose={handleBackToHomepage}
+                  onSave={() => {
+                    handleStageChanges()
+                    saveModalRef.current.showModal()
+                  }}
+                  user={user}
+                />
+              : <Nav items={mediaComponents} onClick={handleCreateNewProject} />
+            }
+          </span>
+          <span>
+            { showLoginButton &&
+              <button className='nav-btn'
+                style={{ marginRight: '10px' }}
+                onClick={handleLoginBtnClicked}
+              >
+              <Icon style={{ fontSize: 'medium', marginRight: '5px' }}>person</Icon>
+                Sign in
+              </button>
+            }
+            { showLogoutButton &&
+              <button className='nav-btn'
+                style={{ marginRight: '10px' }}
+                onClick={handleLogOut}
+              >
+              <Icon style={{ fontSize: 'medium', marginRight: '5px' }}>logout</Icon>
+                Sign out
+              </button>
             }
           </span>
       </header>
@@ -232,50 +281,60 @@ const App = () => {
               e.preventDefault()
               handleSaveProject(e.target.elements.filename.value)
             }}>
-              <p>Name your project</p>
-              <br></br>
-              <input type='text' name='filename' />
+              <p>Save as</p>
+              <input style={{ margin: '5px 5px 5px 0' }}
+                type='text' 
+                name='filename' 
+                defaultValue={requestedProject?requestedProject.metadata.title:''}
+              />
               <button type='submit'>save</button>
             </form>
           </Modal>
+          <Modal ref={unsavedChangesModalRef}>
+            <p>Save changes made to this file?</p>
+            <br></br>
+            <span style={{ display: 'flex', justifyContent: 'center', width: '100%', gap: '5px'}}>
+              <button onClick={() => {
+                handleStageChanges()
+                unsavedChangesModalRef.current.close()
+                saveModalRef.current.showModal()
+              }}>
+                Yes
+              </button>
+              <button onClick={() => {
+                unsavedChangesModalRef.current.close()
+                setShowMedia(false)
+              }}>
+                No
+              </button>
+            </span>
+          </Modal>
 
-          { !showMedia && !showLoginForm
-            && <div className='left-pane-content-container'>
-              { user
-                ? <Dashboard directory={user.directory} 
-                    onOpenProject={handleOpenProject} 
-                    onDeleteProject={handleDeleteProject}
-                  />
-                : <WelcomeMessage />
-              } 
-            </div>
-          }
-
-          { showLoginForm 
-            && <div className='left-pane-content-container'>
-              <Login onCancel={handleCancelLogin} 
-                successCallback={handleLoggedIn}
-              />
-            </div>
-          }
-
-          { showMedia
-            && <div className='left-pane-content-container'>
-                  <MediaRenderer ref={mediaRef} 
-                    type={mediaState.type}
-                    src={mediaState.src} 
-                  />
-            </div>
-          }
+          <div className='left-pane-content-container'>
+            { !showMedia && !showLoginForm && !user && 
+                <WelcomeMessage />
+            }
+            { !showMedia && !showLoginForm && user &&
+                <Dashboard directory={user.directory} 
+                  onOpenProject={handleOpenProject} 
+                  onDeleteProject={handleDeleteProject}
+                />
+            }
+            { showLoginForm &&
+                <Login onCancel={handleCancelLogin} 
+                  successCallback={handleLoggedIn}
+                />
+            }
+            { showMedia && <MediaRenderer ref={attachMediaController} {...mediaRendererProps} /> }
+          </div>
         </div>
 
         <div className='right-pane'>
           <div className='editor-container'>
-            <TextEditor 
-              user={user}
-              onRequestStampData={getStampDataFromMedia} 
-              onSave={handleCaptureReaderState}
-              content={project?project.content:null} />
+            <TextEditor ref={textEditorRef}
+              getStampData={getStampDataFromMedia} 
+              onContentChange={handleEditorContentChange}
+            />
           </div>
         </div>
       </main>

@@ -22,11 +22,11 @@ export const getProjectData = async title => {
       return { metadata: metadata, content: content }
     }
     else {
-      // hanlde errors (might have to login again)
+      // Handle HTTP errors
       return (null)
     }
   } catch(error) {
-    console.log(error)
+    console.error(error)
     return null
   }
 }
@@ -49,7 +49,7 @@ export const deleteProject = async title => {
     const response = await fetch(url, options)    
     if (response.ok) {
       const newDir = await response.json()
-      console.log(newDir)
+      console.log('updated dir', newDir)
       return newDir
     }
     else {
@@ -57,7 +57,7 @@ export const deleteProject = async title => {
       return null
     }
   } catch(error) {
-    console.log(error)
+    console.error(error)
     return null
   }
 }
@@ -91,7 +91,7 @@ export const loginWithCredentials = async (username, password) => {
       else if (response.status === 400) return null
     }
   } catch(error) {
-    console.log(error)
+    console.error(error)
     return null
   }
 }
@@ -123,7 +123,7 @@ export const registerWithCredentials = async (username, password) => {
       else if (response.status === 409) return null
     }
   } catch(error) {
-    console.log(error)
+    console.error(error)
     return null
   }
 }
@@ -143,7 +143,7 @@ export const logOut = async () => {
       return (null)
     }
   } catch(error) {
-    console.log(error)
+    console.error(error)
     return null
   }
 }
@@ -169,7 +169,7 @@ export const saveProject = async (metadata, content) => {
     const response = await fetch(api + "/home/upload", options)  
     if (response.ok) {
       const dir = await response.json()
-      console.log(dir)
+      console.log('updated dir', dir)
       return dir
     }
     else {
@@ -177,7 +177,7 @@ export const saveProject = async (metadata, content) => {
       else if (response.status === 400) return null
     }
   } catch(error) {
-    console.log(error)
+    console.error(error)
     return null
   }
 }

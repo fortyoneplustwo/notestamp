@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react'
-import { WithToolbar, Toolbar } from './MediaComponents'
+import React, { useEffect, useImperativeHandle, useRef } from 'react'
+import { WithToolbar, Toolbar } from './LeftPaneComponents'
 import '../Background.css'
 import { formatTime } from '../modules/formatTime'
 
@@ -11,10 +11,9 @@ const AudioPlayer = React.forwardRef((props, ref) => {
   /// Initialize controller //////
   ////////////////////////////////
   
-  useEffect(() => {
-    // Parent component can use this controller using ref
-    const controller = {
-      getState: function (_) {
+  useImperativeHandle(ref, () => {
+    return {
+      getState: () => {
         if (playerRef.current) {
           const currentTime = playerRef.current.currentTime
           return { 
@@ -25,13 +24,17 @@ const AudioPlayer = React.forwardRef((props, ref) => {
           return null
         }
       },
-      setState: function (newState) {
+      setState: newState => {
         playerRef.current.currentTime = newState
         playerRef.current.play()
-      }
+      },
+      getMetada: () => {
+        return playerRef.current
+          ? { ...props, src: playerRef.current.src }
+          : null
+      } 
     } 
-    ref.current = controller
-  }, [ref])
+  }, [props])
 
 
   ////////////////////////////////
@@ -44,17 +47,15 @@ const AudioPlayer = React.forwardRef((props, ref) => {
 
   return (
       <WithToolbar>
-        { !src
-          && <Toolbar>
-            <form style={{ color: 'black' }} onChange={ e => {
-              playerRef.current.src = window.URL.createObjectURL(e.target.files[0])
-            }}>
-              <input type='file' accept='audio/*' />
-            </form>
-          </Toolbar>
-        }
+        <Toolbar>
+          <form style={{ color: 'black' }} onChange={ e => {
+            playerRef.current.src = window.URL.createObjectURL(e.target.files[0])
+          }}>
+            <input type='file' accept='audio/*' />
+          </form>
+        </Toolbar>
         <div 
-          className='grid-background' 
+          className='diagonal-background' 
           style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: '1' }}>
           <audio style={{ colorScheme: 'dark' }} controls ref={playerRef} />
         </div>

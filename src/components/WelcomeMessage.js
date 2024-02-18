@@ -2,8 +2,8 @@ import React from 'react'
 
 const WelcomeMessage = () => {
   return (
-    <div style={{ display: 'flex', flexGrow: '1', overflow: 'scroll', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-      <div style={{ textJustify: 'inter-word', width: '80%', color: 'black' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+      <div style={{ textJustify: 'inter-word', width: '80%', overflow: 'auto', height: '80%' }}>
         <p style={{ whiteSpace: 'pre-wrap' }}>
           Welcome to <strong>notestamp</strong>, a web app that synchronizes your notes to media.
         </p>
@@ -29,6 +29,10 @@ const WelcomeMessage = () => {
           <li>Cloud storage</li>
           <li>Collaborative editing</li>
           <li>Dark Mode</li>
+        </p>
+        <br></br>
+        <p>This project is open source. Contribute on&nbsp; 
+          <a href='https://github.com/fortyoneplustwo/notestamp'>github</a>.
         </p>
       </div>
     </div>

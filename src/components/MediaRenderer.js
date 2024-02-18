@@ -16,7 +16,8 @@ myMediaComponents.forEach(obj => {
   mediaComponentMap[key] = value
 })
 
-const MediaRenderer = React.forwardRef(({ type=null, src=null }, ref) => {
+const MediaRenderer = React.forwardRef((props, ref) => {
+  const { type, src } = props
   const controller = useRef(null)
   const MediaComponentToRender = mediaComponentMap[type]
 
@@ -27,7 +28,7 @@ const MediaRenderer = React.forwardRef(({ type=null, src=null }, ref) => {
   return (
     <div style={{ height: '100%', overflow: 'hidden' }}>
       <Suspense fallback={<div>Loading...</div>}>
-        <MediaComponentToRender ref={ref} src={src}  />
+        <MediaComponentToRender ref={ref} {...props}  />
       </Suspense>
     </div>
   )

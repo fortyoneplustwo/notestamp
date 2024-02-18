@@ -1,19 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Document, Page } from 'react-pdf'
 import { pdfjs } from 'react-pdf'
 import '../Button.css'
 import "react-pdf/dist/Page/TextLayer.css"
 import { Icon } from './Toolbar'
-import { WithToolbar, Toolbar } from './MediaComponents'
+import { WithToolbar, Toolbar } from './LeftPaneComponents'
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
-const PdfReader = React.forwardRef((_, ref) => {
-  const [source, setSource] = useState(null)
+const PdfReader = React.forwardRef((props, ref) => {
+  const [source, setSource] = useState(props.src)
   const [pageNumber, setPageNumber] = useState(null)
   const pageNumberRef = useRef(null)
   const [pageScale, setPageScale] = useState(1)
-
 
   useEffect(() => { pageNumberRef.current = pageNumber }, [pageNumber])
 
@@ -23,11 +22,11 @@ const PdfReader = React.forwardRef((_, ref) => {
   /// Initialize controller //////
   ////////////////////////////////
 
-  useEffect(()=> {
-    const controller = {
-      getState: function () {
+  useImperativeHandle(ref, ()=> {
+    return {
+      getState: () => {
         // NOTE: Closures always return the initial value of a state variable.
-        // Returning the ref ensures we grab the current state.
+        // Returning the ref's value ensures we grab the current state.
         if (source && pageNumberRef.current) {
           const pageNum = pageNumberRef.current
           return {
@@ -36,12 +35,12 @@ const PdfReader = React.forwardRef((_, ref) => {
           } 
         }
       },
-      setState: function (newState) {
+      setState: newState => {
         setPageNumber(newState)
-      }
+      },
+      getMetadata: () => { return {...props, src: source } }
     } 
-    ref.current = controller
-  }, [pageNumber, source, ref])
+  }, [source, props])
 
 
   return (
@@ -67,7 +66,7 @@ const PdfReader = React.forwardRef((_, ref) => {
           </button>
         </span>
       </Toolbar>
-      <div className='grid-background' style={{ color: 'black', overflow: 'auto', flex: '1' }}>
+      <div className='diagonal-background' style={{ color: 'black', overflow: 'auto', flex: '1' }}>
         {source
           && <Document file={source}>
               <Page pageNumber={pageNumber} 
