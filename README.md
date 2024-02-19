@@ -46,46 +46,69 @@ repository (an early version of notestamp).
 
 # How to integrate your custom media component
 - Create a React component file with a `forward ref` in `/src/components`
-- Within your component, implement a `controller` object and point the `ref` to it. This `controller` enables the application to communicate with your component for synchronizing with notes.
+- Within your component, implement controller methods `getState`, `setState` and `getMetadata` inside a `useImperativeHandle` hook. These methods enable communication between the application and your media component.
 - Define your custom component in `NonCoreMediaComponents.js`.
 
-## Step 1
-### Implement a controller in your component
+## Step 1: Implement controller methods within your component
 
 ```javascript
 const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 
-  useEffect(() => {
+  useImperativeHandle(ref, () => {
     const controller = {
-      getState: function (dateStampRequested) {
-        // Return media state that will be stored inside the stamp
+      getState: dateStampRequested => {
+        // Compute and return media state that will be stored inside the stamp.
         return { label: label, value: value }
       },
-      setState: function (stampValue) {
-        // Update the media element within your component to newState here
+      setState: newState => {
+        // Update the media element within your component to newState here.
+      },
+      getMetadata: () => {
+      // Return the values passed as props.
+      // You may want to update some of these values if they have changed e.g. src.
+        return { ...props }
       }
     } 
-    ref.current = controller
-  }, [ref])
+  }, []) // the compiler will tell you what needs to be added to the dependency array
 
 // Rest of the component logic goes here...
 }
 ```
-- `getState(dateStampRequested)`: Called by the application when the user wants to insert a stamp. It should return the media state that you would like to store inside the stamp e.g. `currentTime` of youtube video. `dateStampRequested` is a `Date` object which you may or may not need.
+- `getState(dateStampRequested: Date)`: Called by the application when the user wants to insert a stamp. It should return the media state that you would like to store inside the stamp e.g. `currentTime` of youtube video.
 
-  The return value must be an object of type `{ label: String or Null, value: Any or Null }`.
-  - `value` is the state of the media when the `getState()` method was called e.g. current time (in seconds) of the video media.
+  **Parameters**
+  The function takes an optional parameter of type `Date` which represents the date when the stamp insertion was requested i.e. when the user pressed `<Enter>`.
+
+  **Return value:**
+  The return value must be an object with keys `{ label: String or Null, value: Any or Null }`.
+  - `value` is the state of the media when `getState` was called e.g. current time (in seconds) of the video media.
   - `label` is the string representation of `value` that will be displayed inside the stamp e.g. current time (in seconds) converted to a string in `hh:mm` format.
 
-  **Important:** If either `getState()` or `value` evaluate to `null`, then the stamp insertion will be aborted. You may use this to your advantage to skip stamp insertion when certain conditions are met.
+  *Important:* If either `getState` or `value` evaluate to `null`, then the stamp insertion will be aborted. You may use this to your advantage to skip stamp insertion on certain conditions.
   
-- `setState(stampValue)`: Called by the application when a user clicks a stamp. This method should set the state of your media to `stampValue`. `stampValue` is extracted from the stamp that was clicked and its type will be the same as that which was returned by `getState`.
+- `setState(newState: Any)`: Called by the application when a user clicks a stamp. This method should set the state of your media to `newState`.
+
+   **Parameters**
+   - `newState` is extracted from the stamp that was click. It is of the same type and value as the `value` property in object which you return from `getState`.
+
+   **Return value**
+   This function should not return any values.
+
+- `getMetadata`: Called when the application needs to check for unsaved changes and save your document.
+
+    **Parameters**
+    None.
+
+    **Return value**
+    You should return the props that were passed to your custom media component which is an object containing the following metadata: `label`, `type`, `title`, `src`.
+    
+    In most cases you will either return the props as is or overwrite only the `src` property. For e.g. the Youtube Player component allows the user to play a different video by submitting a new URL. In this case, the component gets the current URL from the embedded player and ovewrites `src` with that value by returning `{ ...props, src: player.current.getVideoUrl()}`.
 
 ### (Optional) Add a toolbar to your component
-If you would like to add a toolbar, we provide a wrapper container together with a toolbar component that matches the design language of the application. These components are of higher-order, so you may override their default props e.g. passing your own `style` Of course, you may implement your own toolbar if you wish.
+If you would like to add a toolbar, we provide a wrapper container together with a toolbar component that matches the design language of the application. You can import them from `LeftPaneComponents.js` These components are of higher-order, so you may override their default props e.g. passing your own `style` Of course, you may implement your own toolbar if you wish.
 
 ```javascript
-import { WithToolbar, Toolbar } from './MediaComponents'
+import { WithToolbar, Toolbar } from './LeftPaneComponents'
 
 const myCustomMediaComponent = React.forwardRef((_, ref) => {
 
@@ -93,17 +116,16 @@ const myCustomMediaComponent = React.forwardRef((_, ref) => {
   return (
     <WithToolbar>
       <Toolbar>
-        // Add your toolbar elements here e.g. buttons, inputs, etc.
+        // Add your toolbar elements here e.g. buttons, inputs forms, etc.
       </Toolbar>
-      // Component JSX goes here...
+      // The body of your media component's JSX goes here. It is recommended to wrap it in a `div`.
     </WithToolbar>
   )
 }
 ```
-See `YoutubePlayer.js`, `AudioPlayer.js` and `PdfReader.js` in `/src/components` for example usage of the Toolbar component.
+See `YoutubePlayer.js`, `AudioPlayer.js` and `PdfReader.js` in `/src/components` for example usage of the `WithToolbar` and `Toolbar` components.
 
-## Step 2
-### Declare your custom media component in `NonCoreMediaComponents.js`
+## Step 2: Declare your custom media component in `NonCoreMediaComponents.js`
 
 Add an object to the `myMediaComponents` array that describes your custom media component. The application will integrate it for you.
 
