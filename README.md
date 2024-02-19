@@ -55,7 +55,7 @@ repository (an early version of notestamp).
 const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 
   useImperativeHandle(ref, () => {
-    const controller = {
+    return {
       getState: dateStampRequested => {
         // Compute and return media state that will be stored inside the stamp.
         return { label: label, value: value }
