@@ -99,7 +99,7 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 
 - `getMetadata`: Called when the application needs to check for unsaved changes and save your document.
 
-    *Note*: This is only useful for users who have registered an account. Since integration with the back-end is not yet completed, you may simply return `{ ...props }` or `null` for now.
+    *Note*: This is only useful for users who have registered an account. Since integration with the back-end is not yet complete, you may simply return `{ ...props }` or `null` for now.
 
     **Parameters**
 
