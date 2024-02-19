@@ -77,9 +77,11 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 - `getState(dateStampRequested: Date)`: Called by the application when the user wants to insert a stamp. It should return the media state that you would like to store inside the stamp e.g. `currentTime` of youtube video.
 
   **Parameters**
+
   The function takes an optional parameter of type `Date` which represents the date when the stamp insertion was requested i.e. when the user pressed `<Enter>`.
 
   **Return value:**
+
   The return value must be an object with keys `{ label: String or Null, value: Any or Null }`.
   - `value` is the state of the media when `getState` was called e.g. current time (in seconds) of the video media.
   - `label` is the string representation of `value` that will be displayed inside the stamp e.g. current time (in seconds) converted to a string in `hh:mm` format.
@@ -92,14 +94,19 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
    - `newState` is extracted from the stamp that was click. It is of the same type and value as the `value` property in object which you return from `getState`.
 
    **Return value**
+
    This function should not return any values.
 
 - `getMetadata`: Called when the application needs to check for unsaved changes and save your document.
 
+    *Note*: This is only useful for users who have registered an account. Since integration with the back-end is not yet completed, you may simply return `{ ...props }` or `null` for now.
+
     **Parameters**
+
     None.
 
     **Return value**
+
     You should return the props that were passed to your custom media component which is an object containing the following metadata: `label`, `type`, `title`, `src`.
     
     In most cases you will either return the props as is or overwrite only the `src` property. For e.g. the Youtube Player component allows the user to play a different video by submitting a new URL. In this case, the component gets the current URL from the embedded player and ovewrites `src` with that value by returning `{ ...props, src: player.current.getVideoUrl()}`.
