@@ -80,7 +80,7 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 
   The function takes an optional parameter of type `Date` which represents the date when the stamp insertion was requested i.e. when the user pressed `<Enter>`.
 
-  **Return value:**
+  **Return value**
 
   The return value must be an object with keys `{ label: String or Null, value: Any or Null }`.
   - `value` is the state of the media when `getState` was called e.g. current time (in seconds) of the video media.
@@ -95,9 +95,9 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 
    **Return value**
 
-   This function should not return any values.
+   None
 
-- `getMetadata`: Called when the application needs to check for unsaved changes and save your document.
+- `getMetadata()`: Called when the application needs to check for unsaved changes and save your document.
 
     *Note*: This is only useful for users who have registered an account. Since integration with the back-end is not yet complete, you may simply return `{ ...props }` or `null` for now.
 
