@@ -32,10 +32,15 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
         if (player.current) player.current.seekTo(newState, true)
       },
       getMetadata: () => {
-          return player.current
-            ? { ...props, src: withoutTimeData(player.current.getVideoUrl()) }
-            : null
-      }
+        return player.current
+          ? {
+            ...props,
+            src: withoutTimeData(player.current.getVideoUrl()),
+            mimetype: ''
+          }
+          : null
+      },
+      getMedia: () => { return null }
     }
   }, [props])
 

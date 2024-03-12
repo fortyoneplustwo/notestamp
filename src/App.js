@@ -22,6 +22,8 @@ const App = () => {
 
   const mediaControllerRef = useRef(null)
   const textEditorRef = useRef(null)
+  const uploadDialogRef = useRef(null)
+  const downloadDialogRef = useRef(null)
   const attachMediaController = controller => mediaControllerRef.current = controller
 
   // User session data. Updated only after a successful login
@@ -31,13 +33,15 @@ const App = () => {
   const [showLoginForm, setShowLoginForm] = useState(false)
   const [showLoginButton, setShowLoginButton] = useState(true)
   const [showLogoutButton, setShowLogoutButton] = useState(false)
+  const [projectToSave, setProjectToSave] = useState('')
+  const [toggleSave, setToggleSave] = useState(false)
   const saveModalRef = useRef(null)
   const unsavedChangesModalRef = useRef(null)
+
 
   // Non-user-specific variables
   const [showMedia, setShowMedia] = useState(null)
   const [mediaRendererProps, setMediaRendererProps] = useState(null)
-  const [editorContent, setEditorContent] = useState('')
   const [mediaComponents, setMediaComponents] = useState([
     { label: 'YouTube Player', type: 'youtube', path: './YoutubePlayer.js' },
     { label: 'Audio Player', type: 'audio', path: './AudioPlayer.js' },
@@ -48,11 +52,37 @@ const App = () => {
   ////////////////////////////////
   ///  Initialization  ///////////
   ////////////////////////////////
-
+  
   // Import non-core components
   useEffect(() => {
-    setMediaComponents([...mediaComponents, ...myMediaComponents])
+    setMediaComponents(m => {
+      return [...m, ...myMediaComponents]
+    })
   }, [])
+
+  // Save (i.e. upload) the project when the dependency is toggled
+  useEffect(() => {
+    console.log(projectToSave)
+    if (!projectToSave) return
+    saveModalRef.current.close()
+    uploadDialogRef.current.showModal()
+		const { metadata, content, media } = projectSnapshot
+      api.saveProject({ ...metadata, title: projectToSave }, content, media)
+      .then(dir => {
+        uploadDialogRef.current.close()
+        if (dir) {
+          setUser({
+            ...user,
+            directory: dir
+          })	
+          setRequestedProject({
+            metadata: {...projectSnapshot.metadata}, 
+            content: projectSnapshot.content,
+          })
+        }
+      })
+      .catch(error => console.error(error))
+  }, [toggleSave])
 
   /////////////////////////////////
   ///  METHODS  (user session) ////
@@ -69,14 +99,16 @@ const App = () => {
 
   const handleOpenProject = async title => {
     try {
+      downloadDialogRef.current.showModal()
       const result = await api.getProjectData(title)
+      downloadDialogRef.current.close()
       if (result === null) {
         throw new Error('Error fetching project')
       } else {
         const { metadata, content } = result
         setRequestedProject({ 
           metadata: {...metadata},
-          content: content,
+          content: JSON.parse(content)
         })
         setShowMedia(() => {
           setMediaRendererProps({ ...metadata })
@@ -89,29 +121,17 @@ const App = () => {
     }
   }
 
+  // The purpose of staging is to capture the state of the 
+  // current project into the 'projectSnapshot' state var.
   const handleStageChanges = () => {
     const metadata = mediaControllerRef.current ? mediaControllerRef.current.getMetadata() : null
     if (!metadata) return
-    setProjectSnapshot({ metadata: { ...metadata }, content: editorContent })
-  }
-
-  const handleSaveProject = filename => {
-    if (!filename) return
-    saveModalRef.current.close()
-    api.saveProject({ 
-      ...projectSnapshot.metadata,
-      title: filename
-    }, editorContent)
-      .then(dir => {
-        if (dir) setUser({
-          ...user,
-          directory: dir
-        })
-      })
-    setRequestedProject({ 
-      metadata: {...projectSnapshot.metadata}, 
-      content: projectSnapshot.content 
-    })
+    const content = textEditorRef.current.getContent()
+    const media = mediaControllerRef.current ? mediaControllerRef.current.getMedia() : null
+    // Allow media to be null only if the project already exists in the db 
+    // i.e. 'title' field must be present in metadata.
+    if (media === null && !('title' in metadata)) return
+    setProjectSnapshot({ metadata: { ...metadata }, content: content, media: media })
   }
 
   const handleDeleteProject = title => {
@@ -158,29 +178,31 @@ const App = () => {
     setShowLoginButton(false)
   }
 
-  const handleEditorContentChange = content => {
-    setEditorContent(content)
-  }
-
   const handleBackToHomepage = () => {
     setShowMedia((_) => {
       if (user && requestedProject) {
         const currMetadata = mediaControllerRef.current 
           ? mediaControllerRef.current.getMetadata() 
           : null 
-        const currContent = editorContent
+        const currContent = JSON.stringify(textEditorRef.current.getContent())
+        const prevContent = JSON.stringify(requestedProject.content)
 
         let projectModified = false
         if (currMetadata) {
-          if (requestedProject['content'] !== currContent) projectModified = true
-          for (const key in requestedProject.metadata) {
-            if (requestedProject.metadata[key] !== currMetadata[key]) projectModified = true
+          if (prevContent !== currContent) {
+            projectModified = true
           }
         }
 
         if (projectModified) {
           unsavedChangesModalRef.current.showModal()
+          // Keep the media open since we don't know whether the
+          // user will choose to to save changes or not.
+          // If they do, the modal's handler will take care 
+          // of closing the media component for us.
           return true
+        } else {
+          setRequestedProject(null)
         }
       }
       return false
@@ -245,7 +267,14 @@ const App = () => {
                   onClose={handleBackToHomepage}
                   onSave={() => {
                     handleStageChanges()
-                    saveModalRef.current.showModal()
+                    if (!requestedProject) { 
+                      saveModalRef.current.showModal()
+                    } else {
+                      setToggleSave(s => {
+                        setProjectToSave(requestedProject.metadata.title)
+                        return !s
+                      })
+                    }
                   }}
                   user={user}
                 />
@@ -279,7 +308,7 @@ const App = () => {
           <Modal ref={saveModalRef}>
             <form onSubmit={e => {
               e.preventDefault()
-              handleSaveProject(e.target.elements.filename.value)
+              setProjectToSave(e.target.elements.filename.value)
             }}>
               <p>Save as</p>
               <input style={{ margin: '5px 5px 5px 0' }}
@@ -297,17 +326,30 @@ const App = () => {
               <button onClick={() => {
                 handleStageChanges()
                 unsavedChangesModalRef.current.close()
-                saveModalRef.current.showModal()
+                setToggleSave(s => {
+                  setProjectToSave(requestedProject.metadata.title)
+                  setShowMedia(false)
+                  return !s
+                })
               }}>
                 Yes
               </button>
               <button onClick={() => {
                 unsavedChangesModalRef.current.close()
+                setRequestedProject(null)
                 setShowMedia(false)
               }}>
                 No
               </button>
             </span>
+          </Modal>
+          <Modal ref={uploadDialogRef} showCloseBtn={false}>
+            <p>Uploading project</p>
+            <progress />
+          </Modal>
+          <Modal ref={downloadDialogRef} showCloseBtn={false}>
+            <p>Fetching project</p>
+            <progress />
           </Modal>
 
           <div className='left-pane-content-container'>
@@ -333,7 +375,6 @@ const App = () => {
           <div className='editor-container'>
             <TextEditor ref={textEditorRef}
               getStampData={getStampDataFromMedia} 
-              onContentChange={handleEditorContentChange}
             />
           </div>
         </div>

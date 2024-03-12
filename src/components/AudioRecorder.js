@@ -77,9 +77,8 @@ const AudioRecorder = React.forwardRef((_, ref) => {
           mediaRecorder.current.onstop = () => {
             dateWhenRecLastInactive = new Date()
             recDuration += (dateWhenRecLastInactive - dateWhenRecLastActive)
-            const blob = new Blob(chunks.current, {type: "audio/ogg; codecs=opus"})
-            const audioURL = window.URL.createObjectURL(blob)
-            EventEmitter.dispatch('open-media-with-src', { type: 'audio', src: audioURL })
+            const blob = new Blob(chunks.current, {type: "audio/ogg"})
+            EventEmitter.dispatch('open-media-with-src', { type: 'audio', src: blob })
           }
         })
         // Error callback

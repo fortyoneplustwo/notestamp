@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useRef, useEffect, useState, useImperativeHandle } from 'react'
+import React, { useMemo, useCallback, useRef, useState, useImperativeHandle } from 'react'
 import { isKeyHotkey } from 'is-hotkey'
 import { Editable, withReact, useSlate } from 'slate-react'
 import * as SlateReact from 'slate-react'
@@ -27,7 +27,7 @@ const HOTKEYS = {
 }
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
-const TextEditor = React.forwardRef(({ getStampData, onContentChange }, ref) => {
+const TextEditor = React.forwardRef(({ getStampData }, ref) => {
   const [internalClipboard, setInternalClipboard] = useState([])
   const fileUploadModalRef = useRef(null)
   const renderElement = useCallback(props => <Element {...props} />, [])
@@ -50,10 +50,6 @@ const TextEditor = React.forwardRef(({ getStampData, onContentChange }, ref) => 
     []
   )
 
-  useEffect(() => {
-    onContentChange(initialValue[0].children)
-  }, [])
-
   useImperativeHandle(ref, () => {
     return {
       setContent: newContent => {
@@ -66,6 +62,9 @@ const TextEditor = React.forwardRef(({ getStampData, onContentChange }, ref) => 
         Transforms.unwrapNodes(editor)
         Transforms.removeNodes(editor)
         Transforms.insertNodes(editor, newNodes)
+      },
+      getContent: () => {
+        return editor.children
       }
     }
   }, [editor])
@@ -186,7 +185,6 @@ const TextEditor = React.forwardRef(({ getStampData, onContentChange }, ref) => 
         const isAstChange = editor.operations.some(op => 'set_selection' !== op.type)
         if (isAstChange) {
           const content = JSON.stringify(value)
-          onContentChange(content)
           localStorage.setItem('content', content)
         }
       }}
@@ -443,7 +441,6 @@ const toggleAction = (editor, action) => {
   }
   else if (action === 'pdf') {
     const editorContent = toHtml(editor)
-    console.log(editorContent)
     // Default export is a4 paper, portrait, using millimeters for units
     const doc = new jsPDF();
     doc.html(editorContent, {

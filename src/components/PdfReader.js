@@ -5,6 +5,7 @@ import '../Button.css'
 import "react-pdf/dist/Page/TextLayer.css"
 import { Icon } from './Toolbar'
 import { WithToolbar, Toolbar } from './LeftPaneComponents'
+import { getProjectMedia } from '../api'
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
@@ -18,11 +19,20 @@ const PdfReader = React.forwardRef((props, ref) => {
 
   useEffect(() => { source ? setPageNumber(1) : setPageNumber(null) }, [source])
 
+  useEffect(() => {
+    if ('title' in props) {
+      getProjectMedia(props.title)
+        .then(pdf => {
+          if (pdf) setSource(pdf)
+        })
+    }
+  }, [props])
+
   ////////////////////////////////
   /// Initialize controller //////
   ////////////////////////////////
 
-  useImperativeHandle(ref, ()=> {
+  useImperativeHandle(ref, () => {
     return {
       getState: () => {
         // NOTE: Closures always return the initial value of a state variable.
@@ -38,7 +48,16 @@ const PdfReader = React.forwardRef((props, ref) => {
       setState: newState => {
         setPageNumber(newState)
       },
-      getMetadata: () => { return {...props, src: source } }
+      getMetadata: () => { 
+        return {
+          ...props,
+          src: '',
+          mimetype: 'application/pdf'
+        } 
+      },
+      getMedia: () => { 
+        return source ? source : null 
+      }
     } 
   }, [source, props])
 
