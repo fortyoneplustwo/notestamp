@@ -73,19 +73,21 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
 
   return (
     <WithToolbar>
-      <Toolbar style={{ display: 'flex', justifyContent: 'center' }}>
-        <form onSubmit={handleSubmitUrl}>
-          <input
-            type="text"
-            name="inputField"
-            placeholder="Enter YouTube link"
-            style={{ width: '400px' }}
-          />
-          <button type='submit' style={{ marginLeft: '3px' }}>
-            Play
-          </button>
-        </form>
-      </Toolbar>
+      { !props.src &&
+        <Toolbar style={{ display: 'flex', justifyContent: 'center' }}>
+          <form onSubmit={handleSubmitUrl}>
+            <input
+              type="text"
+              name="inputField"
+              placeholder="Enter YouTube link"
+              style={{ width: '400px' }}
+            />
+            <button type='submit' style={{ marginLeft: '3px' }}>
+              Play
+            </button>
+          </form>
+        </Toolbar>
+      }
       <div 
         className='diagonal-background' 
         style={{

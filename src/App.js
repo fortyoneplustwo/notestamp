@@ -62,7 +62,6 @@ const App = () => {
 
   // Save (i.e. upload) the project when the dependency is toggled
   useEffect(() => {
-    console.log(projectToSave)
     if (!projectToSave) return
     saveModalRef.current.close()
     uploadDialogRef.current.showModal()
@@ -128,9 +127,8 @@ const App = () => {
     if (!metadata) return
     const content = textEditorRef.current.getContent()
     const media = mediaControllerRef.current ? mediaControllerRef.current.getMedia() : null
-    // Allow media to be null only if the project already exists in the db 
-    // i.e. 'title' field must be present in metadata.
-    if (media === null && !('title' in metadata)) return
+    if (media) metadata.src = '' // Ensure media and src are mutually exclusive
+    console.log(metadata, content, media)
     setProjectSnapshot({ metadata: { ...metadata }, content: content, media: media })
   }
 
@@ -212,7 +210,7 @@ const App = () => {
   const handleCreateNewProject = (label, type) => {
     setShowMedia(() => {
       setRequestedProject(null)
-      setMediaRendererProps({ label: label, type: type, src: '' })
+      setMediaRendererProps({ label: label, type: type, src: '', title: '', mimetype: '' })
       return true
     })
   }
@@ -308,7 +306,10 @@ const App = () => {
           <Modal ref={saveModalRef}>
             <form onSubmit={e => {
               e.preventDefault()
-              setProjectToSave(e.target.elements.filename.value)
+              setToggleSave(s => {
+                setProjectToSave(e.target.elements.filename.value)
+                return !s
+              })
             }}>
               <p>Save as</p>
               <input style={{ margin: '5px 5px 5px 0' }}
@@ -329,6 +330,7 @@ const App = () => {
                 setToggleSave(s => {
                   setProjectToSave(requestedProject.metadata.title)
                   setShowMedia(false)
+                  setRequestedProject(null)
                   return !s
                 })
               }}>

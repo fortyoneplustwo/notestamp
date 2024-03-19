@@ -49,7 +49,7 @@ repository (an early version of notestamp).
 - Within your component, implement controller methods `getState`, `setState` and `getMetadata` inside a `useImperativeHandle` hook. These methods enable communication between the application and your media component.
 - Define your custom component in `NonCoreMediaComponents.js`.
 
-## Step 1: Implement controller methods within your component
+## Step 1: Implement the following methods within your component
 
 ```javascript
 const MyCustomMediaComponent = React.forwardRef((props, ref) => {
@@ -64,9 +64,13 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
         // Update the media element within your component to newState here.
       },
       getMetadata: () => {
-      // Return the values passed as props.
-      // You may want to update some of these values if they have changed e.g. src.
+        // Return the values passed as props.
+        // You may want to update some of these values if they have changed e.g. src.
         return { ...props }
+      },
+      getMedia: () => {
+        // Return media file input/recorded by user. Typically a blob or buffer.
+        return media
       }
     } 
   }, []) // the compiler will tell you what needs to be added to the dependency array
@@ -74,14 +78,21 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 // Rest of the component logic goes here...
 }
 ```
+- `props`: An object containing metadata about your component.
+    
+    **Fields**
+        - `label`: The text that appears in the title bar when starting a new project with your media component.
+        - `type`: A unique identifier for your media component.
+        - `title`: If opening an existing project, then this value is the title of the project. If opening a new project, this value is an empty string.
+        - `mimetype`: The MIME type of the media e.g. `application/pdf` or `audio/wav`. This value is an empty string for new projects.
+        - `src`: If opening an existing project, this value is the endpoint which must be called to stream or download the project's media. This value is an empty string for new projects.
+    
 - `getState(dateStampRequested: Date)`: Called by the application when the user wants to insert a stamp. It should return the media state that you would like to store inside the stamp e.g. `currentTime` of youtube video.
 
   **Parameters**
-
   The function takes an optional parameter of type `Date` which represents the date when the stamp insertion was requested i.e. when the user pressed `<Enter>`.
 
   **Return value**
-
   The return value must be an object with keys `{ label: String or Null, value: Any or Null }`.
   - `value` is the state of the media when `getState` was called e.g. current time (in seconds) of the video media.
   - `label` is the string representation of `value` that will be displayed inside the stamp e.g. current time (in seconds) converted to a string in `hh:mm` format.
@@ -94,22 +105,29 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
    - `newState` is extracted from the stamp that was click. It is of the same type and value as the `value` property in object which you return from `getState`.
 
    **Return value**
-
    None
 
 - `getMetadata()`: Called when the application needs to check for unsaved changes and save your document.
 
-    *Note*: This is only useful for users who have registered an account. Since integration with the back-end is not yet complete, you may simply return `{ ...props }` or `null` for now.
-
     **Parameters**
-
     None.
 
     **Return value**
-
-    You should return the props that were passed to your custom media component which is an object containing the following metadata: `label`, `type`, `title`, `src`.
+    You should return the props that were passed to your custom media component. Overwriting the `src` property is required. Overwriting the `mimetype` property is optional.
     
-    In most cases you will either return the props as is or overwrite only the `src` property. For e.g. the Youtube Player component allows the user to play a different video by submitting a new URL. In this case, the component gets the current URL from the embedded player and ovewrites `src` with that value by returning `{ ...props, src: player.current.getVideoUrl()}`.
+    If your media is input from the user's device then `src` should be an empty string and `mimetype` should be set to the MIME type of the media.
+
+    Otherwise, if your media is streamed from a publicly accessible external party (e.g. a youtube link), then `src` should be set to stream's url. You don't have to overwrite `mimetype` in this case.
+
+- `getMedia()`: Also called when saving the project or checking for unsaved changes.
+
+    **Parameters**
+    None
+
+    **Return value**
+    Null or buffer
+
+    If media was input/recorded by the user from their local device, then return the media buffer. Otherwise, if media is obtained from an external source (e.g. youtube link) then return `null`
 
 ### (Optional) Add a toolbar to your component
 If you would like to add a toolbar, we provide a wrapper container together with a toolbar component that matches the design language of the application. You can import them from `LeftPaneComponents.js` These components are of higher-order, so you may override their default props e.g. passing your own `style` Of course, you may implement your own toolbar if you wish.

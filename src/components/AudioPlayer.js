@@ -4,9 +4,9 @@ import '../Background.css'
 import { formatTime } from '../modules/formatTime'
 
 const AudioPlayer = React.forwardRef((props, ref) => {
-  const { src } = props
-  const [inputFile, setInputFile] = useState(null)
+  const [audio, setAudio] = useState(null)
   const playerRef = useRef(null)
+
 
   ////////////////////////////////
   /// Initialize controller //////
@@ -18,7 +18,7 @@ const AudioPlayer = React.forwardRef((props, ref) => {
         if (playerRef.current) {
           const currentTime = playerRef.current.currentTime
           return { 
-            label: formatTime(currentTime),
+            label: currentTime ? formatTime(currentTime) : null,
             value: currentTime ? currentTime : null 
           }
         } else {
@@ -33,16 +33,17 @@ const AudioPlayer = React.forwardRef((props, ref) => {
         return playerRef.current
           ? { 
             ...props,
-            mimetype: inputFile?.type || src?.type || props.mimetype,
+            mimetype: audio?.type 
+              || props.mimetype,
             src: ''
           }
           : null
       },
       getMedia: () => {
-        return inputFile || src?.type ? src : null
+        return audio
       }
     } 
-  }, [props, src, inputFile])
+  }, [props, audio])
 
 
   ////////////////////////////////
@@ -50,30 +51,41 @@ const AudioPlayer = React.forwardRef((props, ref) => {
   ////////////////////////////////
 
   useEffect(() => {
-    if (src) {
-      // playerRef.current.src = window.URL.createObjectURL(src)
-      playerRef.current.src = `${src}/${encodeURIComponent(props.title)}`
-      playerRef.current.type = props.mimetype
+    if (props.src) {
+      if (props.src instanceof Blob) {
+        // Src could be a blob passed from the recorder
+        // in which case this would be a new project
+        playerRef.current.src = window.URL.createObjectURL(props.src)
+        playerRef.current.type = props.src.type
+        setAudio(props.src)
+      } else { 
+        // Otherwise src is an endpoint from which to stream the project audio
+        // in which case this is an existing project
+        playerRef.current.src = props.src
+        playerRef.current.type = props.mimetype
+      }
     }
-  }, [src, props.mimetype, props.title])
+  }, [props])
 
   return (
-      <WithToolbar>
+    <WithToolbar>
+      { !props.src &&
         <Toolbar>
           <form style={{ color: 'black' }} onChange={ e => {
             playerRef.current.src = window.URL.createObjectURL(e.target.files[0])
-            setInputFile(e.target.files[0])
+            setAudio(e.target.files[0])
           }}>
             <input type='file' accept='audio/*' />
           </form>
         </Toolbar>
-        <div 
-          className='diagonal-background' 
-          style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: '1' }}
-        >
-          <audio style={{ colorScheme: 'dark' }} controls ref={playerRef} />
-        </div>
-      </WithToolbar>
+      }
+      <div 
+        className='diagonal-background' 
+        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: '1' }}
+      >
+        <audio style={{ colorScheme: 'dark' }} controls ref={playerRef} />
+      </div>
+    </WithToolbar>
   )
 })
 

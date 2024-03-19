@@ -10,17 +10,18 @@ import { getProjectMedia } from '../api'
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 const PdfReader = React.forwardRef((props, ref) => {
-  const [source, setSource] = useState(props.src)
+  const [source, setSource] = useState(null)
   const [pageNumber, setPageNumber] = useState(null)
   const pageNumberRef = useRef(null)
   const [pageScale, setPageScale] = useState(1)
+
 
   useEffect(() => { pageNumberRef.current = pageNumber }, [pageNumber])
 
   useEffect(() => { source ? setPageNumber(1) : setPageNumber(null) }, [source])
 
   useEffect(() => {
-    if ('title' in props) {
+    if (props.src) {
       getProjectMedia(props.title)
         .then(pdf => {
           if (pdf) setSource(pdf)
@@ -56,7 +57,11 @@ const PdfReader = React.forwardRef((props, ref) => {
         } 
       },
       getMedia: () => { 
-        return source ? source : null 
+        return props.title 
+          ? null 
+          : source 
+            ? source 
+            : null 
       }
     } 
   }, [source, props])
@@ -65,11 +70,15 @@ const PdfReader = React.forwardRef((props, ref) => {
   return (
     <WithToolbar style={{ overflow: 'hidden' }}>
       <Toolbar>
-        <form onChange={e => { setSource(e.target.files[0]) }} 
-          style={{ display: 'inline', color: 'black' }}
-        >
-          <input type='file' accept='application/pdf' />
-        </form>
+        { !props.src &&
+          <form onChange={e => { 
+            setSource(e.target.files[0])
+          }} 
+            style={{ display: 'inline', color: 'black' }}
+          >
+            <input type='file' accept='application/pdf' />
+          </form>
+        }
         <span style={{ display: 'flex', gap: '2px', marginLeft: 'auto' }}>
           <button onClick={() => { setPageScale(pageScale - 0.2) }}>
             <Icon>zoom_out</Icon>
