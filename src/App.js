@@ -125,9 +125,13 @@ const App = () => {
   const handleStageChanges = () => {
     const metadata = mediaControllerRef.current ? mediaControllerRef.current.getMetadata() : null
     if (!metadata) return
+    if ('title' in metadata) metadata.src = '' // Ensure media source cannot be overwritten
     const content = textEditorRef.current.getContent()
     const media = mediaControllerRef.current ? mediaControllerRef.current.getMedia() : null
-    if (media) metadata.src = '' // Ensure media and src are mutually exclusive
+    if (media) {
+      metadata.src = '' // Ensure media and src are mutually exclusive
+      if (!metadata.mimetype) return
+    }
     console.log(metadata, content, media)
     setProjectSnapshot({ metadata: { ...metadata }, content: content, media: media })
   }
