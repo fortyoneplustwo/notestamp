@@ -64,12 +64,11 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
         // Update the media element within your component to newState here.
       },
       getMetadata: () => {
-        // Return the values passed as props.
-        // You may want to update some of these values if they have changed e.g. src.
+        // Return the values passed as props, overwriting some propoerties if need be.
         return { ...props }
       },
       getMedia: () => {
-        // Return media file input/recorded by user. Typically a blob or buffer.
+        // Return media buffer that was input/recorded by user.
         return media
       }
     } 
@@ -90,9 +89,11 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 - `getState(dateStampRequested: Date)`: Called by the application when the user wants to insert a stamp. It should return the media state that you would like to store inside the stamp e.g. `currentTime` of youtube video.
 
   **Parameters**
+
   The function takes an optional parameter of type `Date` which represents the date when the stamp insertion was requested i.e. when the user pressed `<Enter>`.
 
   **Return value**
+
   The return value must be an object with keys `{ label: String or Null, value: Any or Null }`.
   - `value` is the state of the media when `getState` was called e.g. current time (in seconds) of the video media.
   - `label` is the string representation of `value` that will be displayed inside the stamp e.g. current time (in seconds) converted to a string in `hh:mm` format.
@@ -102,7 +103,7 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 - `setState(newState: Any)`: Called by the application when a user clicks a stamp. This method should set the state of your media to `newState`.
 
    **Parameters**
-   - `newState` is extracted from the stamp that was click. It is of the same type and value as the `value` property in object which you return from `getState`.
+   - `newState` is extracted from the stamp that was clicked. It is of the same type and value as the `value` property in the object which you returned from `getState`.
 
    **Return value**
    None
@@ -110,14 +111,15 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 - `getMetadata()`: Called when the application needs to check for unsaved changes and save your document.
 
     **Parameters**
+
     None.
 
     **Return value**
-    You should return the props that were passed to your custom media component. Overwriting the `src` property is required. Overwriting the `mimetype` property is optional.
-    
-    If your media is input from the user's device then `src` should be an empty string and `mimetype` should be set to the MIME type of the media.
 
-    Otherwise, if your media is streamed from a publicly accessible external party (e.g. a youtube link), then `src` should be set to stream's url. You don't have to overwrite `mimetype` in this case.
+    You should return the props that were passed to your custom media component, overwriting some properties if needed.
+    
+    If the media was input from a local device then set `props.mimetype` to the MIME type of the media.
+    Otherwise, if the media is streamed from a publicly accessible external source, say a youtube link, then set `props.src` to the the youtube link.
 
 - `getMedia()`: Also called when saving the project or checking for unsaved changes.
 
@@ -125,9 +127,9 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
     None
 
     **Return value**
-    Null or buffer
+    Null or Buffer
 
-    If media was input/recorded by the user from their local device, then return the media buffer. Otherwise, if media is obtained from an external source (e.g. youtube link) then return `null`
+    If media was input/recorded from a local device, then return the media buffer. Otherwise, return `null`
 
 ### (Optional) Add a toolbar to your component
 If you would like to add a toolbar, we provide a wrapper container together with a toolbar component that matches the design language of the application. You can import them from `LeftPaneComponents.js` These components are of higher-order, so you may override their default props e.g. passing your own `style` Of course, you may implement your own toolbar if you wish.
