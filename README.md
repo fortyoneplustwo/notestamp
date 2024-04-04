@@ -80,11 +80,12 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 - `props`: An object containing metadata about your component.
     
     **Fields**
-        - `label`: The text that appears in the title bar when starting a new project with your media component.
-        - `type`: A unique identifier for your media component.
-        - `title`: If opening an existing project, then this value is the title of the project. If opening a new project, this value is an empty string.
-        - `mimetype`: The MIME type of the media e.g. `application/pdf` or `audio/wav`. This value is an empty string for new projects.
-        - `src`: If opening an existing project, this value is the endpoint which must be called to stream or download the project's media. This value is an empty string for new projects.
+
+    - `label`: The text that appears in the title bar when starting a new project with your media component.
+    - `type`: A unique identifier for your media component.
+    - `title`: If opening an existing project, then this value is the title of the project. If opening a new project, this value is an empty string.
+    - `mimetype`: The MIME type of the media e.g. `application/pdf` or `audio/wav`. This value is an empty string for new projects.
+    - `src`: If opening an existing project, this value is the endpoint which must be called to stream or download the project's media. This value is an empty string for new projects.
     
 - `getState(dateStampRequested: Date)`: Called by the application when the user wants to insert a stamp. It should return the media state that you would like to store inside the stamp e.g. `currentTime` of youtube video.
 
