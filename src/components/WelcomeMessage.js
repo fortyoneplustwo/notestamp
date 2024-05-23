@@ -15,7 +15,7 @@ const WelcomeMessage = () => {
           <li>Click a stamp and instantly seek the media to the stamp value.</li>
           <li>Your notes persist across page reloads unless you clear the browser cache.</li>
           <li>Save your project as a .stmp file, stamps included.</li>
-          <li>Export your notes to a .pdf file, stamps excluded (temporarily disabled to fix bugs).</li>
+          <li>Export your notes to a .pdf file, stamps excluded.</li>
           <li>Open your project back into the editor for further editing.</li>
         </ul>
         <br></br>
