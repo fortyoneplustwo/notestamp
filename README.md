@@ -1,9 +1,9 @@
 # Description
 A single page web application for desktop that syncs notes with media using stamps.
 
-**Media Display**: Left pane showcases various media components including YouTube player, audio recorder, audio player, and PDF reader.  
-**Note Editor:** Right pane features a rich text editor. Pressing <Enter> inserts a stamp at the beginning of a line.  
-**Stamp Functionality**: Clicking on a stamp returns the media to its state when the stamp was inserted. For audio/video media, this is the timestamp; for PDF media, it's the page number.
+- **Media Display**: Left pane showcases various media components including YouTube player, audio recorder, audio player, and PDF reader.  
+- **Note Editor:** Right pane features a rich text editor. Pressing <Enter> inserts a stamp at the beginning of a line.  
+- **Stamp Functionality**: Clicking on a stamp returns the media to its state when the stamp was inserted. For audio/video media, this is the timestamp; for PDF media, it's the page number.
 
 # Motivation
 - Develop a tool for efficient note-taking and transcription of university lectures.
