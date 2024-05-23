@@ -144,9 +144,9 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
   }
 
   // Override paste
-  // Paste nodes from internal clipboard if
+  // Paste nodes from editor clipboard if
   // contents of editor clipboard = contents of device clipboard.
-  // Otherwise paste contents device clipboard
+  // Otherwise paste contents of device clipboard
   const handlePaste = event => {
     event.preventDefault()
 
@@ -207,7 +207,7 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
             <ActionButton action='upload' icon="folder_open" description="Open .stmp file" 
               onClick={() => { fileUploadModalRef.current.showModal() }} />
             <ActionButton action='download' icon="download" description="Download project file (.stmp)" />
-            {/*<ActionButton action='pdf' icon="picture_as_pdf" description="Download as .pdf document" />*/}
+            <ActionButton action='pdf' icon="picture_as_pdf" description="Download as .pdf document" />
           </div>
         </Toolbar>
         <Editable
@@ -383,7 +383,8 @@ const toHtml = node => {
     case 'numbered-list':
       return `<ol>${children}</ol>`
     case 'list-item':
-      return `<li><p>${children}</p></li>`
+      // return `<li><p>${children}</p></li>`
+      return `<li>${children}</li>`
     default:
       return children
   }
@@ -447,10 +448,10 @@ const toggleAction = (editor, action) => {
       callback: function(doc) {
           doc.save('document.pdf');
       },
-      // x: 15,
-      // y: 15,
-      // width: 170, //target width in the PDF document
-      // windowWidth: 650, //window width in CSS pixels
+      x: 15,
+      y: 15,
+      width: 170, //target width in the PDF document
+      windowWidth: 650, //window width in CSS pixels
     })
   }
 }
