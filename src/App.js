@@ -46,7 +46,7 @@ const App = () => {
     { label: 'YouTube Player', type: 'youtube', path: './YoutubePlayer.js' },
     { label: 'Audio Player', type: 'audio', path: './AudioPlayer.js' },
     { label: 'Sound Recorder', type: 'recorder', path: './AudioRecorder.js' },
-    { label: 'PDF Reader', type: 'pdf', path: './PdfReader.js' }
+    { label: 'Pdf Reader', type: 'pdf', path: './PdfReader.js' }
   ])
 
   ////////////////////////////////

@@ -9,8 +9,8 @@ const MediaTitleBar = ({ label, title, onClose, onSave, user }) => {
         style={{ padding: '2px 10px',
           marginRight: '0',
           textDecoration: 'none', 
-          fontWeight: 'bold',
-          background: 'purple'
+          // fontWeight: 'bold',
+          background: 'black'
         }}>
         <Icon style={{ fontSize: 'medium', marginRight: '5px', color: 'orangered' }}>
           close

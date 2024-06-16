@@ -7,7 +7,7 @@
 .diagonal-background {
   background-color: transparent;
   background-size: 10px 10px;
-  background-image: repeating-linear-gradient(45deg, violet 0, violet 1px, transparent 0, transparent 50%);
+  background-image: repeating-linear-gradient(45deg, lightgrey 0, lightgrey 1px, transparent 0, transparent 50%);
 }
 
 .alternate-background:nth-child(even) {
