@@ -2,7 +2,7 @@
 A single page web application for desktop that syncs notes with media using stamps.
 
 - **Media Display**: Left pane showcases various media components including YouTube player, audio recorder, audio player, and PDF reader.  
-- **Note Editor:** Right pane features a rich text editor. Pressing <Enter> inserts a stamp at the beginning of a line.  
+- **Note Editor:** Right pane features a rich text editor. Pressing `<Enter>` inserts a stamp at the beginning of a line.  
 - **Stamp Functionality**: Clicking on a stamp returns the media to its state when the stamp was inserted. For audio/video media, this is the timestamp; for PDF media, it's the page number.
 
 # Motivation
@@ -27,32 +27,47 @@ Eventually I want the editor to support
 - Code blocks with syntax highlighting
 - Collaborative editing
 
-## Dynamic algorithm for the audio recorder 
-The MediaStream Recording API I used to implement the recorder does not allow users to query the current time while recording. To circumvent this, 
-I implemented a dynamic programming algorithm to compute the timestamp in O(1).
+## Algorithm to calculate a timestamp in real time
+The MediaStream Recording API I used to implement the recorder does not allow users to query a timestamp in real time while recording. The algorithm I implemented efficiently manages the recording state by maintaining two key variables: `dateWhenRecLastActive` and `dateWhenRecLastInactive`. These variables are updated whenever the recorder is started, resumed, paused, or stopped. The total recording duration is stored in the `recDuration` variable, which is updated whenever the recorder becomes inactive.
 
-### Algorithm details
-  - Keep track of 2 variables `dateWhenRecLastActive` and `dateWhenRecLastInactive`. Update them whenever the audio recorder is active (started/resumed) & inactive (paused/stopped).
-  - Update the audio recording's duration, `recDuration`, each time the recorder goes inactive.
-  - Mark the date, `dateStampRequested`, whenever the user attemps to insert a stamp. The timestamp can be computed using the following computation:
+When a user attempts to insert a timestamp, the algorithm first marks the current time as `dateStampRequested`. It then checks whether the recorder is currently active or inactive. If the recorder is active, the timestamp is calculated by adding the difference between `dateStampRequested` and `dateWhenRecLastInactive` to `recDuration`. If the recorder is inactive, the timestamp is simply equal to `recDuration`.
 
-  ```javascript
-   if (dateWhenRecLastActive > dateWhenRecLastInactive) {
-    timestamp = recDuration + (dateStampRequested - dateWhenRecLastInactive)
-  } else {
-    timestamp = recDuration
-  }
-   ```
+```javascript
+if (dateWhenRecLastActive > dateWhenRecLastInactive) {
+timestamp = recDuration + (dateStampRequested - dateWhenRecLastInactive)
+} else {
+timestamp = recDuration
+}
+```
+
+This approach ensures constant time complexity O(1), for both updating the state and computing timestamps, making it highly efficient for real-time applications. The algorithm leverages simple updates and checks, avoiding the overhead of iterating over events or using complex synchronization mechanisms, thus providing an efficient solution for accurate timestamping in audio recordings.
 
 # Integrate your custom media component
 - Create a React component file with a `forward ref` in `/src/components`
 - Within your component, implement controller methods `getState`, `setState` and `getMetadata` inside a `useImperativeHandle` hook. These methods enable communication between the application and your media component.
 - Define your custom component in `NonCoreMediaComponents.js`.
 
-## Step 1: Implement the following methods within your component
+## Step 1: Declare your custom media component in `NonCoreMediaComponents.js`
+
+Add an object to the `myMediaComponents` array that describes your custom media component. The application will integrate it for you.
+
+The object must define the following keys:
+- `label`: The text to display as the shortcut to your component within the navigation bar. Clicking on it will open a new project for your media component.
+- `path`: The path to your media component relative to the `/src/components` directory.
+- `type`: Pick a unique identifier for your component. It cannot be named 'youtube', 'audio', 'recorder' nor 'pdf' because these are already being used by the default media components.
+
+**Example**  
+Say you implement a custom component that plays videos from Vimeo.
 
 ```javascript
-const MyCustomMediaComponent = React.forwardRef((props, ref) => {
+const myMediaComponents = [
+  { label: 'Vimeo Player', path: './VimeoPlayer', type: 'vimeo' }
+]
+```
+## Step 2: Implement the following methods within your component
+
+```javascript
+const VimeoPlayer = React.forwardRef((props, ref) => {
 
   useImperativeHandle(ref, () => {
     return {
@@ -74,11 +89,13 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
     } 
   }, []) // the compiler will tell you what needs to be added to the dependency array
 
-// Rest of the component logic goes here...
+// ... Rest of the component logic goes here.
 }
 ```
     
 ### Props
+The props object will contain what you have decalred in Step 1 plus some additional fields.
+
 - `label`: The text that appears in the title bar when starting a new project with your media component.
 - `type`: A unique identifier for your media component.
 - `title`: If opening an existing project, then this value is the title of the project. If opening a new project, this value is an empty string.
@@ -86,7 +103,7 @@ const MyCustomMediaComponent = React.forwardRef((props, ref) => {
 - `src`: If opening an existing project, this value is the endpoint which must be called to stream or download the project's media. This value is an empty string for new projects.
 
 ### Exposed handles
-You must implement the following handles.
+You must implement the following handles to synchronize your component with the main app.
     
 #### `getState(dateStampRequested: Date)`
 Executes when the <Enter> key is pressed which means a stamp will be inserted. It should return the media state that you would like to store inside the stamp.
@@ -96,7 +113,7 @@ The function executes with an argument of type `Date` which represents the date 
 
 **Return value**  
 The return value must be an object `{ label: String or Null, value: Any or Null }`.
-- `value` is the state of the media you wish to store e.g. the timestamp of the video being viewed.
+- `value` is the state of the media you wish to store e.g. the timestamp in seconds of the video being viewed.
 - `label` is the string representation of `value` that will be displayed inside the stamp e.g. the timestamp in seconds converted to a string in `hh:mm` format.
 
 *Important:* If `value` is set to `null`, then the stamp insertion will be aborted. You may use this to your advantage to skip stamp insertion on certain conditions.
@@ -120,7 +137,7 @@ None.
 You should return the props that were passed to your custom media component, overwriting some properties if needed.
 
 If the media was input from a local device then set `props.mimetype` to the MIME type of the media.
-Otherwise, if the media is streamed from a publicly accessible external source, say a youtube link, then set `props.src` to the the youtube link.
+Otherwise, if the media is streamed from a publicly accessible external source e.g. vimeo then set `props.src` as the video url.
 
 #### `getMedia()`
 Executes when saving the project or checking for unsaved changes.
@@ -140,37 +157,18 @@ If you would like to add a toolbar, we provide a wrapper container together with
 import { WithToolbar, Toolbar } from './LeftPaneComponents'
 
 const myCustomMediaComponent = React.forwardRef((_, ref) => {
-
-  // JSX
   return (
     <WithToolbar>
       <Toolbar>
-        // Add your toolbar elements here e.g. buttons, inputs forms, etc.
+        // ... Add your toolbar elements here e.g. buttons, inputs forms, etc.
       </Toolbar>
-      // The body of your media component's JSX goes here. It is recommended to wrap it in a `div`.
+      // ... The body of your media component's JSX goes here.
     </WithToolbar>
   )
 }
 ```
 See `YoutubePlayer.js`, `AudioPlayer.js` and `PdfReader.js` in `/src/components` for example usage of the `WithToolbar` and `Toolbar` components.
 
-## Step 2: Declare your custom media component in `NonCoreMediaComponents.js`
-
-Add an object to the `myMediaComponents` array that describes your custom media component. The application will integrate it for you.
-
-The object must define the following keys:
-- `label`: The text to display as the shortcut to your component within the navigation bar. Clicking on it will open a new project for your media component.
-- `path`: The path to your media component relative to the `/src/components` directory.
-- `type`: Pick a unique identifier for your component. It cannot be named 'youtube', 'audio', 'recorder' nor 'pdf' because these are already being used by the default media components.
-
-**Example**  
-Say you implement a custom component that plays videos from Vimeo.
-
-```javascript
-const myMediaComponents = [
-  { label: 'Vimeo Player', path: './VimeoPlayer', type: 'vimeo' }
-]
-```
 # Install
 `npm install`
 
