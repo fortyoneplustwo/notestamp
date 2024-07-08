@@ -34,9 +34,9 @@ When a user attempts to insert a timestamp, the algorithm first marks the curren
 
 ```javascript
 if (dateWhenRecLastActive > dateWhenRecLastInactive) {
-timestamp = recDuration + (dateStampRequested - dateWhenRecLastInactive)
+    timestamp = recDuration + (dateStampRequested - dateWhenRecLastInactive)
 } else {
-timestamp = recDuration
+    timestamp = recDuration
 }
 ```
 
