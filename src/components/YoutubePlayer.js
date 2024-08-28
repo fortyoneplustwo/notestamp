@@ -81,8 +81,9 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
               name="inputField"
               placeholder="Enter YouTube link"
               style={{ width: '400px' }}
+              className="text-sm border rounded px-1"
             />
-            <button type='submit' style={{ marginLeft: '3px' }}>
+            <button type='submit' className='text-sm ml-1 px-1 border rounded'>
               Play
             </button>
           </form>

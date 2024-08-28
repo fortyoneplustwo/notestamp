@@ -31,7 +31,7 @@ const App = () => {
   const [projectSnapshot, setProjectSnapshot] = useState(null)
   const [requestedProject, setRequestedProject] = useState(null)
   const [showLoginForm, setShowLoginForm] = useState(false)
-  const [showLoginButton, setShowLoginButton] = useState(true)
+  const [showLoginButton, setShowLoginButton] = useState(false)
   const [showLogoutButton, setShowLogoutButton] = useState(false)
   const [projectToSave, setProjectToSave] = useState('')
   const [toggleSave, setToggleSave] = useState(false)
@@ -258,11 +258,13 @@ const App = () => {
   ////////////////
 
   return (
-    <div className='app-container'>
-      <header>
-          <span className='logo'>notestamp</span>
-          <span className='nav-bar'>
-            { showMedia
+    <div className="grid grid-rows-[auto,1fr] h-screen bg-[#f5f5f7]">
+      <header className="flex row-span-1 bg-transparent pt-1 px-2">
+          <span className="bg-transparent mr-4 text-[#FF4500] font-bold">notestamp</span>
+          <span
+            className="flex items-center"
+          >
+           {showMedia
               ? <MediaTitleBar
                   label={mediaRendererProps.label}
                   title={requestedProject?requestedProject.metadata.title:''}
@@ -283,9 +285,9 @@ const App = () => {
               : <Nav items={mediaComponents} onClick={handleCreateNewProject} />
             }
           </span>
-          <span>
-            { showLoginButton &&
-              <button className='nav-btn'
+          <span style={{ marginRight: '10px', display: 'flex', alignItems: 'center' }}>
+            {  showLoginButton &&
+              <button className="bg-transparent text-black border-none mr-1 cursor-pointer"
                 style={{ marginRight: '10px' }}
                 onClick={handleLoginBtnClicked}
               >
@@ -294,7 +296,7 @@ const App = () => {
               </button>
             }
             { showLogoutButton &&
-              <button className='nav-btn'
+              <button className="bg-transparent text-black border-none mr-1 cursor-pointer"
                 style={{ marginRight: '10px' }}
                 onClick={handleLogOut}
               >
@@ -305,8 +307,8 @@ const App = () => {
           </span>
       </header>
 
-      <main>
-        <div className='left-pane'>
+      <main className="row-span-2 grid grid-cols-2">
+        <div className='grid grid-row-1 pl-2 pr-1 py-2 overflow-auto'>
           <Modal ref={saveModalRef}>
             <form onSubmit={e => {
               e.preventDefault()
@@ -358,7 +360,7 @@ const App = () => {
             <progress />
           </Modal>
 
-          <div className='left-pane-content-container'>
+          <div className="bg-white row-span-1 border border-solid rounded-md overflow-hidden">
             { !showMedia && !showLoginForm && !user && 
                 <WelcomeMessage />
             }
@@ -377,8 +379,8 @@ const App = () => {
           </div>
         </div>
 
-        <div className='right-pane'>
-          <div className='editor-container'>
+        <div className="grid grid-row-1 pl-1 pr-2 py-2 overflow-hidden">
+          <div className="row-span-1 h-100% border border-solid rounded-md overflow-hidden">
             <TextEditor ref={textEditorRef}
               getStampData={getStampDataFromMedia} 
             />

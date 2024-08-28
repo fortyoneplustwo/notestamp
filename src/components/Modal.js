@@ -3,13 +3,17 @@ import CloseButton from './CloseButton'
 
 const Modal = React.forwardRef(({ showCloseBtn=true, children }, ref) => {
   return (
-    <dialog ref={ref}>
+    <dialog ref={ref} className="border border-black">
       {showCloseBtn &&
-        <div style={{ display: 'flex', justifyContent: 'right', marginBottom: '0.5em' }}>
+        <div
+          className="flex justify-end"
+        >
           <CloseButton handler={() => {ref.current.close()}}/>
         </div>
       }
-      {children}
+      <div className="flex p-2 text-sm">
+        {children}
+      </div>
     </dialog>
   )
 })

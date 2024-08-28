@@ -76,10 +76,11 @@ const PdfReader = React.forwardRef((props, ref) => {
           }} 
             style={{ display: 'inline', color: 'black' }}
           >
-            <input type='file' accept='application/pdf' />
+            <input type='file' accept='application/pdf' className="text-xs" />
           </form>
         }
-        <span style={{ display: 'flex', gap: '2px', marginLeft: 'auto' }}>
+        <span
+        className="flex ml-auto gap-2 items-right">
           <button onClick={() => { setPageScale(pageScale - 0.2) }}>
             <Icon>zoom_out</Icon>
           </button>

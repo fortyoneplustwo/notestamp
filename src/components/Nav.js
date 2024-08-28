@@ -1,12 +1,19 @@
-import React from 'react'
+import React, { useState } from 'react'
 import MediaShortcut from './MediaShortcut'
 
 const Nav = ({ items, onClick }) => {
+  const [showMediaShortcuts, setShowMediaShortcuts] = useState(true);
+
   return (
-    <nav style={{ padding: '2px 10px' }}>
-      <ul style={{ margin: '0', padding: '0', color: 'black' }}>
+    <nav className="flex items-center">
+      <ul className="flex gap-4">
         {items.map((item, index) => {
-          return <MediaShortcut key={index} onClick={onClick} {...item} >
+          return <MediaShortcut 
+            key={index} 
+            onShowToolbar={() => { setShowMediaShortcuts(false)} }
+            onClick={onClick} 
+            {...item} 
+          >
             { item.label }
           </MediaShortcut>
         })}

@@ -75,7 +75,7 @@ const AudioPlayer = React.forwardRef((props, ref) => {
             playerRef.current.src = window.URL.createObjectURL(e.target.files[0])
             setAudio(e.target.files[0])
           }}>
-            <input type='file' accept='audio/*' />
+            <input type='file' accept='audio/*' className="text-xs"/>
           </form>
         </Toolbar>
       }

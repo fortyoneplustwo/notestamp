@@ -2,11 +2,14 @@ import React from 'react'
 import '../Button.css'
 
 const MediaShortcut = (props) => {
-  const { type, onClick, children } = props
+  const { type, onClick, onShowToolbar, children } = props
 
   return (
-    <button  className='nav-btn'
-      onClick={() => { onClick(children, type) }}
+    <button className="text-sm bg-transparent text-black cursor-pointer hover:underline "
+      onClick={() => { 
+        onClick(children, type) 
+        onShowToolbar();
+      }}
     >
       { children }
     </button>

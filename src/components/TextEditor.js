@@ -180,48 +180,53 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
   //////////////
 
   return (
-    <SlateReact.Slate editor={editor} initialValue={initialValue}
-      onChange={value => {
-        const isAstChange = editor.operations.some(op => 'set_selection' !== op.type)
-        if (isAstChange) {
-          const content = JSON.stringify(value)
-          localStorage.setItem('content', content)
-        }
-      }}
-    >
-      <div className='text-editor-container'>
-        <Modal ref={fileUploadModalRef}>
-          <form onChange={e => { handleOpenFile(e.target.files[0]) }}>
-            <input type='file' accept='.stmp' />
-          </form>
-        </Modal>
-        <Toolbar>
-          <div className='toolbar-btn-container'>
-            <MarkButton format='bold' icon="format_bold" description='Bold (Ctrl+B)' />
-            <MarkButton format='italic' icon="format_italic" description="Italic (Ctrl+I)"/>
-            <MarkButton format='underline' icon="format_underlined" description="Underline (Ctrl+U)"/>
-            <MarkButton format='code' icon="code" description="Code (Ctrl+`)"/>
-            <BlockButton format="numbered-list" icon="format_list_numbered" description="Toggle numbered list (Ctrl+Shift+8)" />
-            <BlockButton format="bulleted-list" icon="format_list_bulleted" description="Toggle bulleted list (Ctrl+Shift+9)"/>
-            <div className='toolbar-btn-separator'></div>
-            <ActionButton action='upload' icon="folder_open" description="Open .stmp file" 
-              onClick={() => { fileUploadModalRef.current.showModal() }} />
-            <ActionButton action='download' icon="download" description="Download project file (.stmp)" />
-            <ActionButton action='pdf' icon="picture_as_pdf" description="Download as .pdf document" />
-          </div>
-        </Toolbar>
-        <Editable
-          className='editor'
-          renderElement={renderElement}
-          renderLeaf={renderLeaf}
-          placeholder={'Press <Enter> to insert a stamp.\nPress <Shift + Enter> to escape stamping.'}
-          spellCheck={true}
-          onCopy={handleCopy}
-          onPaste={handlePaste}
-          onKeyDown={(event) => { onKeyDown(event, getStampData, editor) }}
-        />
-      </div>
-    </SlateReact.Slate>
+    <div 
+      className="border-none bg-transparent h-full"
+      >
+      <SlateReact.Slate editor={editor} initialValue={initialValue}
+        onChange={value => {
+          const isAstChange = editor.operations.some(op => 'set_selection' !== op.type)
+          if (isAstChange) {
+            const content = JSON.stringify(value)
+            localStorage.setItem('content', content)
+          }
+        }}
+      >
+        <div className="flex flex-col h-full">
+          <Modal ref={fileUploadModalRef}>
+            <form onChange={e => { handleOpenFile(e.target.files[0]) }}>
+              <input type='file' accept='.stmp' />
+            </form>
+          </Modal>
+          <Toolbar>
+            <div className='toolbar-btn-container'>
+              <MarkButton format='bold' icon="format_bold" description='Bold (Ctrl+B)' />
+              <MarkButton format='italic' icon="format_italic" description="Italic (Ctrl+I)"/>
+              <MarkButton format='underline' icon="format_underlined" description="Underline (Ctrl+U)"/>
+              <MarkButton format='code' icon="code" description="Code (Ctrl+`)"/>
+              <BlockButton format="numbered-list" icon="format_list_numbered" description="Toggle numbered list (Ctrl+Shift+8)" />
+              <BlockButton format="bulleted-list" icon="format_list_bulleted" description="Toggle bulleted list (Ctrl+Shift+9)"/>
+              <div className='toolbar-btn-separator'></div>
+              <ActionButton action='upload' icon="folder_open" description="Open .stmp file" 
+                onClick={() => { fileUploadModalRef.current.showModal() }} />
+              <ActionButton action='download' icon="download" description="Download project file (.stmp)" />
+              <ActionButton action='pdf' icon="picture_as_pdf" description="Download as .pdf document" />
+            </div>
+          </Toolbar>
+          <Editable
+            className="overflow-x-hidden outline-none p-1 w-full h-full color-black bg-white"
+            style={{ tabSize: "2" }}
+            renderElement={renderElement}
+            renderLeaf={renderLeaf}
+            placeholder={'Press <Enter> to insert a stamp.\nPress <Shift + Enter> to escape stamping.'}
+            spellCheck={true}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            onKeyDown={(event) => { onKeyDown(event, getStampData, editor) }}
+          />
+        </div>
+      </SlateReact.Slate>
+    </div>
   )
 })
 
@@ -610,7 +615,7 @@ const Stamp = ({ attributes, children, element }) => {
       onClick={() => { 
         EventEmitter.dispatch('stamp-clicked', [element.label, element.value])
       }}
-      className='badge'
+      className="badge"
     >
       {children}
       <InlineChromiumBugfix />
