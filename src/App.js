@@ -9,7 +9,7 @@ import Dashboard from './components/Dashboard'
 import * as api from './api'
 import MediaRenderer from './components/MediaRenderer'
 import Nav from './components/Nav'
-import MediaTitleBar from './components/MediaTitleBar'
+import AppToolbar from './components/MediaTitleBar'
 import { myMediaComponents } from './components/NonCoreMediaComponents'
 import { Icon } from './components/Toolbar'
 import { ModalProvider, useModal } from './components/modal/ModalContext'
@@ -280,7 +280,7 @@ const App = () => {
           <span className="flex items-center" >
             {showMedia 
               ? (
-                <MediaTitleBar
+                <AppToolbar
                   label={mediaRendererProps.label}
                   title={requestedProject?requestedProject.metadata.title:''}
                   onClose={handleBackToHomepage}
