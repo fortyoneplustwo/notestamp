@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useRef, useState, useImperativeHandle } from 'react'
+import React, { useMemo, useCallback, useState, useImperativeHandle } from 'react'
 import { isKeyHotkey } from 'is-hotkey'
 import { Editable, withReact, useSlate } from 'slate-react'
 import * as SlateReact from 'slate-react'
@@ -14,10 +14,10 @@ import { withHistory } from 'slate-history'
 import isHotkey from 'is-hotkey'
 import { EventEmitter } from './EventEmitter.js'
 import { Toolbar, Button, Icon } from './Toolbar.js'
-import Modal from './Modal.js'
 import escapeHtml from 'escape-html'
 import { jsPDF } from 'jspdf'
 import '../Editor.css'
+import { useModal } from './modal/ModalContext.js'
 
 const HOTKEYS = {
   'mod+b': 'bold',
@@ -29,7 +29,6 @@ const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
 const TextEditor = React.forwardRef(({ getStampData }, ref) => {
   const [internalClipboard, setInternalClipboard] = useState([])
-  const fileUploadModalRef = useRef(null)
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
 
@@ -76,7 +75,7 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
 
   // Paste contents of submitted .stmp file into the editor
   const handleOpenFile = file => {
-    fileUploadModalRef.current.close() 
+    // fileUploadModalRef.current.close() 
     if (file) {
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -100,6 +99,7 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
         }
       }
       reader.readAsText(file)
+      closeModal()
     }
   }
 
@@ -175,6 +175,7 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
     }
   }
 
+  const { openModal, closeModal } = useModal()
   //////////////
   ///  JSX  ////
   //////////////
@@ -193,11 +194,6 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
         }}
       >
         <div className="flex flex-col h-full">
-          <Modal ref={fileUploadModalRef}>
-            <form onChange={e => { handleOpenFile(e.target.files[0]) }}>
-              <input type='file' accept='.stmp' />
-            </form>
-          </Modal>
           <Toolbar>
             <div className='toolbar-btn-container'>
               <MarkButton format='bold' icon="format_bold" description='Bold (Ctrl+B)' />
@@ -208,7 +204,12 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
               <BlockButton format="bulleted-list" icon="format_list_bulleted" description="Toggle bulleted list (Ctrl+Shift+9)"/>
               <div className='toolbar-btn-separator'></div>
               <ActionButton action='upload' icon="folder_open" description="Open .stmp file" 
-                onClick={() => { fileUploadModalRef.current.showModal() }} />
+                onClick={() => { 
+                  console.log("upload button clicked")
+                  openModal("notesUploader", { 
+                    onClose: closeModal,
+                    onFileSelect: handleOpenFile
+                  }) }} />
               <ActionButton action='download' icon="download" description="Download project file (.stmp)" />
               <ActionButton action='pdf' icon="picture_as_pdf" description="Download as .pdf document" />
             </div>

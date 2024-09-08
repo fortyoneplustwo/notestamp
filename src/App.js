@@ -7,12 +7,12 @@ import WelcomeMessage from './components/WelcomeMessage'
 import Login from './components/Login'
 import Dashboard from './components/Dashboard'
 import * as api from './api'
-import Modal from './components/Modal'
 import MediaRenderer from './components/MediaRenderer'
 import Nav from './components/Nav'
 import MediaTitleBar from './components/MediaTitleBar'
 import { myMediaComponents } from './components/NonCoreMediaComponents'
 import { Icon } from './components/Toolbar'
+import { ModalProvider, useModal } from './components/modal/ModalContext'
 
 const App = () => {
 
@@ -22,8 +22,6 @@ const App = () => {
 
   const mediaControllerRef = useRef(null)
   const textEditorRef = useRef(null)
-  const uploadDialogRef = useRef(null)
-  const downloadDialogRef = useRef(null)
   const attachMediaController = controller => mediaControllerRef.current = controller
 
   // User session data. Updated only after a successful login
@@ -35,11 +33,10 @@ const App = () => {
   const [showLogoutButton, setShowLogoutButton] = useState(false)
   const [projectToSave, setProjectToSave] = useState('')
   const [toggleSave, setToggleSave] = useState(false)
-  const saveModalRef = useRef(null)
-  const unsavedChangesModalRef = useRef(null)
 
 
   // Non-user-specific variables
+  const { openModal, closeModal } = useModal()
   const [showMedia, setShowMedia] = useState(null)
   const [mediaRendererProps, setMediaRendererProps] = useState(null)
   const [mediaComponents, setMediaComponents] = useState([
@@ -63,12 +60,12 @@ const App = () => {
   // Save (i.e. upload) the project when the dependency is toggled
   useEffect(() => {
     if (!projectToSave) return
-    saveModalRef.current.close()
-    uploadDialogRef.current.showModal()
+    closeModal()
+    openModal("uploadProgress")
 		const { metadata, content, media } = projectSnapshot
       api.saveProject({ ...metadata, title: projectToSave }, content, media)
       .then(dir => {
-        uploadDialogRef.current.close()
+        closeModal()
         if (dir) {
           setUser({
             ...user,
@@ -98,9 +95,9 @@ const App = () => {
 
   const handleOpenProject = async title => {
     try {
-      downloadDialogRef.current.showModal()
+      openModal("downloadProgress")
       const result = await api.getProjectData(title)
-      downloadDialogRef.current.close()
+      closeModal()
       if (result === null) {
         throw new Error('Error fetching project')
       } else {
@@ -197,7 +194,24 @@ const App = () => {
         }
 
         if (projectModified) {
-          unsavedChangesModalRef.current.showModal()
+          openModal("unsavedChangesNotifier", {
+            onClose: closeModal,
+            onSave: () => {
+              handleStageChanges()
+              closeModal()
+              setToggleSave(s => {
+                setProjectToSave(requestedProject.metadata.title)
+                setShowMedia(false)
+                setRequestedProject(null)
+                return !s
+              })
+            },
+            onDiscard: () => {
+              closeModal()
+              setRequestedProject(null)
+              setShowMedia(false)
+            },
+          })
           // Keep the media open since we don't know whether the
           // user will choose to to save changes or not.
           // If they do, the modal's handler will take care 
@@ -258,122 +272,78 @@ const App = () => {
   ////////////////
 
   return (
-    <div className="grid grid-rows-[auto,1fr] h-screen bg-[#f5f5f7]">
+    <>
       <header className="flex row-span-1 bg-transparent pt-1 px-2">
-          <span className="bg-transparent mr-4 text-[#FF4500] font-bold">notestamp</span>
-          <span
-            className="flex items-center"
-          >
-           {showMedia
-              ? <MediaTitleBar
-                  label={mediaRendererProps.label}
-                  title={requestedProject?requestedProject.metadata.title:''}
-                  onClose={handleBackToHomepage}
-                  onSave={() => {
-                    handleStageChanges()
-                    if (!requestedProject) { 
-                      saveModalRef.current.showModal()
-                    } else {
-                      setToggleSave(s => {
-                        setProjectToSave(requestedProject.metadata.title)
-                        return !s
-                      })
-                    }
-                  }}
-                  user={user}
-                />
-              : <Nav items={mediaComponents} onClick={handleCreateNewProject} />
-            }
-          </span>
-          <span style={{ marginRight: '10px', display: 'flex', alignItems: 'center' }}>
-            {  showLoginButton &&
-              <button className="bg-transparent text-black border-none mr-1 cursor-pointer"
-                style={{ marginRight: '10px' }}
-                onClick={handleLoginBtnClicked}
-              >
+        <span className="bg-transparent mr-4 text-[#FF4500] font-bold">notestamp</span>
+        <span className="flex items-center" >
+          {showMedia 
+            ? (
+              <MediaTitleBar
+                label={mediaRendererProps.label}
+                title={requestedProject?requestedProject.metadata.title:''}
+                onClose={handleBackToHomepage}
+                onSave={() => {
+                  handleStageChanges()
+                  if (!requestedProject) { 
+                    openModal("projectSaver", {
+                      onSave: (event) => {
+                        setToggleSave(s => {
+                          setProjectToSave(event.target.elements.filename.value)
+                          return !s
+                        })
+                      },
+                      onClose: closeModal,
+                    })
+                  } else {
+                    setToggleSave(s => {
+                      setProjectToSave(requestedProject.metadata.title)
+                      return !s
+                    })
+                  }
+                }}
+                user={user}
+              />
+            ) : <Nav items={mediaComponents} onClick={handleCreateNewProject} />
+          }
+        </span>
+        <span style={{ marginRight: '10px', display: 'flex', alignItems: 'center' }}>
+          {  showLoginButton &&
+            <button className="bg-transparent text-black border-none mr-1 cursor-pointer"
+              style={{ marginRight: '10px' }}
+              onClick={handleLoginBtnClicked}
+            >
               <Icon style={{ fontSize: 'medium', marginRight: '5px' }}>person</Icon>
-                Sign in
-              </button>
-            }
-            { showLogoutButton &&
-              <button className="bg-transparent text-black border-none mr-1 cursor-pointer"
-                style={{ marginRight: '10px' }}
-                onClick={handleLogOut}
-              >
+              Sign in
+            </button>
+          }
+          { showLogoutButton &&
+            <button className="bg-transparent text-black border-none mr-1 cursor-pointer"
+              style={{ marginRight: '10px' }}
+              onClick={handleLogOut}
+            >
               <Icon style={{ fontSize: 'medium', marginRight: '5px' }}>logout</Icon>
-                Sign out
-              </button>
-            }
-          </span>
+              Sign out
+            </button>
+          }
+        </span>
       </header>
 
       <main className="row-span-2 grid grid-cols-2">
         <div className='grid grid-row-1 pl-2 pr-1 py-2 overflow-auto'>
-          <Modal ref={saveModalRef}>
-            <form onSubmit={e => {
-              e.preventDefault()
-              setToggleSave(s => {
-                setProjectToSave(e.target.elements.filename.value)
-                return !s
-              })
-            }}>
-              <p>Save as</p>
-              <input style={{ margin: '5px 5px 5px 0' }}
-                type='text' 
-                name='filename' 
-                defaultValue={requestedProject?requestedProject.metadata.title:''}
-              />
-              <button type='submit'>save</button>
-            </form>
-          </Modal>
-          <Modal ref={unsavedChangesModalRef}>
-            <p>Save changes made to this file?</p>
-            <br></br>
-            <span style={{ display: 'flex', justifyContent: 'center', width: '100%', gap: '5px'}}>
-              <button onClick={() => {
-                handleStageChanges()
-                unsavedChangesModalRef.current.close()
-                setToggleSave(s => {
-                  setProjectToSave(requestedProject.metadata.title)
-                  setShowMedia(false)
-                  setRequestedProject(null)
-                  return !s
-                })
-              }}>
-                Yes
-              </button>
-              <button onClick={() => {
-                unsavedChangesModalRef.current.close()
-                setRequestedProject(null)
-                setShowMedia(false)
-              }}>
-                No
-              </button>
-            </span>
-          </Modal>
-          <Modal ref={uploadDialogRef} showCloseBtn={false}>
-            <p>Uploading project</p>
-            <progress />
-          </Modal>
-          <Modal ref={downloadDialogRef} showCloseBtn={false}>
-            <p>Fetching project</p>
-            <progress />
-          </Modal>
-
           <div className="bg-white row-span-1 border border-solid rounded-md overflow-hidden">
             { !showMedia && !showLoginForm && !user && 
-                <WelcomeMessage />
+              <WelcomeMessage />
             }
             { !showMedia && !showLoginForm && user &&
-                <Dashboard directory={user.directory} 
-                  onOpenProject={handleOpenProject} 
-                  onDeleteProject={handleDeleteProject}
-                />
+              <Dashboard directory={user.directory} 
+                onOpenProject={handleOpenProject} 
+                onDeleteProject={handleDeleteProject}
+              />
             }
             { showLoginForm &&
-                <Login onCancel={handleCancelLogin} 
-                  successCallback={handleLoggedIn}
-                />
+              <Login onCancel={handleCancelLogin} 
+                successCallback={handleLoggedIn}
+              />
             }
             { showMedia && <MediaRenderer ref={attachMediaController} {...mediaRendererProps} /> }
           </div>
@@ -387,7 +357,7 @@ const App = () => {
           </div>
         </div>
       </main>
-    </div>  
+    </>
   )
 }
 
