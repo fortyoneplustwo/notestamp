@@ -4,22 +4,16 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import 'material-icons/iconfont/material-icons.css';
-// import {
-//   createBrowserRouter,
-//   RouterProvider,
-// } from "react-router-dom";
-
-// const router = createBrowserRouter([
-//   {
-//     path: "/*",
-//     element: <App />
-//   },
-// ]);
+import { ModalProvider } from './components/modal/ModalContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+      <div className="grid grid-rows-[auto,1fr] h-screen bg-[#f5f5f7]">
+        <ModalProvider>
+          <App />
+        </ModalProvider>
+      </div>
   </React.StrictMode>
 );
 
