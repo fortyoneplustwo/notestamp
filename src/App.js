@@ -13,6 +13,7 @@ import MediaTitleBar from './components/MediaTitleBar'
 import { myMediaComponents } from './components/NonCoreMediaComponents'
 import { Icon } from './components/Toolbar'
 import { ModalProvider, useModal } from './components/modal/ModalContext'
+import { ProjectProvider } from './components/context/ProjectContext'
 
 const App = () => {
 
@@ -273,90 +274,92 @@ const App = () => {
 
   return (
     <>
-      <header className="flex row-span-1 bg-transparent pt-1 px-2">
-        <span className="bg-transparent mr-4 text-[#FF4500] font-bold">notestamp</span>
-        <span className="flex items-center" >
-          {showMedia 
-            ? (
-              <MediaTitleBar
-                label={mediaRendererProps.label}
-                title={requestedProject?requestedProject.metadata.title:''}
-                onClose={handleBackToHomepage}
-                onSave={() => {
-                  handleStageChanges()
-                  if (!requestedProject) { 
-                    openModal("projectSaver", {
-                      onSave: (event) => {
-                        setToggleSave(s => {
-                          setProjectToSave(event.target.elements.filename.value)
-                          return !s
-                        })
-                      },
-                      onClose: closeModal,
-                    })
-                  } else {
-                    setToggleSave(s => {
-                      setProjectToSave(requestedProject.metadata.title)
-                      return !s
-                    })
-                  }
-                }}
-                user={user}
-              />
-            ) : <Nav items={mediaComponents} onClick={handleCreateNewProject} />
-          }
-        </span>
-        <span style={{ marginRight: '10px', display: 'flex', alignItems: 'center' }}>
-          {  showLoginButton &&
-            <button className="bg-transparent text-black border-none mr-1 cursor-pointer"
-              style={{ marginRight: '10px' }}
-              onClick={handleLoginBtnClicked}
-            >
-              <Icon style={{ fontSize: 'medium', marginRight: '5px' }}>person</Icon>
-              Sign in
-            </button>
-          }
-          { showLogoutButton &&
-            <button className="bg-transparent text-black border-none mr-1 cursor-pointer"
-              style={{ marginRight: '10px' }}
-              onClick={handleLogOut}
-            >
-              <Icon style={{ fontSize: 'medium', marginRight: '5px' }}>logout</Icon>
-              Sign out
-            </button>
-          }
-        </span>
-      </header>
+      <ProjectProvider media={mediaControllerRef} editor={textEditorRef}>
+        <header className="flex row-span-1 bg-transparent pt-1 px-2">
+          <span className="bg-transparent mr-4 text-[#FF4500] font-bold">notestamp</span>
+          <span className="flex items-center" >
+            {showMedia 
+              ? (
+                <MediaTitleBar
+                  label={mediaRendererProps.label}
+                  title={requestedProject?requestedProject.metadata.title:''}
+                  onClose={handleBackToHomepage}
+                  onSave={() => {
+                    handleStageChanges()
+                    if (!requestedProject) { 
+                      openModal("projectSaver", {
+                        onSave: (event) => {
+                          setToggleSave(s => {
+                            setProjectToSave(event.target.elements.filename.value)
+                            return !s
+                          })
+                        },
+                        onClose: closeModal,
+                      })
+                    } else {
+                      setToggleSave(s => {
+                        setProjectToSave(requestedProject.metadata.title)
+                        return !s
+                      })
+                    }
+                  }}
+                  user={user}
+                />
+              ) : <Nav items={mediaComponents} onClick={handleCreateNewProject} />
+            }
+          </span>
+          <span style={{ marginRight: '10px', display: 'flex', alignItems: 'center' }}>
+            {  showLoginButton &&
+              <button className="bg-transparent text-black border-none mr-1 cursor-pointer"
+                style={{ marginRight: '10px' }}
+                onClick={handleLoginBtnClicked}
+              >
+                <Icon style={{ fontSize: 'medium', marginRight: '5px' }}>person</Icon>
+                Sign in
+              </button>
+            }
+            { showLogoutButton &&
+              <button className="bg-transparent text-black border-none mr-1 cursor-pointer"
+                style={{ marginRight: '10px' }}
+                onClick={handleLogOut}
+              >
+                <Icon style={{ fontSize: 'medium', marginRight: '5px' }}>logout</Icon>
+                Sign out
+              </button>
+            }
+          </span>
+        </header>
 
-      <main className="row-span-2 grid grid-cols-2">
-        <div className='grid grid-row-1 pl-2 pr-1 py-2 overflow-auto'>
-          <div className="bg-white row-span-1 border border-solid rounded-md overflow-hidden">
-            { !showMedia && !showLoginForm && !user && 
-              <WelcomeMessage />
-            }
-            { !showMedia && !showLoginForm && user &&
-              <Dashboard directory={user.directory} 
-                onOpenProject={handleOpenProject} 
-                onDeleteProject={handleDeleteProject}
-              />
-            }
-            { showLoginForm &&
-              <Login onCancel={handleCancelLogin} 
-                successCallback={handleLoggedIn}
-              />
-            }
-            { showMedia && <MediaRenderer ref={attachMediaController} {...mediaRendererProps} /> }
+        <main className="row-span-2 grid grid-cols-2">
+          <div className='grid grid-row-1 pl-2 pr-1 py-2 overflow-auto'>
+            <div className="bg-white row-span-1 border border-solid rounded-md overflow-hidden">
+              { !showMedia && !showLoginForm && !user && 
+                <WelcomeMessage />
+              }
+              { !showMedia && !showLoginForm && user &&
+                <Dashboard directory={user.directory} 
+                  onOpenProject={handleOpenProject} 
+                  onDeleteProject={handleDeleteProject}
+                />
+              }
+              { showLoginForm &&
+                <Login onCancel={handleCancelLogin} 
+                  successCallback={handleLoggedIn}
+                />
+              }
+              { showMedia && <MediaRenderer ref={attachMediaController} {...mediaRendererProps} /> }
+            </div>
           </div>
-        </div>
 
-        <div className="grid grid-row-1 pl-1 pr-2 py-2 overflow-hidden">
-          <div className="row-span-1 h-100% border border-solid rounded-md overflow-hidden">
-            <TextEditor ref={textEditorRef}
-              getStampData={getStampDataFromMedia} 
-            />
+          <div className="grid grid-row-1 pl-1 pr-2 py-2 overflow-hidden">
+            <div className="row-span-1 h-100% border border-solid rounded-md overflow-hidden">
+              <TextEditor ref={textEditorRef}
+                getStampData={getStampDataFromMedia} 
+              />
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </ProjectProvider>
     </>
   )
 }
