@@ -3,7 +3,7 @@ import { useCustomFetch } from './useCustomFetch';
 
 export const useSaveProject = () => {
   const { fetchWithoutCache, loading, error } = useCustomFetch()
-  const [isError, setIsError] = useState(false)
+  const [hasError, setHasError] = useState(false)
 
   const saveWithData = useCallback(async (projectData) => {
     const response = await fetchWithoutCache("saveProject", {
@@ -12,12 +12,13 @@ export const useSaveProject = () => {
       notes: projectData.notes,
     })
     try {
+      setHasError(false)
       await response.json()
     } catch (error) {
       console.error(`Failed to extract projects list from response: ${error}`)
-      setIsError(true)
+      setHasError(true)
     }
   }, [fetchWithoutCache])
 
-  return { saveWithData, loading, error: error || isError }
+  return { saveWithData, loading, error: error || hasError }
 }

@@ -1,4 +1,4 @@
-export const apiFetch = async (endpoint, params?) => {
+export const apiFetch = async (endpoint, params=null) => {
   const domain ="http://localhost:8080"
 
   try {
@@ -29,10 +29,26 @@ export const apiFetch = async (endpoint, params?) => {
         )
 
       case "saveProject":
+
+        const metadataEncoded = params?.metadata && 
+          JSON.stringify(params.metadata)
+        const notesFile = params?.notes &&
+          new File(
+            JSON.stringify(params.notes),
+            "notesFile.json",
+            { type: "application/json" },
+          )
+        const mediaFile = params?.media &&
+          new File(
+            params.media,
+            "mediaFile.json",
+            { type: params.metadata.mimeType },
+          )
+
         const formData = new FormData()
-        formData.append('mediaFile', params?.media)
-        formData.append('notesFile', params?.notes)
-        formData.append('metadata', params?.metadata)
+        formData.append('mediaFile', mediaFile)
+        formData.append('notesFile', notesFile)
+        formData.append('metadata', metadataEncoded)
 
         return await fetch(`${domain}/project/save`, {
             method: "POST",
