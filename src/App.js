@@ -9,10 +9,10 @@ import Dashboard from './components/Dashboard'
 import * as api from './api'
 import MediaRenderer from './components/MediaRenderer'
 import Nav from './components/Nav'
-import AppToolbar from './components/MediaTitleBar'
+import ProjectToolbar from './components/ProjectToolbar'
 import { myMediaComponents } from './components/NonCoreMediaComponents'
 import { Icon } from './components/Toolbar'
-import { ModalProvider, useModal } from './components/modal/ModalContext'
+import { useModal } from './components/modal/ModalContext'
 import { ProjectProvider } from './components/context/ProjectContext'
 
 const App = () => {
@@ -234,11 +234,6 @@ const App = () => {
     })
   }
 
-  // Called when a stamp in inserted. Return value must be an object.
-  // {
-  //    label: String or null       String rendered inside of the stamp
-  //    value: Any or Null          Actual stamp value
-  // }
   const getStampDataFromMedia = dateStampRequested => { 
     if (mediaControllerRef.current) {
       const stampData = mediaControllerRef.current.getState(dateStampRequested)
@@ -274,36 +269,16 @@ const App = () => {
 
   return (
     <>
-      <ProjectProvider media={mediaControllerRef} editor={textEditorRef}>
-        <header className="flex row-span-1 bg-transparent pt-1 px-2">
+      <ProjectProvider>
+        <header className="flex row-span-1 bg-transparent pt-2 px-2">
           <span className="bg-transparent mr-4 text-[#FF4500] font-bold">notestamp</span>
           <span className="flex items-center" >
             {showMedia 
               ? (
-                <AppToolbar
+                <ProjectToolbar
                   label={mediaRendererProps.label}
                   title={requestedProject?requestedProject.metadata.title:''}
                   onClose={handleBackToHomepage}
-                  onSave={() => {
-                    handleStageChanges()
-                    if (!requestedProject) { 
-                      openModal("projectSaver", {
-                        onSave: (event) => {
-                          setToggleSave(s => {
-                            setProjectToSave(event.target.elements.filename.value)
-                            return !s
-                          })
-                        },
-                        onClose: closeModal,
-                      })
-                    } else {
-                      setToggleSave(s => {
-                        setProjectToSave(requestedProject.metadata.title)
-                        return !s
-                      })
-                    }
-                  }}
-                  user={user}
                 />
               ) : <Nav items={mediaComponents} onClick={handleCreateNewProject} />
             }
