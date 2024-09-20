@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState, useImperativeHandle } from 'react'
+import React, { useMemo, useCallback, useState, useImperativeHandle, useEffect } from 'react'
 import { isKeyHotkey } from 'is-hotkey'
 import { Editable, withReact, useSlate } from 'slate-react'
 import * as SlateReact from 'slate-react'
@@ -18,6 +18,7 @@ import escapeHtml from 'escape-html'
 import { jsPDF } from 'jspdf'
 import '../Editor.css'
 import { useModal } from './modal/ModalContext.js'
+import { useProjectContext } from './context/ProjectContext.js'
 
 const HOTKEYS = {
   'mod+b': 'bold',
@@ -31,6 +32,7 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
   const [internalClipboard, setInternalClipboard] = useState([])
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
+  const { setEditorRef } = useProjectContext()
 
   const editor = useMemo(() => withInlines(withReact(withHistory(createEditor()))), [])
 
@@ -48,6 +50,14 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
       ],
     []
   )
+
+  useEffect(() => {
+    setEditorRef(ref.current)
+
+    return () => {
+      setEditorRef(null)
+    }
+  }, [setEditorRef, ref])
 
   useImperativeHandle(ref, () => {
     return {

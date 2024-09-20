@@ -44,7 +44,8 @@ const AudioRecorder = React.forwardRef((_, ref) => {
         }
       },
       setState: () => {},
-      getMetadata: () => { return null }
+      getMetadata: () => { return null },
+      getMedia: () => {return null }
     } 
   }, [])
 

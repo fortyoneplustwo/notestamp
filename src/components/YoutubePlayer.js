@@ -32,13 +32,11 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
         if (player.current) player.current.seekTo(newState, true)
       },
       getMetadata: () => {
-        return player.current
-          ? {
+        return {
             ...props,
-            src: withoutTimeData(player.current.getVideoUrl()),
+            src: withoutTimeData(player.current?.getVideoUrl()),
             mimetype: ''
           }
-          : null
       },
       getMedia: () => { return null }
     }
@@ -50,6 +48,7 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
   
   // remove time data from url
   const withoutTimeData = url => {
+    if (!url) { return "" }
     return url.replace(/[?&]t=\d+m?\d*s?/i, '')
   }
   

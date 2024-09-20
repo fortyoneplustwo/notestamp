@@ -1,3 +1,4 @@
+import DeleteModal from "./modals/DeleteModal"
 import DownloadProgressModal from "./modals/DownloadProgressModel"
 import NotesUploaderModal from "./modals/NotesUploaderModal"
 import SaveModal from "./modals/SaveModal"
@@ -8,6 +9,7 @@ const ModalRenderer = ({ modal, props }) => {
   const modals = {
     notesUploader: NotesUploaderModal,
     projectSaver: SaveModal,
+    deleteModal: DeleteModal,
     unsavedChangesNotifier: UnsavedChangesModal,
     uploadProgress: UploadProgressModal,
     downloadProgess: DownloadProgressModal,

@@ -1,5 +1,6 @@
-import React, {useEffect, useRef, Suspense} from 'react'
+import React, { Suspense } from 'react'
 import { myMediaComponents } from './NonCoreMediaComponents'
+import { useProjectContext } from './context/ProjectContext'
 
 // Import core components
 const mediaComponentMap = {
@@ -17,18 +18,21 @@ myMediaComponents.forEach(obj => {
 })
 
 const MediaRenderer = React.forwardRef((props, ref) => {
-  const { type, src } = props
-  const controller = useRef(null)
+  const { type } = props
   const MediaComponentToRender = mediaComponentMap[type]
-
-  useEffect(() => {
-    ref.current = controller.current
-  }, [ref, type, src, controller])
+  const { setMediaRef } = useProjectContext()
 
   return (
     <div style={{ height: '100%', overflow: 'hidden' }}>
       <Suspense fallback={<div>Loading...</div>}>
-        <MediaComponentToRender ref={ref} {...props}  />
+        <MediaComponentToRender ref={(node) => {
+          ref(node)
+          setMediaRef(node)
+
+          return () => {
+            setMediaRef(null)
+          }
+        }} {...props}  />
       </Suspense>
     </div>
   )
