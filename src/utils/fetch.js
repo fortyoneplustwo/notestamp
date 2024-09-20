@@ -29,8 +29,6 @@ export const apiFetch = async (endpoint, params=null) => {
         )
 
       case "saveProject":
-
-        const metadataEncoded = params?.metadata && 
           JSON.stringify(params.metadata)
         const notesFile = params?.notes &&
           new File(
