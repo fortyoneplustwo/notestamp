@@ -5,7 +5,6 @@ import '../../style/Background.css'
 import "react-pdf/dist/Page/TextLayer.css"
 import { Icon } from '../../../Editor/components/Toolbar'
 import { WithToolbar, Toolbar } from '../../components/Toolbar'
-import { getProjectMedia } from '../../../../api'
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
@@ -15,6 +14,31 @@ const PdfReader = React.forwardRef((props, ref) => {
   const pageNumberRef = useRef(null)
   const [pageScale, setPageScale] = useState(1)
 
+  const getProjectMedia = async title => {
+    if (!title) return null
+
+    const url = new URL(`http://localhost:8080/home/media-file/${encodeURIComponent(title)}`)
+
+    const options = {
+      method: "GET",
+      credentials: "include",
+    };
+
+    try {
+      const response = await fetch(url, options)    
+      if (response.ok) {
+        const media = await response.arrayBuffer()
+        return media
+      }
+      else {
+        // Handle HTTP errors
+        return (null)
+      }
+    } catch(error) {
+      console.error(error)
+      return null
+    }
+  }
 
   useEffect(() => { pageNumberRef.current = pageNumber }, [pageNumber])
 
