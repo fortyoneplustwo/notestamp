@@ -6,14 +6,14 @@ import { useModal } from '../../../Modal/ModalContext'
 import { useProjectContext } from "../../../../context/ProjectContext"
 import { useAppContext } from '../../../../context/AppContext'
 
-const AppToolbar = ({ title, onClose }) => {
+const AppToolbar = ({ metadata, onClose }) => {
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const { openModal, closeModal } = useModal()
   const { user } = useAppContext()
   const { saveWithData, loading: loadingSave, error: saveError } = useSaveProject()
   const { deleteById, loading: loadingDelete, error: deleteError } = useDeleteProject()
-  const { metadata, getMetadata, getNotes, getMedia } = useProjectContext()
+  const { takeSnapshot } = useProjectContext()
 
   useEffect(() => {
     if (!loadingSave) {
@@ -37,32 +37,30 @@ const AppToolbar = ({ title, onClose }) => {
   }, [loadingDelete, deleteError, closeModal, onClose])
 
   const handleDeleteProject = () => {
-    const currMetadata = getMetadata()
+    const snapshot = takeSnapshot()
     openModal("deleteModal", {
       onClose: closeModal,
       onDelete: () => {
         setIsDeleting(true)
-        deleteById(currMetadata?.title)
+        deleteById(snapshot.metadata?.title)
       },
     })
   }
 
   const handleSaveProject = () => {
-    const currMetadata = getMetadata()
-    const currNotes = getNotes()
-    const currMedia = getMedia()
+    const snapshot = takeSnapshot()
     openModal("projectSaver", {
       onClose: closeModal,
       onSave: (title) => {
-        if (!currMetadata || !currNotes || !title) {
+        if (!snapshot.metadata || !snapshot.notes || !title) {
           closeModal()
           return
         }
         setIsSaving(true)
         saveWithData({
-          metadata: { ...currMetadata, title },
-          media: currMedia,
-          notes: currNotes,
+          metadata: { ...snapshot.metadata, title },
+          media: snapshot.media,
+          notes: snapshot.notes,
         })
         openModal("uploadProgress")
       },
@@ -72,7 +70,7 @@ const AppToolbar = ({ title, onClose }) => {
   return (
     <span className="flex gap-4">
       <span className="text-sm text-bold self-center">
-        { title || metadata?.label }
+        { metadata?.title || metadata?.label }
       </span>
       <AppToolbarButton
         label={"Close"}
@@ -85,7 +83,7 @@ const AppToolbar = ({ title, onClose }) => {
             onClick={handleSaveProject}
             style={{ disabled: isSaving }}
           />
-          {title && (
+          {metadata?.title && (
             <AppToolbarButton 
               label={"Delete"} 
               onClick={handleDeleteProject}

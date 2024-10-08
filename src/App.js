@@ -1,6 +1,6 @@
+import React, { useState, useRef, useEffect } from 'react'
 import './App.css'
 import TextEditor from './components/Editor/TextEditor'
-import React, { useState, useRef, useEffect } from 'react'
 import { EventEmitter } from './components/EventEmitter.js'
 import WelcomeMessage from './components/Screens/Welcome/WelcomeMessage'
 import Dashboard from './components/Screens/Dashboard/Dashboard'
@@ -25,6 +25,7 @@ const App = () => {
     { label: 'Sound Recorder', type: 'recorder', path: './AudioRecorder.js' },
     { label: 'Pdf Reader', type: 'pdf', path: './PdfReader.js' }
   ])
+
   const { data: userData  } = useGetUserData()
   const { user, setUser } = useAppContext()
   const { 
@@ -113,7 +114,7 @@ const App = () => {
               onCloseProject={() => { setIsProjectOpen(false) }}
               navItems={mediaComponents}
               onNavItemClick={handleOpenNewProject}
-              selectedProjectTitle={currProjectMetadata?.title}
+              metadata={currProjectMetadata}
             />
           </header>
           <main className="row-span-2 grid grid-cols-2">

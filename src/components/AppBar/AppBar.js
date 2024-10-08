@@ -8,7 +8,7 @@ const AppBar = ({
   onNavItemClick,
   showToolbar,
   onCloseProject,
-  selectedProjectTitle,
+  metadata,
 }) => {
   return (
     <div className="flex w-full">
@@ -17,7 +17,7 @@ const AppBar = ({
         {showToolbar ? (
           <AppToolbar
             onClose={onCloseProject}
-            title={selectedProjectTitle}
+            metadata={metadata}
           />
         ) : (
           <Nav items={navItems} onClick={onNavItemClick}/>
