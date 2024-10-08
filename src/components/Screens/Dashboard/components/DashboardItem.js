@@ -10,7 +10,8 @@ const DashboardItem = props => {
         className="p-2 bg-transparent"
       >
         {id}
-        <button title='delete' 
+        <button 
+          title='delete' 
           style={{ background: 'transparent', border: '0', float: 'right', padding: '0' }} 
           onClick={(e) => { 
             e.stopPropagation()

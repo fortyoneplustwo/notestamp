@@ -16,7 +16,7 @@ const Dashboard = ({ onOpenProject }) => {
     deleteById,
     loading: loadingDelete,
     error: errorDeleting
-  } = useDeleteProject
+  } = useDeleteProject()
   const { clearCacheByEndpoint } = useCustomFetch()
 
   useEffect(() => {
@@ -24,21 +24,25 @@ const Dashboard = ({ onOpenProject }) => {
   }, [fetchAllProjects])
 
   useEffect(() => {
-    if (!loadingProjects && errorFetchingProjects) {
-      // handle error
+    if (!loadingProjects) {
+      if (errorFetchingProjects) {
+        // handle error
+      }
     }
   }, [errorFetchingProjects, loadingProjects])
 
   useEffect(() => {
-    if (!loadingDelete && errorDeleting) {
-      // handle error
+    if (!loadingDelete) {
+      if (errorDeleting) {
+        // handle error
+      }
+    fetchAllProjects()
     }
-  }, [loadingDelete, errorDeleting])
+  }, [loadingDelete, errorDeleting, fetchAllProjects])
 
   const handleDeleteProject = (projectId) => {
     deleteById(projectId)
     clearCacheByEndpoint("listProjects")
-    fetchAllProjects()
   }
 
   return (
