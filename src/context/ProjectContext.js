@@ -8,30 +8,24 @@ export const ProjectProvider = ({ children }) => {
   const [isMounted, setIsMounted] = useState(false)
   const [isMediaMounted, setIsMediaMounted] = useState(false)
   const [isEditorMounted, setIsEditorMounted] = useState(false)
-  const [metadata, setMetadata] = useState(null)
-  const [notes, setNotes] = useState(null)
-  const [media, setMedia] = useState(null)
   const mediaRef = useRef(null) 
   const editorRef = useRef(null)
-
-  const takeSnapshot = useCallback(() => {
-    setNotes(editorRef.current?.getContent())
-    setMedia(mediaRef.current?.getMedia())
-    setMetadata(mediaRef.current?.getMetadata())
-  }, [])
 
   useEffect(() => {
     if (isMediaMounted && isEditorMounted) {
       setIsMounted(true)
-      takeSnapshot()
     } else {
       setIsMounted(false)
     }
-  }, [isMediaMounted, isEditorMounted, takeSnapshot])
+  }, [isMediaMounted, isEditorMounted])
 
-  const getMetadata = useCallback(() => mediaRef.current?.getMetadata(), [])
-  const getNotes = useCallback(() => editorRef.current?.getContent(), [])
-  const getMedia = useCallback(() => mediaRef.current?.getMedia(), [])
+  const takeSnapshot = useCallback(() => {
+    return {
+      metadata: mediaRef.current?.getMetadata(),
+      notes: editorRef.current?.getContent(),
+      media: mediaRef.current?.getMedia(),
+    }
+  }, [])
 
   const setMediaRef = useCallback((node) => {
     setIsMediaMounted(() => {
@@ -49,15 +43,10 @@ export const ProjectProvider = ({ children }) => {
 
   return (
     <ProjectContext.Provider value={{ 
-      notes,
-      media,
-      metadata,
       setMediaRef,
       setEditorRef,
-      getMetadata,
-      getNotes,
-      getMedia,
-      isMounted
+      isMounted,
+      takeSnapshot,
     }}>
       { children }
     </ProjectContext.Provider>
