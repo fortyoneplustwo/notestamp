@@ -13,6 +13,8 @@ const PdfReader = React.forwardRef((props, ref) => {
   const [pageNumber, setPageNumber] = useState(null)
   const pageNumberRef = useRef(null)
   const [pageScale, setPageScale] = useState(1)
+  const [containerWidth, setContainerWidth] = useState(0);
+  const containerRef = useRef(null);
 
   const getProjectMedia = async title => {
     if (!title) return null
@@ -39,6 +41,20 @@ const PdfReader = React.forwardRef((props, ref) => {
       return null
     }
   }
+
+  useEffect(() => {
+    // Function to set the width of the container
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth)
+      }
+    };
+    updateWidth();
+
+    window.addEventListener('resize', updateWidth)
+
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
 
   useEffect(() => { pageNumberRef.current = pageNumber }, [pageNumber])
 
@@ -119,16 +135,20 @@ const PdfReader = React.forwardRef((props, ref) => {
           </button>
         </span>
       </Toolbar>
-      <div className='diagonal-background' style={{ color: 'black', overflow: 'auto', flex: '1' }}>
-        {source
-          && <Document file={source}>
+      <div 
+        className='diagonal-background flex overflow-auto' 
+        ref={containerRef}
+      >
+        {source && (
+          <Document file={source}>
               <Page pageNumber={pageNumber} 
                 renderAnnotationLayer={false} 
                 renderTextLayer={false} 
                 scale={pageScale} 
+                width={containerWidth}
               />
           </Document>
-        }
+        )}
       </div>
     </WithToolbar>
   );
