@@ -4,16 +4,14 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import 'material-icons/iconfont/material-icons.css';
-import { ModalProvider } from './components/modal/ModalContext';
+import { AppContextProvider } from './context/AppContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-      <div className="grid grid-rows-[auto,1fr] h-screen bg-[#f5f5f7]">
-        <ModalProvider>
-          <App />
-        </ModalProvider>
-      </div>
+    <AppContextProvider>
+        <App />
+    </AppContextProvider>
   </React.StrictMode>
 );
 

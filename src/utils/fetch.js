@@ -1,10 +1,10 @@
 export const apiFetch = async (endpoint, params=null) => {
-  const domain ="http://localhost:8080"
+  const domain ="http://localhost:8000"
 
   try {
     switch (endpoint) {
       case "getUserData":
-        return await fetch(domain + "/user/get", {
+        return await fetch(domain + "/auth/user", {
           method: "GET",
           credentials: "include",
           headers: {
@@ -23,23 +23,23 @@ export const apiFetch = async (endpoint, params=null) => {
             }
           })
 
-      case "getProjects":
-        return await fetch(domain +
-          "/project/list/"
-        )
+      case "listProjects":
+        return await fetch(domain + "/project/list", {
+          credentials: "include",
+        })
 
       case "saveProject":
-          JSON.stringify(params.metadata)
+        const metadataEncoded = JSON.stringify(params.metadata)
         const notesFile = params?.notes &&
           new File(
-            JSON.stringify(params.notes),
+            [JSON.stringify(params.notes)],
             "notesFile.json",
             { type: "application/json" },
           )
         const mediaFile = params?.media &&
           new File(
-            params.media,
-            "mediaFile.json",
+            [params.media],
+            "mediaFile",
             { type: params.metadata.mimeType },
           )
 
@@ -56,35 +56,31 @@ export const apiFetch = async (endpoint, params=null) => {
 
       case "deleteProject":
         return await fetch(domain +
-          "/project/delete" +
+          "/project/delete/" +
           encodeURIComponent(params?.projectId ?? ""), {
-            method: "GET",
+            method: "DELETE",
             credentials: "include",
           })
 
       case "register":
-        return await fetch(domain + "/auth/login", {
+        const registerFormData = new FormData()
+        registerFormData.append("username", params?.username)
+        registerFormData.append("password", params?.password)
+
+        return await fetch(domain + "/auth/register", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              username: params?.email,
-              password: params?.passsword
-            })
+            body: registerFormData,
           }) 
 
       case "login":
-        return await fetch(domain + "auth/login", {
+        const loginFormData = new FormData()
+        loginFormData.append("username", params?.username)
+        loginFormData.append("password", params?.password)
+
+        return await fetch(domain + "/auth/login", {
             method: "POST",
             credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              username: params?.email,
-              password: params?.password
-            })
+            body: loginFormData,
           })
 
       case "logout":
@@ -97,6 +93,6 @@ export const apiFetch = async (endpoint, params=null) => {
         throw new Error("Invalid endpoint")
     }
   } catch (error) {
-    console.error(`Failed to fetch from from backend: ${error}`)
+    console.error(`Failed to fetch: ${error}`)
   }
 }

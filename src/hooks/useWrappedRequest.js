@@ -1,11 +1,12 @@
 import { useCallback, useState } from "react"
 
-// This wrapper returns a response object of type Promise<Data | null>
-// as well as the loading and error states of the request.
+// The point of this hook is to transform the return type of the response
+// and provide the loading and error states of the request.
 export const useWrappedRequest = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
+  // This wrapper returns a response object of type Promise<Data | null>
   const wrappedRequest = useCallback(async (request) => {
     try {
       setLoading(true)

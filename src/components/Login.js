@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { loginWithCredentials } from '../api'
 import "../Button.css"
 import Register from './Register'
-import { WithToolbar, Toolbar } from './LeftPaneComponents'
+import { WithToolbar, Toolbar } from './MediaRenderer/components/Toolbar'
 
 const Login = ({ onCancel, successCallback }) => {
   // State variables to store the username and password

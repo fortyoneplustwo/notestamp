@@ -27,7 +27,7 @@ export const useDeleteProject = () => {
   const [hasError, setHasError] = useState(false)
 
   const deleteById = useCallback(async (projectId) => {
-    const response = fetchWithoutCache("saveProject", {
+    const response = fetchWithoutCache("deleteProject", {
       projectId,
     })
     try {

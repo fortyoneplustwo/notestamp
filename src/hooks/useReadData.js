@@ -8,6 +8,7 @@ export const useGetUserData = () => {
 
   const fetchData = useCallback(async () => {
     const response = await fetchWithoutCache("getUserData")
+
     try {
       const data = await response.json()
       setUserData(data)
@@ -17,7 +18,7 @@ export const useGetUserData = () => {
     }
   }, [fetchWithoutCache])
 
-  return { data: userData, fetchData, loading, error: error || isError }
+  return { data: userData, fetch: fetchData, loading, error: error || isError }
 }
 
 export const useGetProjectMetadata = () => {
@@ -47,10 +48,10 @@ export const useGetProjects = () => {
   const [isError, setIsError] = useState(false)
 
   const fetchAll = useCallback(async () => {
-    const response = await fetchWithoutCache("getUserData")
+    const response = await fetchWithoutCache("listProjects")
     try {
       const data = await response.json()
-      setProjects(data)
+      setProjects(data.projects)
     } catch (error) {
       console.error(`Failed to extract projects list from response: ${error}`)
       setIsError(true)
