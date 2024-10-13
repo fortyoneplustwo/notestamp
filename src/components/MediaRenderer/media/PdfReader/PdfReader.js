@@ -43,13 +43,16 @@ const PdfReader = React.forwardRef((props, ref) => {
   }
 
   useEffect(() => {
-    // Function to set the width of the container
+    console.log(source)
+  }, [source])
+
+  useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
         setContainerWidth(containerRef.current.offsetWidth)
       }
     };
-    updateWidth();
+    updateWidth()
 
     window.addEventListener('resize', updateWidth)
 
@@ -108,8 +111,8 @@ const PdfReader = React.forwardRef((props, ref) => {
 
 
   return (
-    <WithToolbar style={{ overflow: 'hidden' }}>
-      <Toolbar>
+    <WithToolbar style={{ overflow: 'hidden' }} className="diagonal-background">
+      <Toolbar className="bg-white">
         { !props.src &&
           <form onChange={e => { 
             setSource(e.target.files[0])
@@ -136,7 +139,7 @@ const PdfReader = React.forwardRef((props, ref) => {
         </span>
       </Toolbar>
       <div 
-        className='diagonal-background flex overflow-auto' 
+        className='diagonal-background overflow-auto' 
         ref={containerRef}
       >
         {source && (

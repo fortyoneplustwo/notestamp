@@ -1,31 +1,33 @@
 import React, { useMemo, useCallback, useState, useImperativeHandle, useEffect } from 'react'
-import { isKeyHotkey } from 'is-hotkey'
 import { Editable, withReact, useSlate } from 'slate-react'
 import * as SlateReact from 'slate-react'
 import {
   Editor,
   Transforms,
   createEditor,
-  Text,
   Element as SlateElement,
-  Point
 } from 'slate'
 import { withHistory } from 'slate-history'
 import isHotkey from 'is-hotkey'
 import { EventEmitter } from '../EventEmitter.js'
 import { Toolbar, Button, Icon } from './components/Toolbar.js'
-import escapeHtml from 'escape-html'
-import { jsPDF } from 'jspdf'
 import './style/Editor.css'
 import { useModal } from '../Modal/ModalContext.js'
 import { useProjectContext } from '../../context/ProjectContext.js'
+import { downloadPdf } from './components/PdfDownloader.js'
 
-const HOTKEYS = {
+const markButtonHotkeys = {
   'mod+b': 'bold',
   'mod+i': 'italic',
   'mod+u': 'underline',
   'mod+`': 'code',
 }
+
+const blockButtonHotkeys = {
+  'mod+shift+8': 'numbered-list',
+  'mod+shift+9': 'bulleted-list',
+}
+
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
 const TextEditor = React.forwardRef(({ getStampData }, ref) => {
@@ -36,10 +38,6 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
   const { openModal, closeModal } = useModal()
 
   const editor = useMemo(() => withInlines(withReact(withHistory(createEditor()))), [])
-
-  ////////////////////////////////
-  ///  INITIALIZATION  ///////////
-  ////////////////////////////////
 
   const initialValue = useMemo(
     () =>
@@ -64,11 +62,13 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
     return {
       setContent: newContent => {
         const newNodes = JSON.parse(newContent)
+
         // Select entire content to ensure all nodes get removed
         Transforms.select(editor, {
           anchor: Editor.start(editor, []),
           focus: Editor.end(editor, []),
         })
+
         Transforms.unwrapNodes(editor)
         Transforms.removeNodes(editor)
         Transforms.insertNodes(editor, newNodes)
@@ -79,31 +79,21 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
     }
   }, [editor])
 
-
-  /////////////////////////
-  ///  METHODS  ///////////
-  /////////////////////////
-
-  // Paste contents of submitted .stmp file into the editor
   const handleOpenFile = file => {
-    // fileUploadModalRef.current.close() 
     if (file) {
       const reader = new FileReader()
       reader.onload = (e) => {
         try {
           const newNodes = JSON.parse(e.target.result)
-          // fix: focus the editor to ensure all nodes get removed
+
+          // Fix: focus the editor to ensure all nodes get removed
           Transforms.select(editor, {
             anchor: Editor.start(editor, []),
             focus: Editor.end(editor, []),
           })
+
+          Transforms.unwrapNodes(editor)
           Transforms.removeNodes(editor)
-          // if editor is empty remove the default empty paragraph node
-          if (editor.children.length > 0 
-            && editor.children[0].type === 'paragraph' 
-            && editor.children[0].children[0].text === '') {
-            Transforms.removeNodes(editor, { at: [0] })
-          }
           Transforms.insertNodes(editor, newNodes)
         } catch (error) {
           console.error('Error parsing JSON:', error)
@@ -114,8 +104,9 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
     }
   }
 
-  // Override copy 
-  // Copy nodes to editor clipboard and text to device clipboard
+  /** Override copy
+   * Copy nodes to editor clipboard and text to device clipboard
+   */
   const handleCopy = event => {
     event.preventDefault()
     const { selection } = editor
@@ -154,10 +145,10 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
     }
   }
 
-  // Override paste
-  // Paste nodes from editor clipboard if
-  // contents of editor clipboard = contents of device clipboard.
-  // Otherwise paste contents of device clipboard
+  /** Override paste
+   * Paste nodes from editor clipboard if editor clipboard = device clipboard
+   * Otherwise paste contents of device clipboard
+   */
   const handlePaste = event => {
     event.preventDefault()
 
@@ -186,9 +177,39 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
     }
   }
 
-  //////////////
-  ///  JSX  ////
-  //////////////
+  const dispatchKeyEvent = (event) => {
+    switch (event.key) {
+      case "Tab":
+        event.preventDefault()
+        handleInsertTab(event, editor)
+        break
+      case "Enter":
+        if (event.shiftKey) {
+          event.preventDefault()
+          handleEscapeStamp(editor)
+        } else {
+          event.preventDefault()
+          handleInsertStamp(getStampData, editor)
+        }
+        break
+      default:
+        for (let hotkey in markButtonHotkeys) {
+          if (isHotkey(hotkey, event)) {
+            event.preventDefault()
+            toggleMark(editor, markButtonHotkeys[hotkey])
+            return
+          }
+        }
+
+        for (let hotkey in blockButtonHotkeys) {
+          if (isHotkey(hotkey, event)) {
+            event.preventDefault()
+            toggleBlock(editor, blockButtonHotkeys[hotkey])
+            return
+          }
+        }
+    }
+  }
 
   return (
     <div 
@@ -206,21 +227,57 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
         <div className="flex flex-col h-full">
           <Toolbar>
             <div className='toolbar-btn-container'>
-              <MarkButton format='bold' icon="format_bold" description='Bold (Ctrl+B)' />
-              <MarkButton format='italic' icon="format_italic" description="Italic (Ctrl+I)"/>
-              <MarkButton format='underline' icon="format_underlined" description="Underline (Ctrl+U)"/>
-              <MarkButton format='code' icon="code" description="Code (Ctrl+`)"/>
-              <BlockButton format="numbered-list" icon="format_list_numbered" description="Toggle numbered list (Ctrl+Shift+8)" />
-              <BlockButton format="bulleted-list" icon="format_list_bulleted" description="Toggle bulleted list (Ctrl+Shift+9)"/>
+              <MarkButton 
+                format='bold' 
+                icon="format_bold" 
+                description='Bold (Ctrl+B)' 
+              />
+              <MarkButton 
+                format='italic' 
+                icon="format_italic" 
+                description="Italic (Ctrl+I)"
+              />
+              <MarkButton 
+                format='underline' 
+                icon="format_underlined" 
+                description="Underline (Ctrl+U)"
+              />
+              <MarkButton 
+                format='code' 
+                icon="code" 
+                description="Plain Text (Ctrl+`)"
+              />
+              <BlockButton 
+                format="numbered-list" 
+                icon="format_list_numbered" 
+                description="Toggle numbered list (Ctrl+Shift+8)"
+              />
+              <BlockButton 
+                format="bulleted-list" 
+                icon="format_list_bulleted" 
+                description="Toggle bulleted list (Ctrl+Shift+9)"
+              />
               <div className='toolbar-btn-separator'></div>
-              <ActionButton action='upload' icon="folder_open" description="Open .stmp file" 
+              <ActionButton 
+                action='upload' 
+                icon="folder_open" 
+                description="Open .stmp file" 
                 onClick={() => { 
                   openModal("notesUploader", { 
                     onClose: closeModal,
                     onFileSelect: handleOpenFile
-                  }) }} />
-              <ActionButton action='download' icon="download" description="Download project file (.stmp)" />
-              <ActionButton action='pdf' icon="picture_as_pdf" description="Download as .pdf document" />
+                })}} 
+              />
+              <ActionButton 
+                action='download' 
+                icon="download" 
+                description="Download project file (.stmp)" 
+              />
+              <ActionButton 
+                action='pdf' 
+                icon="picture_as_pdf" 
+                description="Download as .pdf document"
+              />
             </div>
           </Toolbar>
           <Editable
@@ -232,7 +289,7 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
             spellCheck={true}
             onCopy={handleCopy}
             onPaste={handlePaste}
-            onKeyDown={(event) => { onKeyDown(event, getStampData, editor) }}
+            onKeyDown={dispatchKeyEvent}
           />
         </div>
       </SlateReact.Slate>
@@ -240,135 +297,86 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
   )
 })
 
-////////////////////////////////
-///  METHODS  //////////////////
-////////////////////////////////
-
-// Keyboard events
-const onKeyDown = (event, getStampData, editor) => {
-  const { nativeEvent } = event
-// Handle formatting hotkeys. TODO reimplement this. it's really slow
-  for (const hotkey in HOTKEYS) {
-    if (isHotkey(hotkey, event)) {
-      event.preventDefault()
-      const mark = HOTKEYS[hotkey]
-      toggleMark(editor, mark)
-    }
-  }
-  // on tab
-  if (isHotkey('tab', nativeEvent)) {
+const handleInsertTab = (event, editor) => {
     event.preventDefault()
     const marks = Editor.marks(editor)
     Transforms.insertText(editor, '\t')
     for(const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true)
     return
-  } 
-  // on shift + enter: insert a block of same type without a stamp
-  else if (isHotkey('shift+enter', nativeEvent)) {
-    event.preventDefault()
-    const { selection } = editor
-    const startPath = Editor.start(editor, selection);
-    const [block] = Editor.parent(editor, startPath)
-    const marks = Editor.marks(editor) // *
+}
+
+const handleInsertStamp = (getStampData, editor) => {
+  const { label, value } = getStampData(new Date())
+
+  // Get the block that wraps our current selection
+  const { selection } = editor
+  const startPath = Editor.start(editor, selection)
+  const [block] = Editor.parent(editor, startPath)
+
+  const marks = Editor.marks(editor) // Save marks applied on current selection
+  
+  // Abort insertion of stamp if stamp value is null
+  if (!value) { 
     Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
     for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
     return 
-  }
-  // on mod+shift+8 toggle numbered-list
-  else if (isHotkey('mod+shift+8', nativeEvent)) {
-    event.preventDefault()
-    toggleBlock(editor, 'numbered-list')
-  }
-  // on mod+shift+9 toggle bulleted-list
-  else if (isHotkey('mod+shift+9', nativeEvent)) {
-    event.preventDefault()
-    toggleBlock(editor, 'bulleted-list')
-  }
-  // on backspace: fixes disappearing caret on block deletion
-  else if (isKeyHotkey('backspace', nativeEvent)) {
-    // Get the block that wraps our current selection
-    const { selection } = editor
-    const startPath = Editor.start(editor, selection)
-    const [block] = Editor.parent(editor, startPath)
+  } 
 
-    if (selection.isFocused && Point.compare(selection.anchor, selection.focus)) return
+  // If current block contains either a stamp node or a non-empty text node
+  // then insert a block of similar type with an empty text node
+  const stampFound = block.children.reduce(
+    (accumulator, node) => {
+      return accumulator || ('type' in node ? node.type === 'stamp' : false)
+    },
+    false
+  )
+  const textNode = block.children[block.children.length - 1]
+  if (stampFound || textNode.text !== '') {
+    Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
+  }
 
-    // Fix: manually delete empty block to make sure caret appears at the 
-    // end of previous block after delete operation 
-    // Make sure not to delete last remaining block
-    if (editor.children.length > 1 
-      || (editor.children.length === 1 
-        && block.type === 'list-item' 
-        && editor.children[0].children.length > 1)) {
-      if (block.children.length === 1 && block.children[0].text === '') {
-        event.preventDefault()
-        Transforms.removeNodes(editor, { at: startPath }) 
-      }
+  // Proceed with stamp insertion
+  const caretPathBeforeInsert = editor.selection.focus.path
+  Transforms.insertNodes(editor, {
+    type: 'stamp', 
+    label: label, 
+    value: value,
+    children: [{ text: '' }] 
+  })
+
+  // Fix: After insertion the caret mysteriously disappears.
+  // Force caret position to be positioned after the newly inserted node.
+  const path = [...caretPathBeforeInsert]
+  path[path.length-1] = caretPathBeforeInsert[path.length-1] + 2
+  const caretPathAfterInsert = {
+    path: path, offset: 0
+  }
+  Transforms.select(editor, ({
+      anchor: caretPathAfterInsert,
+      focus: caretPathAfterInsert
     }
-  }
-  // on enter: insert stamp
-  else if (isKeyHotkey('enter', nativeEvent)) {
-    const { label, value } = getStampData(new Date())
-    event.preventDefault()
+  ))
 
-    // Get the block that wraps our current selection
-    const { selection } = editor
-    const startPath = Editor.start(editor, selection)
-    const [block] = Editor.parent(editor, startPath)
-
-    // save marks on current selection 
-    const marks = Editor.marks(editor) // *
-    
-    // abort insertion of stamp if stamp value is null
-    if (!value) { 
-      Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
-      for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
-      return 
-    } 
-
-    // If current block contains either a stamp node or a non-empty text node,
-    // then insert a block of similar type with an empty text node
-    const stampFound = block.children.reduce(
-      (accumulator, node) => {
-        return accumulator || ('type' in node ? node.type === 'stamp' : false)
-      },
-      false
-    )
-    const textNode = block.children[block.children.length - 1]
-    if (stampFound || textNode.text !== '') {
-      Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
-    }
-
-    // Proceed with stamp insertion
-    const caretPathBeforeInsert = editor.selection.focus.path // **
-    Transforms.insertNodes(editor, {
-      type: 'stamp', 
-      label: label, 
-      value: value,
-      children: [{ text: '' }] 
-    })
-
-    // ** (fix) After insertion the caret mysteriously disappears.
-    // Force caret position to after newly inserted node.
-    const path = [...caretPathBeforeInsert]
-    path[path.length-1] = caretPathBeforeInsert[path.length-1] + 2
-    const caretPathAfterInsert = {
-      path: path, offset: 0
-    }
-
-    Transforms.select(editor, ({
-        anchor: caretPathAfterInsert,
-        focus: caretPathAfterInsert
-      }
-    ))
-
-    // * (fix) restore marks
-    for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
-    return
-  }
+  // Fix: restore marks
+  for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
+  return
 }
 
-// Recursive algorithm that consumes an editor and returns its text nodes as html
+const handleEscapeStamp = (editor) => {
+  const { selection } = editor
+  const startPath = Editor.start(editor, selection);
+  const [block] = Editor.parent(editor, startPath)
+  const marks = Editor.marks(editor) // Save marks
+  Transforms.insertNodes(editor, { ...block, children: [{ text: '' }] })
+  // Fix: Restore marks
+  for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
+  return 
+}
+
+/** 
+ * Recursive algorithm that consumes an editor and returns its text nodes as html
+ *
+// TODO: Add functionality for nested marks
 const toHtml = node => {
   if (Text.isText(node)) {
     let string = escapeHtml(node.text)
@@ -398,14 +406,14 @@ const toHtml = node => {
     case 'numbered-list':
       return `<ol>${children}</ol>`
     case 'list-item':
-      // return `<li><p>${children}</p></li>`
       return `<li>${children}</li>`
     default:
       return children
   }
 }
+*/
 
-// Download stmp file
+/** Download the editor's content in JSON format */
 const downloadJSON = (jsonObject, fileName) => {
   const jsonString = JSON.stringify(jsonObject, null, 2)
   const blob = new Blob([jsonString], { type: 'application/json' })
@@ -442,6 +450,8 @@ const toggleBlock = (editor, format) => {
   }
 }
 
+const handleDownloadNotesAsPdf = (request) => request()
+
 const toggleAction = (editor, action) => {
   if (action === 'download') {
     const json = JSON.parse(localStorage.getItem('content'))
@@ -456,18 +466,7 @@ const toggleAction = (editor, action) => {
     navigator.clipboard.writeText(textContent)
   }
   else if (action === 'pdf') {
-    const editorContent = toHtml(editor)
-    // Default export is a4 paper, portrait, using millimeters for units
-    const doc = new jsPDF();
-    doc.html(editorContent, {
-      callback: function(doc) {
-          doc.save('document.pdf');
-      },
-      x: 15,
-      y: 15,
-      width: 170, //target width in the PDF document
-      windowWidth: 650, //window width in CSS pixels
-    })
+    handleDownloadNotesAsPdf(async () => await downloadPdf(editor.children))
   }
 }
 
@@ -495,7 +494,6 @@ const isBlockActive = (editor, format, blockType = 'type') => {
         n[blockType] === format,
     })
   )
-
   return !!match
 }
 
@@ -504,7 +502,7 @@ const isMarkActive = (editor, format) => {
   return marks ? marks[format] === true : false
 }
 
-// Returns an editor that supports inline elements
+/** Returns an editor that supports inline elements */
 const withInlines = editor => {
   const {
     isVoid,
@@ -512,7 +510,7 @@ const withInlines = editor => {
     isElementReadOnly,
     isSelectable,
   } = editor
-  // overriding these methods to define stamp behaviour
+  // Overriding these methods to define stamp behaviour
   editor.isVoid = element => 
     ['stamp'].includes(element.type) || isVoid(element)
   editor.isInline = element => 
@@ -524,9 +522,9 @@ const withInlines = editor => {
   return editor
 }
 
-////////////////////////////////
-///  Components  ///////////////
-////////////////////////////////
+/**
+ * Components
+ */
 
 const ActionButton = ({ action, icon, description, ...props }) => {
   const editor = useSlate()
@@ -585,7 +583,10 @@ const Element = props => {
       return <Stamp {...props} />
     case 'bulleted-list':
       return (
-        <ul {...attributes}>
+        <ul 
+          {...attributes}
+          className="list-disc list-inside"
+        >
           {children}
         </ul>
       )
@@ -597,7 +598,10 @@ const Element = props => {
       )
     case 'numbered-list':
       return (
-        <ol {...attributes}>
+        <ol 
+          {...attributes}
+          className="list-decimal list-inside"
+        >
           {children}
         </ol>
       )
