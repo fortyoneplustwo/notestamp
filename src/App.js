@@ -6,8 +6,8 @@ import Dashboard from './components/Screens/Dashboard/Dashboard'
 import MediaRenderer from './components/MediaRenderer/MediaRenderer'
 import { myMediaComponents as customMediaComponents } from './components/MediaRenderer/config'
 import { ProjectProvider } from './context/ProjectContext'
-import LeftPane from './components/LeftPane'
-import RightPane from './components/RightPane'
+import LeftPane from './components/Containers/LeftPane'
+import RightPane from './components/Containers/RightPane'
 import AppBar from './components/AppBar/AppBar'
 import { useGetProjectMetadata, useGetProjectNotes, useGetUserData } from './hooks/useReadData'
 import { ModalProvider } from './context/ModalContext'
@@ -127,7 +127,7 @@ const App = () => {
           <header className="flex row-span-1 bg-transparent pt-2 px-2">
             <AppBar
               showToolbar={isProjectOpen}
-              onCloseProject={() => { setIsProjectOpen(false) }}
+              onCloseProject={() => setIsProjectOpen(false)}
               navItems={mediaComponents}
               onNavItemClick={handleOpenNewProject}
               metadata={currProjectMetadata}
