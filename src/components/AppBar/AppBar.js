@@ -11,9 +11,9 @@ const AppBar = ({
   metadata,
 }) => {
   return (
-    <div className="flex w-full">
+    <div className="flex w-full gap-4">
       <Logo />
-      <span className="flex items-center" >
+      <span className="flex items-center flex-grow" >
         {showToolbar ? (
           <AppToolbar
             onClose={onCloseProject}

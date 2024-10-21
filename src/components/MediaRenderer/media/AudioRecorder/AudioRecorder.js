@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useImperativeHandle } from 'react'
 import { EventEmitter } from '../../../EventEmitter.js'
 import '../../style/Background.css'
 import { Icon } from '../../../Editor/components/Toolbar.js'
-import '../../../../Button.css'
+import './Button.css'
 import { formatTime } from '../../utils/formatTime.js'
 
 // Variables needed to calculate timestamp.

@@ -1,4 +1,5 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { useGetProjectMedia } from '../../../../hooks/useReadData'
 import { WithToolbar, Toolbar } from '../../components/Toolbar'
 import '../../style/Background.css'
 import { formatTime } from '../../utils/formatTime'
@@ -6,12 +7,8 @@ import { formatTime } from '../../utils/formatTime'
 const AudioPlayer = React.forwardRef((props, ref) => {
   const [audio, setAudio] = useState(null)
   const playerRef = useRef(null)
+  const { data: savedAudio, fetchById: fetchAudioById } = useGetProjectMedia()
 
-
-  ////////////////////////////////
-  /// Initialize controller //////
-  ////////////////////////////////
-  
   useImperativeHandle(ref, () => {
     return {
       getState: () => {
@@ -45,10 +42,18 @@ const AudioPlayer = React.forwardRef((props, ref) => {
     } 
   }, [props, audio])
 
+  useEffect(() => {
+    if (props.title) {
+      fetchAudioById(props.title)
+    }
+  }, [props.title, fetchAudioById])
 
-  ////////////////////////////////
-  /// Initialize player //////////
-  ////////////////////////////////
+  useEffect(() => {
+    if (savedAudio) {
+      playerRef.current.src = window.URL.createObjectURL(savedAudio)
+      playerRef.current.type = props.mimetype
+    }
+  }, [savedAudio, props.mimetype])
 
   useEffect(() => {
     if (props.src) {
@@ -69,7 +74,7 @@ const AudioPlayer = React.forwardRef((props, ref) => {
 
   return (
     <WithToolbar>
-      { !props.src &&
+      { (!props.src && !savedAudio) &&
         <Toolbar>
           <form style={{ color: 'black' }} onChange={ e => {
             playerRef.current.src = window.URL.createObjectURL(e.target.files[0])

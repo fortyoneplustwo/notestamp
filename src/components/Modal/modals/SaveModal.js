@@ -1,8 +1,8 @@
 import { forwardRef } from "react"
-import AppToolbarButton from "../../Button/AppToolbarButton"
+import Button from "../../Button/Button"
 import ModalLayout from "../ModalLayout"
 
-const SaveModal = forwardRef(({ projectToSave = null, onSave, onClose }, ref) => {
+const SaveModal = forwardRef(({ metadata=null, onSave, onClose }, ref) => {
 
   return (
     <ModalLayout ref={ref} onClose={onClose} >
@@ -14,15 +14,17 @@ const SaveModal = forwardRef(({ projectToSave = null, onSave, onClose }, ref) =>
         <input
           type='text' 
           name='filename' 
-          defaultValue={ projectToSave ? projectToSave.metadata.title : '' }
+          defaultValue={ metadata ? metadata.title : '' }
           className="border border-black mt-1"
+          autofocus
         />
         <div className="pt-3">
-          <AppToolbarButton
-            label={"Save"}
+          <Button
             type="submit"
             style={{ float: "right" }}
-          />
+          >
+            Save 
+          </Button>
         </div>
       </form>
     </ModalLayout>

@@ -27,5 +27,6 @@ p {
 
 ::selection {
   background-color: orangered;
+  color: white;
 }
 

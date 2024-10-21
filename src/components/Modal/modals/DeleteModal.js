@@ -1,5 +1,5 @@
 import { forwardRef } from "react"
-import AppToolbarButton from "../../Button/AppToolbarButton"
+import Button from "../../Button/Button"
 import ModalLayout from "../ModalLayout"
 
 const DeleteModal = forwardRef(({ onDelete, onClose }, ref) => {
@@ -8,14 +8,16 @@ const DeleteModal = forwardRef(({ onDelete, onClose }, ref) => {
       <div>
         <p>Delete this project?</p>
         <div className="flex justify-center mt-4 gap-2">
-          <AppToolbarButton
+          <Button
             onClick={onDelete}
-            label={"Delete"}
-          />
-          <AppToolbarButton
+          >
+            Delete
+          </Button>
+          <Button
             onClick={onClose}
-            label={"Cancel"}
-          />
+          >
+            Cancel
+          </Button>
         </div>
       </div>
     </ModalLayout>

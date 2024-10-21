@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react"
 import { useLogin, useLogout, useRegister } from "../../../../hooks/useAuth"
 import { useGetUserData } from "../../../../hooks/useReadData"
-import AppToolbarButton from "../../../Button/AppToolbarButton"
+import Button from "../../../Button/Button"
 import { useCustomFetch } from "../../../../hooks/useCustomFetch"
 import { useAppContext } from "../../../../context/AppContext"
 import { useModal } from "../../../Modal/ModalContext"
+import ToggleButton from "../../../Button/ToggleButton"
 
 const ProfileSettings = () => {
   const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const { data: userData, fetch: fetchUser } = useGetUserData()
-  const { user, setUser } = useAppContext()
+  const { user, setUser, setSyncToFileSystem, setCwd } = useAppContext()
   const { data: isLoggedIn, loginWithCredentials, loading: loadingLogIn, error: errorLoggingIn } = useLogin()
   const { data: isLoggedOut, logout, loading: loadingLogOut, error: errorLoggingOut } = useLogout()
   const { registerWithCredentials } = useRegister()
@@ -72,11 +73,25 @@ const ProfileSettings = () => {
     logout()
   }
 
+  const handleToggleSyncToFileSystem = () => 
+    setSyncToFileSystem(active => {
+      if (active) {
+        setCwd(null)
+      }
+      return !active
+    })
+
   return (
     <span className="flex ml-auto gap-4">
-      {!user && (
-        <AppToolbarButton 
-          label={"Sign in"}
+      <ToggleButton 
+        onClick={handleToggleSyncToFileSystem} 
+        icon={"sync"}
+        style={{ border: "none" }}
+      >
+        Sync
+      </ToggleButton>
+      {!user && false && (
+        <Button 
           disabled={isLoggingIn}
           onClick={() => openModal("loginModal", { 
             onClose: closeModal,
@@ -88,14 +103,17 @@ const ProfileSettings = () => {
               })
             }
           })}
-        />
+        >
+          Sign in 
+        </Button>
       )}
       {user && (
-        <AppToolbarButton 
-          label={"Sign out"}
+        <Button 
           disabled={isLoggingOut}
           onClick={handleLogOut}
-        />
+        >
+          Sign out 
+        </Button>
       )}
     </span>
   )

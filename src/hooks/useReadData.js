@@ -52,6 +52,7 @@ export const useGetProjects = () => {
     try {
       const data = await response.json()
       setProjects(data.projects)
+      setIsError(false)
     } catch (error) {
       console.error(`Failed to extract projects list from response: ${error}`)
       setIsError(true)
@@ -61,3 +62,46 @@ export const useGetProjects = () => {
   return { data: projects, fetchAll, loading, error: error || isError }
 }
 
+export const useGetProjectNotes = () => {
+  const { fetchWithoutCache, loading, error } = useCustomFetch()
+  const [notes, setNotes] = useState(null)
+  const [isError, setIsError] = useState(false)
+
+  const fetchById = useCallback(async (projectId) => {
+    const response = await fetchWithoutCache("getProjectNotes", {
+      projectId: projectId,
+    })
+    try {
+      const notesFile = await response.blob()
+      setNotes(notesFile)
+      setIsError(false)
+    } catch (error) {
+      console.error(`Failed to extract notes file from response:\n ${error}`)
+      setIsError(true)
+    }
+  }, [fetchWithoutCache])
+
+  return { data: notes, fetchById, loading, error: error || isError }
+}
+
+export const useGetProjectMedia = () => {
+  const { fetchWithoutCache, loading, error } = useCustomFetch()
+  const [media, setMedia] = useState(null)
+  const [isError, setIsError] = useState(false)
+
+  const fetchById = useCallback(async (projectId) => {
+    const response = await fetchWithoutCache("getProjectMedia", {
+      projectId: projectId,
+    })
+    try {
+      const mediaFile = await response.blob()
+      setMedia(mediaFile)
+      setIsError(false)
+    } catch (error) {
+      console.error(`Failed to extract media file from response:\n ${error}`)
+      setIsError(true)
+    }
+  }, [fetchWithoutCache])
+
+  return { data: media, fetchById, loading, error: error || isError }
+}

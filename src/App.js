@@ -1,16 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react'
-import './App.css'
 import TextEditor from './components/Editor/TextEditor'
 import { EventEmitter } from './components/EventEmitter.js'
 import WelcomeMessage from './components/Screens/Welcome/WelcomeMessage'
 import Dashboard from './components/Screens/Dashboard/Dashboard'
 import MediaRenderer from './components/MediaRenderer/MediaRenderer'
-import { myMediaComponents } from './components/MediaRenderer/config'
+import { myMediaComponents as customMediaComponents } from './components/MediaRenderer/config'
 import { ProjectProvider } from './context/ProjectContext'
 import LeftPane from './components/LeftPane'
 import RightPane from './components/RightPane'
 import AppBar from './components/AppBar/AppBar'
-import { useGetProjectMetadata, useGetUserData } from './hooks/useReadData'
+import { useGetProjectMetadata, useGetProjectNotes, useGetUserData } from './hooks/useReadData'
 import { ModalProvider } from './components/Modal/ModalContext'
 import { useAppContext } from './context/AppContext'
 
@@ -27,18 +26,26 @@ const App = () => {
   ])
 
   const { data: userData  } = useGetUserData()
-  const { user, setUser } = useAppContext()
+  const { user, setUser, syncToFileSystem } = useAppContext()
   const { 
     data: metadata,
     fetchById: fetchProjectById,
     loading: loadingMetadata,
     error: errorFetchingMetadata,
   } = useGetProjectMetadata()
+  const { 
+    data: fetchedNotes, 
+    fetchById: fetchNotesById, 
+    loading: loadingNotes,
+    error: errorFetchingNotes
+  } = useGetProjectNotes()
 
-  // Import custom components
+  /**
+    * Add custom media components on initial render 
+    */
   useEffect(() => {
     setMediaComponents(m => {
-      return [...m, ...myMediaComponents]
+      return [...m, ...customMediaComponents]
     })
   }, [])
 
@@ -49,14 +56,27 @@ const App = () => {
   useEffect(() => {
     if (metadata) {
       setCurrProjectMetadata(metadata)
+      fetchNotesById(metadata.title)
     }
-  }, [metadata])
+  }, [metadata, fetchNotesById])
+
+ useEffect(() => {
+    if (!fetchedNotes) return
+    const reader = new FileReader();
+    reader.onload = () => textEditorRef.current?.setContent(reader.result)
+    reader.onerror = (error) => console.error(`Error reading notes file:\n${error}`)
+    reader.readAsText(fetchedNotes)
+  }, [fetchedNotes])
 
   useEffect(() => {
-    if (!loadingMetadata) {
-      if (errorFetchingMetadata) {
-        // handle error
-      }
+    if (!loadingNotes && errorFetchingNotes) {
+      // handle error
+    }
+  }, [loadingNotes, errorFetchingNotes])
+  
+  useEffect(() => {
+    if (!loadingMetadata && errorFetchingMetadata) {
+      // handle error
     }
   }, [loadingMetadata, errorFetchingMetadata])
 
@@ -65,9 +85,9 @@ const App = () => {
       setCurrProjectMetadata({ 
         label: label,
         type: type,
-        src: '',
-        title: '',
-        mimetype: '',
+        src: "",
+        title: "",
+        mimetype: "",
       })
       return true
     })
@@ -78,13 +98,17 @@ const App = () => {
     setIsProjectOpen(true)
   }
 
-  const getStampDataFromMedia = dateStampRequested => { 
+  const handleGetMediaState = dateStampRequested => { 
     if (mediaRendererRef.current) {
       const stampData = mediaRendererRef.current.getState(dateStampRequested)
       return stampData ? stampData : { label: null, value: null }
     } else {
       return { label: null, value: null }
     }
+  }
+
+  const handleSeekMedia = (_, stampValue) => {
+    mediaRendererRef.current?.setState(stampValue)
   }
   
   EventEmitter.subscribe('open-media-with-src', data => { 
@@ -96,14 +120,6 @@ const App = () => {
     setIsProjectOpen(true)
   })
 
-  EventEmitter.subscribe('stamp-clicked', data => {
-    const stampValue = data[1]
-    if (mediaRendererRef.current) {
-      mediaRendererRef.current.setState(stampValue)
-    }
-  })
-
-  // jsx
   return (
     <div className="grid grid-rows-[auto,1fr] h-screen bg-[#f5f5f7]">
       <ProjectProvider>
@@ -125,7 +141,7 @@ const App = () => {
                   loading={loadingMetadata}
                   ref={(node) => mediaRendererRef.current = node} 
                 />
-              ) : user ? (
+              ) : (user || syncToFileSystem) ? (
                 <Dashboard onOpenProject={handleOpenProject} />
               ) : (
                 <WelcomeMessage />
@@ -134,7 +150,8 @@ const App = () => {
             <RightPane>
               <TextEditor 
                 ref={textEditorRef} 
-                getStampData={getStampDataFromMedia} 
+                onStampInsert={handleGetMediaState} 
+                onStampClick={handleSeekMedia}
               />
             </RightPane>
           </main>

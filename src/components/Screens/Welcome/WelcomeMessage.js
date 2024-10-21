@@ -2,10 +2,10 @@ import React from 'react'
 
 const WelcomeMessage = () => {
   return (
-    <div className="bg-white" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
       <div style={{ textJustify: 'inter-word', width: '80%', overflow: 'auto', height: '80%' }}>
         <p style={{ whiteSpace: 'pre-wrap' }}>
-          Welcome to <span style={{ fontFamily: 'Mosk, sans-serif', fontWeight: 'bold' }}>notestamp</span>, a web app that synchronizes your notes to media.
+          Welcome to <span style={{ fontFamily: 'Mosk, sans-serif', fontWeight: 'bold', color: 'orangered' }}>notestamp</span>, a web app that synchronizes your notes to media.
         </p>
         <br></br>
         <p style={{ whiteSpace: 'pre-wrap' }}>Instructions:</p>
@@ -14,9 +14,14 @@ const WelcomeMessage = () => {
           <li>Press <code>&lt;shift + enter&gt;</code> to escape stamping.</li>
           <li>Click a stamp and instantly seek the media to the stamp value.</li>
           <li>Your notes persist across page reloads unless you clear the browser cache.</li>
-          <li>Save your project as a .stmp file, stamps included.</li>
-          <li>Export your notes to a .pdf file, stamps excluded.</li>
-          <li>Open your project back into the editor for further editing.</li>
+        </p>
+        <br />
+        <p style={{ whiteSpace: 'pre-wrap' }}>Managing projects in Sync Mode:</p>
+        <p>
+          <li>Toggle the <code>Sync</code> button to enable synchronization.</li>
+          <li>Click <code>Open directory</code> to pick a folder on your device.</li>
+          <li>In Sync Mode, you are able to save a project to the chosen directory.</li>
+          <li>Any projects saved to that directory will be listed in the left pane.</li>
         </p>
         <br></br>
         <p style={{ whiteSpace: 'pre-wrap' }}>
@@ -26,9 +31,8 @@ const WelcomeMessage = () => {
         <br></br>
         <p style={{ whiteSpace: 'pre-wrap' }}>
           Features in development:
-          <li>Cloud storage</li>
-          <li>Collaborative editing</li>
           <li>Dark Mode</li>
+          <li>Collaborative editing</li>
         </p>
         <br></br>
         <p>This project is open source. Contribute on&nbsp; 

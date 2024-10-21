@@ -4,6 +4,9 @@ import { WithToolbar, Toolbar } from '../../MediaRenderer/components/Toolbar'
 import { useGetProjects } from '../../../hooks/useReadData'
 import { useDeleteProject } from '../../../hooks/useUpdateData'
 import { useCustomFetch } from '../../../hooks/useCustomFetch'
+import Button from '../../Button/Button'
+import { useGetDirHandle } from '../../../hooks/useFileSystem'
+import { useAppContext } from '../../../context/AppContext'
 
 const Dashboard = ({ onOpenProject }) => {
   const { 
@@ -18,6 +21,8 @@ const Dashboard = ({ onOpenProject }) => {
     error: errorDeleting
   } = useDeleteProject()
   const { clearCacheByEndpoint } = useCustomFetch()
+  const { dirHandle, getDirHandle } = useGetDirHandle()
+  const { syncToFileSystem, cwd, setCwd } = useAppContext()
 
   useEffect(() => {
     fetchAllProjects()
@@ -40,6 +45,12 @@ const Dashboard = ({ onOpenProject }) => {
     }
   }, [loadingDelete, errorDeleting, fetchAllProjects])
 
+  useEffect(() => {
+    if (dirHandle) {
+      setCwd(dirHandle)
+    }
+  }, [dirHandle, setCwd])
+
   const handleDeleteProject = (projectId) => {
     deleteById(projectId)
     clearCacheByEndpoint("listProjects")
@@ -48,9 +59,19 @@ const Dashboard = ({ onOpenProject }) => {
   return (
     <WithToolbar>
       <Toolbar>
-        <span className="font-bold">Library</span>
+        <span className="font-bold">
+          { (syncToFileSystem && cwd) ? `${cwd.name}` : "Library" }
+        </span>
+        {syncToFileSystem && (
+          <Button
+            onClick={getDirHandle}
+            style={{ marginLeft: "auto" }}
+          >
+            Open directory
+          </Button>
+        )}
       </Toolbar>
-      <div style={{ height: '100%', overflowY: 'auto' }}>
+      <div className="h-full overflow-y-auto"> 
         {projects ? (
           <ul>
            {projects.map(item => (
@@ -63,12 +84,7 @@ const Dashboard = ({ onOpenProject }) => {
             ))}
           </ul>
         ) : (
-          <div style={{ 
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100%'
-          }}>
+          <div className="flex justify-center items-center h-full">
             <p>No saved projects to display</p>
           </div>
         )}

@@ -1,18 +1,31 @@
 import { useCallback } from "react"
 import { useAppContext } from "../context/AppContext"
-import { apiFetch } from "../utils/fetch"
+import { backendFetch } from "../utils/backendFetch"
+import { fsFetch } from "../utils/fsFetch"
 import { useWrappedRequest } from "./useWrappedRequest"
 
 export const useCustomFetch = () => {
-  const { cache } = useAppContext()
+  const { cache, syncToFileSystem, cwd } = useAppContext()
   const { loading, error, wrappedRequest } = useWrappedRequest()
+
+  const fetchDispatch = useCallback(async (endpoint, params) => {
+    // Synchronized local dir takes precedence over a logged-in session
+    if (syncToFileSystem) {
+      return await fsFetch(endpoint, {
+        ...(params || {}),
+        cwd: cwd,
+      })
+    } else {
+      return await backendFetch(endpoint, params)
+    }
+  }, [cwd, syncToFileSystem])
 
   const fetchWithoutCache = useCallback(async (endpoint, params) => (
     wrappedRequest(async () => {
-      const data = await apiFetch(endpoint, params)
+      const data = await fetchDispatch(endpoint, params)
       return data
     })
-  ), [wrappedRequest])
+  ), [wrappedRequest, fetchDispatch])
 
   const fetchWithCache = useCallback(async (endpoint, params) => (
     wrappedRequest(async () => {
@@ -23,11 +36,11 @@ export const useCustomFetch = () => {
         return JSON.parse(cacheResponse)
       }
 
-      const result = await apiFetch(endpoint, params)
-      cache?.current?.set(cacheKey, JSON.stringify(result))
+      const result = await fetchDispatch(endpoint, params)
+      result.ok && cache.current?.set(cacheKey, JSON.stringify(result))
       return result
     }) 
-  ), [cache, wrappedRequest])
+  ), [cache, wrappedRequest, fetchDispatch])
 
   const clearCache = useCallback(() => {
     if (!cache?.current) {

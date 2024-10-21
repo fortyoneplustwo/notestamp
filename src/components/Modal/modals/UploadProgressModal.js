@@ -5,7 +5,7 @@ const UploadProgressModal = forwardRef((_, ref) => {
   return (
     <ModalLayout ref={ref} showCloseBtn={false} >
       <div>
-        <p>Uploading project</p>
+        <p>Saving project</p>
         <progress className="mt-3" />
       </div>
     </ModalLayout>

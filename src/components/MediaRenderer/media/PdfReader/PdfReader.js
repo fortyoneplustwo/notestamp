@@ -5,6 +5,7 @@ import '../../style/Background.css'
 import "react-pdf/dist/Page/TextLayer.css"
 import { Icon } from '../../../Editor/components/Toolbar'
 import { WithToolbar, Toolbar } from '../../components/Toolbar'
+import { useGetProjectMedia } from '../../../../hooks/useReadData'
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
@@ -15,45 +16,28 @@ const PdfReader = React.forwardRef((props, ref) => {
   const [pageScale, setPageScale] = useState(1)
   const [containerWidth, setContainerWidth] = useState(0);
   const containerRef = useRef(null);
-
-  const getProjectMedia = async title => {
-    if (!title) return null
-
-    const url = new URL(`http://localhost:8080/home/media-file/${encodeURIComponent(title)}`)
-
-    const options = {
-      method: "GET",
-      credentials: "include",
-    };
-
-    try {
-      const response = await fetch(url, options)    
-      if (response.ok) {
-        const media = await response.arrayBuffer()
-        return media
-      }
-      else {
-        // Handle HTTP errors
-        return (null)
-      }
-    } catch(error) {
-      console.error(error)
-      return null
-    }
-  }
+  const { data: pdf, fetchById: fetchPdfById } = useGetProjectMedia()
 
   useEffect(() => {
-    console.log(source)
-  }, [source])
+    if (props.title) {
+      fetchPdfById(props.title)
+    }
+  }, [props.title, fetchPdfById])
+
+  useEffect(() => {
+    if (pdf) {
+      console.log(pdf)
+      setSource(pdf)
+    }
+  }, [pdf, setSource])
 
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
         setContainerWidth(containerRef.current.offsetWidth)
       }
-    };
+    }
     updateWidth()
-
     window.addEventListener('resize', updateWidth)
 
     return () => window.removeEventListener('resize', updateWidth)
@@ -63,24 +47,12 @@ const PdfReader = React.forwardRef((props, ref) => {
 
   useEffect(() => { source ? setPageNumber(1) : setPageNumber(null) }, [source])
 
-  useEffect(() => {
-    if (props.src) {
-      getProjectMedia(props.title)
-        .then(pdf => {
-          if (pdf) setSource(pdf)
-        })
-    }
-  }, [props])
-
-  ////////////////////////////////
-  /// Initialize controller //////
-  ////////////////////////////////
-
   useImperativeHandle(ref, () => {
     return {
       getState: () => {
-        // NOTE: Closures always return the initial value of a state variable.
-        // Returning the ref's value ensures we grab the current state.
+        // Using ref to access the state rather than returning the state
+        // directly because of a weird bug that was returning only the 
+        // initial state.
         if (source && pageNumberRef.current) {
           const pageNum = pageNumberRef.current
           return {

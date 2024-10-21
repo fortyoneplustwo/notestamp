@@ -1,4 +1,4 @@
-export const apiFetch = async (endpoint, params=null) => {
+export const backendFetch = async (endpoint, params=null) => {
   const domain ="http://localhost:8000"
 
   try {
@@ -93,6 +93,6 @@ export const apiFetch = async (endpoint, params=null) => {
         throw new Error("Invalid endpoint")
     }
   } catch (error) {
-    console.error(`Failed to fetch: ${error}`)
+    console.error(`Failed to fetch from server:\n${error}`)
   }
 }

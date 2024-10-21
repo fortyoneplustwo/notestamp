@@ -6,13 +6,12 @@ import {
   Transforms,
   createEditor,
   Element as SlateElement,
+  Point,
 } from 'slate'
 import { withHistory } from 'slate-history'
 import isHotkey from 'is-hotkey'
-import { EventEmitter } from '../EventEmitter.js'
 import { Toolbar, Button, Icon } from './components/Toolbar.js'
 import './style/Editor.css'
-import { useModal } from '../Modal/ModalContext.js'
 import { useProjectContext } from '../../context/ProjectContext.js'
 import { downloadPdf } from './components/PdfDownloader.js'
 
@@ -30,12 +29,11 @@ const blockButtonHotkeys = {
 
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
-const TextEditor = React.forwardRef(({ getStampData }, ref) => {
+const TextEditor = React.forwardRef(({ onStampInsert, onStampClick }, ref) => {
   const [internalClipboard, setInternalClipboard] = useState([])
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
   const { setEditorRef } = useProjectContext()
-  const { openModal, closeModal } = useModal()
 
   const editor = useMemo(() => withInlines(withReact(withHistory(createEditor()))), [])
 
@@ -50,6 +48,69 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
     []
   )
 
+  const Stamp = ({ attributes, children, element }) => {
+    return (
+      <span
+        {...attributes}
+        contentEditable={false}
+        onClick={() => onStampClick(element.label, element.value)}
+        className="badge"
+      >
+        {children}
+        <InlineChromiumBugfix />
+        {element.label}
+        <InlineChromiumBugfix />
+      </span>
+    )
+  }
+
+  const Element = props => {
+    const { children, element, attributes } = props
+    switch (element.type) {
+      case 'stamp':
+        return <Stamp {...props} />
+      case 'bulleted-list':
+        return (
+          <ul 
+            {...attributes}
+            className="list-disc list-inside"
+          >
+            {children}
+          </ul>
+        )
+      case 'list-item':
+        return (
+          <li {...attributes}>
+            {children}
+          </li>
+        )
+      case 'numbered-list':
+        return (
+          <ol 
+            {...attributes}
+            className="list-decimal list-inside"
+          >
+            {children}
+          </ol>
+        )
+      default:
+        return <Paragraph {...props}>{children}</Paragraph>
+    }
+  }
+
+  const setEditorChildren = useCallback((children) => {
+    // Select entire content to ensure all nodes get removed
+    Transforms.select(editor, {
+      anchor: Editor.start(editor, []),
+      focus: Editor.end(editor, []),
+    })
+
+    Transforms.unwrapNodes(editor)
+    Transforms.removeNodes(editor)
+    Transforms.insertNodes(editor, children)
+  }, [editor])
+
+
   useEffect(() => {
     setEditorRef(ref.current)
 
@@ -60,51 +121,22 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
 
   useImperativeHandle(ref, () => {
     return {
-      setContent: newContent => {
-        const newNodes = JSON.parse(newContent)
-
-        // Select entire content to ensure all nodes get removed
-        Transforms.select(editor, {
-          anchor: Editor.start(editor, []),
-          focus: Editor.end(editor, []),
-        })
-
-        Transforms.unwrapNodes(editor)
-        Transforms.removeNodes(editor)
-        Transforms.insertNodes(editor, newNodes)
+      setContent: contentString => {
+        try {
+          const children = JSON.parse(contentString)
+          setEditorChildren(children)
+        } catch (error) {
+          console.error(`Invalid editor content:\n${error}`)
+        }
       },
       getContent: () => {
         return editor.children
       }
     }
-  }, [editor])
+  }, [editor, setEditorChildren])
 
-  const handleOpenFile = file => {
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        try {
-          const newNodes = JSON.parse(e.target.result)
-
-          // Fix: focus the editor to ensure all nodes get removed
-          Transforms.select(editor, {
-            anchor: Editor.start(editor, []),
-            focus: Editor.end(editor, []),
-          })
-
-          Transforms.unwrapNodes(editor)
-          Transforms.removeNodes(editor)
-          Transforms.insertNodes(editor, newNodes)
-        } catch (error) {
-          console.error('Error parsing JSON:', error)
-        }
-      }
-      reader.readAsText(file)
-      closeModal()
-    }
-  }
-
-  /** Override copy
+  /** 
+   * Override copy:
    * Copy nodes to editor clipboard and text to device clipboard
    */
   const handleCopy = event => {
@@ -145,7 +177,8 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
     }
   }
 
-  /** Override paste
+  /** 
+   * Override paste:
    * Paste nodes from editor clipboard if editor clipboard = device clipboard
    * Otherwise paste contents of device clipboard
    */
@@ -189,8 +222,11 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
           handleEscapeStamp(editor)
         } else {
           event.preventDefault()
-          handleInsertStamp(getStampData, editor)
+          handleInsertStamp(onStampInsert, editor)
         }
+        break
+      case "Backspace":
+        handleBackspace(editor, event)
         break
       default:
         for (let hotkey in markButtonHotkeys) {
@@ -258,21 +294,6 @@ const TextEditor = React.forwardRef(({ getStampData }, ref) => {
                 description="Toggle bulleted list (Ctrl+Shift+9)"
               />
               <div className='toolbar-btn-separator'></div>
-              <ActionButton 
-                action='upload' 
-                icon="folder_open" 
-                description="Open .stmp file" 
-                onClick={() => { 
-                  openModal("notesUploader", { 
-                    onClose: closeModal,
-                    onFileSelect: handleOpenFile
-                })}} 
-              />
-              <ActionButton 
-                action='download' 
-                icon="download" 
-                description="Download project file (.stmp)" 
-              />
               <ActionButton 
                 action='pdf' 
                 icon="picture_as_pdf" 
@@ -362,6 +383,31 @@ const handleInsertStamp = (getStampData, editor) => {
   return
 }
 
+// TODO: This is a temp solution with some caveats. Needs to be rewritten.
+const handleBackspace = (editor, event) => {
+  const { selection } = editor
+  const startPath = Editor.start(editor, selection)
+  const [block] = Editor.parent(editor, startPath)
+
+  if (selection.isFocused && Point.compare(selection.anchor, selection.focus)) {
+    console.log("triggered")
+    return
+  }
+
+  // Fix: manually delete empty block to make sure caret appears at the 
+  // end of previous block after delete operation 
+  // Make sure not to delete last remaining block
+  if (editor.children.length > 1 
+    || (editor.children.length === 1 
+      && block.type === 'list-item' 
+      && editor.children[0].children.length > 1)) {
+    if (block.children.length === 1 && block.children[0].text === '') {
+      event.preventDefault()
+      Transforms.removeNodes(editor, { at: startPath }) 
+    }
+  }
+}
+
 const handleEscapeStamp = (editor) => {
   const { selection } = editor
   const startPath = Editor.start(editor, selection);
@@ -374,46 +420,8 @@ const handleEscapeStamp = (editor) => {
 }
 
 /** 
- * Recursive algorithm that consumes an editor and returns its text nodes as html
- *
-// TODO: Add functionality for nested marks
-const toHtml = node => {
-  if (Text.isText(node)) {
-    let string = escapeHtml(node.text)
-    string = string.replace(/\n/g, '<br>')
-    string = string.replace(/\t/g, '&nbsp;&nbsp;')
-    if (node.bold) {
-      string = `<strong>${string}</strong>`
-    } else if (node.italic) {
-      string = `<em>${string}</em>`
-    } else if (node.underline) {
-      string = `<u>${string}</u>`
-    } else if (node.code) {
-      string = `<code>${string}</code>`
-    }
-    return string
-  }
-  const children = node.children.map(n => toHtml(n)).join('')
-  switch (node.type) {
-    case 'quote':
-      return `<blockquote><p>${children}</p></blockquote>`
-    case 'paragraph':
-      return `<p>${children}</p>`
-    case 'link':
-      return `<a href="${escapeHtml(node.url)}">${children}</a>`
-    case 'bulleted-list':
-      return `<ul>${children}</ul>`
-    case 'numbered-list':
-      return `<ol>${children}</ol>`
-    case 'list-item':
-      return `<li>${children}</li>`
-    default:
-      return children
-  }
-}
-*/
-
-/** Download the editor's content in JSON format */
+ * Download the editor's content in JSON format 
+ */
 const downloadJSON = (jsonObject, fileName) => {
   const jsonString = JSON.stringify(jsonObject, null, 2)
   const blob = new Blob([jsonString], { type: 'application/json' })
@@ -470,7 +478,6 @@ const toggleAction = (editor, action) => {
   }
 }
 
-// Toggle mark on current selection
 const toggleMark = (editor, format) => {
   const isActive = isMarkActive(editor, format)
 
@@ -502,7 +509,9 @@ const isMarkActive = (editor, format) => {
   return marks ? marks[format] === true : false
 }
 
-/** Returns an editor that supports inline elements */
+/** 
+ * Returns an editor that supports inline elements 
+ */
 const withInlines = editor => {
   const {
     isVoid,
@@ -525,7 +534,6 @@ const withInlines = editor => {
 /**
  * Components
  */
-
 const ActionButton = ({ action, icon, description, ...props }) => {
   const editor = useSlate()
   return (
@@ -576,39 +584,6 @@ const MarkButton = ({ format, icon, description }) => {
   )
 }
 
-const Element = props => {
-  const { children, element, attributes } = props
-  switch (element.type) {
-    case 'stamp':
-      return <Stamp {...props} />
-    case 'bulleted-list':
-      return (
-        <ul 
-          {...attributes}
-          className="list-disc list-inside"
-        >
-          {children}
-        </ul>
-      )
-     case 'list-item':
-      return (
-        <li {...attributes}>
-          {children}
-        </li>
-      )
-    case 'numbered-list':
-      return (
-        <ol 
-          {...attributes}
-          className="list-decimal list-inside"
-        >
-          {children}
-        </ol>
-      )
-    default:
-      return <Paragraph {...props}>{children}</Paragraph>
-  }
-}
 
 const Paragraph = ({ attributes, children }) => {
   return (
@@ -621,23 +596,6 @@ const Paragraph = ({ attributes, children }) => {
   )
 }
 
-const Stamp = ({ attributes, children, element }) => {
-  return (
-    <span
-      {...attributes}
-      contentEditable={false}
-      onClick={() => { 
-        EventEmitter.dispatch('stamp-clicked', [element.label, element.value])
-      }}
-      className="badge"
-    >
-      {children}
-      <InlineChromiumBugfix />
-      {element.label}
-      <InlineChromiumBugfix />
-    </span>
-  )
-}
 
 const Leaf = props => {
   let { attributes, children, leaf } = props

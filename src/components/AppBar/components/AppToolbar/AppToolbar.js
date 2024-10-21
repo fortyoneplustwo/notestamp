@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import AppToolbarButton from '../../../Button/AppToolbarButton'
+import Button from '../../../Button/Button'
 import { useSaveProject } from "../../../../hooks/useWriteData"
 import { useDeleteProject } from '../../../../hooks/useUpdateData'
 import { useModal } from '../../../Modal/ModalContext'
@@ -10,7 +10,7 @@ const AppToolbar = ({ metadata, onClose }) => {
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const { openModal, closeModal } = useModal()
-  const { user } = useAppContext()
+  const { user, cwd} = useAppContext()
   const { saveWithData, loading: loadingSave, error: saveError } = useSaveProject()
   const { deleteById, loading: loadingDelete, error: deleteError } = useDeleteProject()
   const { takeSnapshot } = useProjectContext()
@@ -50,6 +50,7 @@ const AppToolbar = ({ metadata, onClose }) => {
   const handleSaveProject = () => {
     const snapshot = takeSnapshot()
     openModal("projectSaver", {
+      metadata: { ...snapshot.metadata },
       onClose: closeModal,
       onSave: (title) => {
         if (!snapshot.metadata || !snapshot.notes || !title) {
@@ -68,30 +69,39 @@ const AppToolbar = ({ metadata, onClose }) => {
   }
 
   return (
-    <span className="flex gap-4">
-      <span className="text-sm text-bold self-center">
+    <span className="flex flex-row h-full flex-grow gap-4">
+      <span className="text-sm font-bold self-center">
         { metadata?.title || metadata?.label }
       </span>
-      <AppToolbarButton
-        label={"Close"}
-        onClick={onClose}
-      />
-      {user && (
-        <>
-          <AppToolbarButton
-            label={"Save"}
-            onClick={handleSaveProject}
-            style={{ disabled: isSaving }}
-          />
-          {metadata?.title && (
-            <AppToolbarButton 
-              label={"Delete"} 
-              onClick={handleDeleteProject}
-              style={{ disabled: isDeleting }}
-            />
-          )}
-        </>
-      )}
+      <span className="flex flex-row gap-3 ml-auto">
+        {(user || cwd) && (
+          <>
+            <Button
+              icon="save"
+              onClick={handleSaveProject}
+              style={{ disabled: isSaving, border: 'none' }}
+            >
+              Save 
+            </Button>
+            {metadata?.title && (
+              <Button 
+                icon="delete"
+                onClick={handleDeleteProject}
+                style={{ disabled: isDeleting, border: 'none', }}
+              >
+                Delete
+              </Button>
+            )}
+          </>
+        )}
+        <Button
+          onClick={onClose}
+          icon={"cancel"}
+          style={{ border: 'none' }}
+        >
+          Close
+        </Button>
+      </span>
     </span>
   )
 }

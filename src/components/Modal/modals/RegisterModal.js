@@ -1,5 +1,5 @@
 import { forwardRef, useState } from "react"
-import AppToolbarButton from "../../Button/AppToolbarButton"
+import Button from "../../Button/Button"
 import ModalLayout from "../ModalLayout"
 
 const RegisterModal = forwardRef(({ onRegister, onClose }, ref) => {
@@ -34,12 +34,13 @@ const RegisterModal = forwardRef(({ onRegister, onClose }, ref) => {
             />
           </div>
           <div className="flex justify-center mt-4 mb-3">
-            <AppToolbarButton label={"Sign up"} type="submit" />
-            <AppToolbarButton 
+            <Button type="submit">Sign up</Button>
+            <Button 
               onClick={onClose}
-              label={"Cancel"}
               style={{ marginLeft: "0.5em"}}
-            />
+            >
+              Cancel
+            </Button>
           </div>
         </div>
       </form>
