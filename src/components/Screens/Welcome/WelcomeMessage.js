@@ -5,7 +5,7 @@ const WelcomeMessage = () => {
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
       <div style={{ textJustify: 'inter-word', width: '80%', overflow: 'auto', height: '80%' }}>
         <p style={{ whiteSpace: 'pre-wrap' }}>
-          Welcome to <span style={{ fontFamily: 'Mosk, sans-serif', fontWeight: 'bold', color: 'orangered' }}>notestamp</span>, a web app that synchronizes your notes to media.
+          Welcome to <span style={{ fontWeight: 'bold', color: 'orangered' }}>notestamp</span>, a web app that synchronizes your notes to media.
         </p>
         <br></br>
         <p style={{ whiteSpace: 'pre-wrap' }}>Instructions:</p>

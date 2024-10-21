@@ -4,7 +4,7 @@ import { useGetUserData } from "../../../../hooks/useReadData"
 import Button from "../../../Button/Button"
 import { useCustomFetch } from "../../../../hooks/useCustomFetch"
 import { useAppContext } from "../../../../context/AppContext"
-import { useModal } from "../../../Modal/ModalContext"
+import { useModal } from "../../../../context/ModalContext"
 import ToggleButton from "../../../Button/ToggleButton"
 
 const ProfileSettings = () => {

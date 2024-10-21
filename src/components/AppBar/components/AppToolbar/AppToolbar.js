@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Button from '../../../Button/Button'
 import { useSaveProject } from "../../../../hooks/useWriteData"
 import { useDeleteProject } from '../../../../hooks/useUpdateData'
-import { useModal } from '../../../Modal/ModalContext'
+import { useModal } from '../../../../context/ModalContext'
 import { useProjectContext } from "../../../../context/ProjectContext"
 import { useAppContext } from '../../../../context/AppContext'
 

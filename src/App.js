@@ -10,7 +10,7 @@ import LeftPane from './components/LeftPane'
 import RightPane from './components/RightPane'
 import AppBar from './components/AppBar/AppBar'
 import { useGetProjectMetadata, useGetProjectNotes, useGetUserData } from './hooks/useReadData'
-import { ModalProvider } from './components/Modal/ModalContext'
+import { ModalProvider } from './context/ModalContext'
 import { useAppContext } from './context/AppContext'
 
 const App = () => {
