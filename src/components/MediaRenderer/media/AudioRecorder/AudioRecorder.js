@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useImperativeHandle } from 'react'
-import { EventEmitter } from '../../../EventEmitter.js'
+import { EventEmitter } from '../../../../utils/EventEmitter'
 import '../../style/Background.css'
 import { Icon } from '../../../Editor/components/Toolbar.js'
 import './Button.css'

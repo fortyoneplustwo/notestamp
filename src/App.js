@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import TextEditor from './components/Editor/TextEditor'
-import { EventEmitter } from './components/EventEmitter.js'
+import { EventEmitter } from './utils/EventEmitter'
 import WelcomeMessage from './components/Screens/Welcome/WelcomeMessage'
 import Dashboard from './components/Screens/Dashboard/Dashboard'
 import MediaRenderer from './components/MediaRenderer/MediaRenderer'
