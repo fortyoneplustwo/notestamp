@@ -30,16 +30,24 @@ const parseSlateTextNode = (node) => {
   return null
 }
 
+let uniqueKey = 0
+
 const parseSlateNode = (node) => {
   switch (node.type) {
     case 'paragraph': {
-      if (node.children.length === 1 && node.children[0].text === '') {
+      if ((node.children.length === 1 && 
+            node.children[0].text === ''
+          ) || (
+            node.children.length <= 3 && 
+            node.children[1].type === 'stamp' &&
+            node.children[2].text === ''
+         )) {
         return (
-          <Text key={Math.random()}>{'\n'}</Text>
-        );
+          <Text key={++uniqueKey}>{'\n'}</Text>
+        )
       }
       return (
-        <Text key={Math.random()} style={{ display: "flex", flexWrap: "wrap" }}>
+        <Text key={++uniqueKey} style={{ display: "flex", flexWrap: "wrap" }}>
           {node.children.map((child) => parseSlateNode(child))}
         </Text>
       );
@@ -48,8 +56,8 @@ const parseSlateNode = (node) => {
     case 'bulleted-list': {
       return (
         <View>
-          {node.children.map((child, index) => (
-            <View key={index}>
+          {node.children.map((child) => (
+            <View key={++uniqueKey}>
               <Text>• {parseSlateNode(child)}</Text>
             </View>
           ))}
@@ -61,7 +69,7 @@ const parseSlateNode = (node) => {
       return (
         <View>
           {node.children.map((child, index) => (
-            <View key={index}>
+            <View key={++uniqueKey}>
               <Text>{index + 1}. {parseSlateNode(child)}</Text>
             </View>
           ))}
@@ -72,8 +80,8 @@ const parseSlateNode = (node) => {
     case 'list-item': {
       return (
         <View>
-          {node.children.map((child, index) => (
-            <Text key={index}>{parseSlateNode(child)}</Text>
+          {node.children.map((child) => (
+            <Text key={++uniqueKey}>{parseSlateNode(child)}</Text>
           ))}
         </View>
       );

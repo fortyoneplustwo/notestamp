@@ -13,7 +13,7 @@ import isHotkey from 'is-hotkey'
 import { Toolbar, Button, Icon } from './components/Toolbar.js'
 import './style/Editor.css'
 import { useProjectContext } from '../../context/ProjectContext.js'
-import { downloadPdf } from './components/PdfDownloader.js'
+import { downloadPdf } from './utils/PdfDownloader'
 
 const markButtonHotkeys = {
   'mod+b': 'bold',
