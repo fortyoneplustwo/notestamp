@@ -20,7 +20,7 @@ A single page web application for desktop that syncs notes with media using stam
 React, Slate, React-PDF.
 
 ## Custom text editor
-The application uses a custom rich text editor I built using [Slate](https://docs.slatejs.org/) wich can support clickable timestamps alongside text.
+The application uses a [custom rich text editor](https://github.com/fortyoneplustwo/notestamp-editor-react) I built using [Slate](https://docs.slatejs.org/) wich can support clickable timestamps alongside text.
 
 ## Algorithm to calculate a timestamp in real time
 The MediaStream Recording API I used to implement the recorder does not allow users to query a timestamp in real time while recording. The algorithm I implemented efficiently manages the recording state by maintaining two key variables: `dateWhenRecLastActive` and `dateWhenRecLastInactive`. These variables are updated whenever the recorder is started, resumed, paused, or stopped. The total recording duration is stored in the `recDuration` variable, which is updated whenever the recorder becomes inactive.
@@ -38,24 +38,28 @@ if (dateWhenRecLastActive > dateWhenRecLastInactive) {
 This approach ensures constant time complexity O(1), for both updating the state and computing timestamps, making it highly efficient for real-time applications. The algorithm leverages simple updates and checks, avoiding the overhead of iterating over events or using complex synchronization mechanisms, thus providing an efficient solution for accurate timestamping in audio recordings.
 
 # Integrate your custom media component
-## Step 1: Declare your custom media component in `NonCoreMediaComponents.js`
-To integrate your custom media component into the application, add an object to the `myMediaComponents` array. This object must contain the following keys:
+## Step 1: Declare your custom media component in the Media Renderer configuration file
+Navigate to `/src/components/MediaRenderer`. This is where you will find all the code related to the media components. Open `config.js` and add an object to the `myMediaComponents` array that describes your media component using the following properties:
 
 - **`label`**: This is the text that will appear as a shortcut to your component in the navigation bar. Clicking it will open a new project for your media component.
-- **`path`**: This specifies the path to your media component, relative to the `/src/components` directory.
+- **`path`**: This specifies the path to your media component, relative to the `/src/components/MediaRenderer` directory.
 - **`type`**: This is a unique identifier for your component. Please ensure it does not conflict with the existing identifiers: 'youtube', 'audio', 'recorder', or 'pdf', which are reserved for the default media components.
-
-The application will automatically integrate your component once it is added to the `myMediaComponents` array.
 
 **Example**  
 Say you implement a custom component that plays videos from Vimeo.
 
 ```javascript
 const myMediaComponents = [
-  { label: 'Vimeo Player', path: './VimeoPlayer', type: 'vimeo' }
+  { label: 'Vimeo Player', path: '.media/VimeoPlayer/VimeoPlayer', type: 'vimeo' }
 ]
 ```
-## Step 2: Implement the following methods within your component
+
+## Step 2: Implement your custom media component
+Create a new directory in `/src/components/MediaRenderer/media` that will contain all the code related to your component. Navigate to that directory and create a `jsx` file for your component.
+
+Make sure your component implements the following handles in the example below:
+
+**Example: `VimeoPlayer.jsx`**
 
 ```javascript
 const VimeoPlayer = React.forwardRef((props, ref) => {
@@ -64,7 +68,9 @@ const VimeoPlayer = React.forwardRef((props, ref) => {
     return {
       getState: dateStampRequested => {
         // Compute and return media state that will be stored inside the stamp.
-        return { label: label, value: value }
+        const someLabel = "";
+        const someValue = 7;
+        return { label: someLabel, value: someValue }
       },
       setState: newState => {
         // Update the media element within your component to newState here.
@@ -85,7 +91,7 @@ const VimeoPlayer = React.forwardRef((props, ref) => {
 ```
  ### Props
 
-The props object will contain what you have declared in Step 1 plus some additional fields.
+The props object will contain the properties you have declared in Step 1 plus some additional fields.
 
 - **`label`**: The text that appears in the title bar when starting a new project with your media component.
 - **`type`**: A unique identifier for your media component.
@@ -149,10 +155,10 @@ None
 - Otherwise, return `null`.
 
 ### (Optional) Add a toolbar to your component
-If you would like to add a toolbar, we provide a wrapper container together with a toolbar component that matches the design language of the application. You can import them from `LeftPaneComponents.js`. These components are of higher-order, so you may override the `style` prop.
+If you would like to add a toolbar, we provide a wrapper container together with a toolbar component that matches the design language of the application. You can import them from `/src/components/MediaRenderer/components/Toolbar`. These components are of higher-order, so you may override the `style` prop.
 
 ```javascript
-import { WithToolbar, Toolbar } from './LeftPaneComponents'
+import { WithToolbar, Toolbar } from '../../components/Toolbar'
 
 const myCustomMediaComponent = React.forwardRef((_, ref) => {
   return (
@@ -165,13 +171,8 @@ const myCustomMediaComponent = React.forwardRef((_, ref) => {
   )
 }
 ```
-See `YoutubePlayer.js`, `AudioPlayer.js` and `PdfReader.js` in `/src/components` for example usage of the `WithToolbar` and `Toolbar` components.
 
 # Install
 `npm install`
 
 `npm start`
-
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-
