@@ -42,7 +42,7 @@ This approach ensures constant time complexity O(1), for both updating the state
 Navigate to `/src/components/MediaRenderer`. This is where you will find all the code related to the media components. Open `config.js` and add an object to the `myMediaComponents` array that describes your media component using the following properties:
 
 - **`label`**: This is the text that will appear as a shortcut to your component in the navigation bar. Clicking it will open a new project for your media component.
-- **`path`**: This specifies the path to your media component, relative to the `/src/components` directory.
+- **`path`**: This specifies the path to your media component, relative to the `/src/components/MediaRenderer` directory.
 - **`type`**: This is a unique identifier for your component. Please ensure it does not conflict with the existing identifiers: 'youtube', 'audio', 'recorder', or 'pdf', which are reserved for the default media components.
 
 **Example**  
