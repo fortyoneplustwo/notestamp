@@ -20,7 +20,7 @@ A single page web application for desktop that syncs notes with media using stam
 React, Slate, React-PDF.
 
 ## Custom text editor
-The application uses a custom rich text editor I built using [Slate](https://docs.slatejs.org/) wich can support clickable timestamps alongside text.
+The application uses a [custom rich text editor](https://github.com/fortyoneplustwo/notestamp-editor-react) I built using [Slate](https://docs.slatejs.org/) wich can support clickable timestamps alongside text.
 
 ## Algorithm to calculate a timestamp in real time
 The MediaStream Recording API I used to implement the recorder does not allow users to query a timestamp in real time while recording. The algorithm I implemented efficiently manages the recording state by maintaining two key variables: `dateWhenRecLastActive` and `dateWhenRecLastInactive`. These variables are updated whenever the recorder is started, resumed, paused, or stopped. The total recording duration is stored in the `recDuration` variable, which is updated whenever the recorder becomes inactive.
