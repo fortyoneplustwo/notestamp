@@ -85,7 +85,6 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
         <Toolbar style={{ display: 'flex', justifyContent: 'center' }}>
           <form onSubmit={handleSubmitUrl} className="flex w-full max-w-md items-center space-x-2">
             <Input className="h-6" type="url" placeholder="Enter youtube video url" />
-            {/* <DefaultButton className="h-6" variant="secondary" type="submit">Play</DefaultButton> */}
             <MediaToolbarButton type="submit">Play</MediaToolbarButton>
           </form>
         </Toolbar>

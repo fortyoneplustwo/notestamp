@@ -85,7 +85,7 @@ const PdfReader = React.forwardRef((props, ref) => {
 
   return (
     <WithToolbar style={{ overflow: 'hidden' }} className="diagonal-background">
-      <Toolbar className="bg-white dark:bg-[#1d2021]">
+      <Toolbar className="dark:bg-[#1d2021]">
         { !props.src && !props.title &&
           <form onChange={e => { 
             setSource(e.target.files[0])
@@ -117,12 +117,12 @@ const PdfReader = React.forwardRef((props, ref) => {
       >
         {source && (
           <Document file={source}>
-              <Page pageNumber={pageNumber} 
-                renderAnnotationLayer={false} 
-                renderTextLayer={false} 
-                scale={pageScale} 
-                width={containerWidth}
-              />
+            <Page pageNumber={pageNumber} 
+              renderAnnotationLayer={false} 
+              renderTextLayer={false} 
+              scale={pageScale} 
+              width={containerWidth}
+            />
           </Document>
         )}
       </div>

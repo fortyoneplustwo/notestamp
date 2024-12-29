@@ -81,7 +81,7 @@ const Dashboard = ({ onOpenProject }) => {
         {projects ? (
           <ScrollArea>
             <ul>
-             {projects.map(title => (
+             {projects.sort().map(title => ( // TODO: should sort by date modified
                 <DashboardItem 
                   key={title} 
                   id={title} 
