@@ -1,14 +1,14 @@
-import React, { useEffect } from 'react'
-import DashboardItem from './components/DashboardItem'
-import { WithToolbar, Toolbar } from '../../MediaRenderer/components/Toolbar'
+import React, { useEffect, useRef } from 'react'
+import { columns } from "./components/Columns"
+import { Toolbar } from '../../MediaRenderer/components/Toolbar'
 import { useGetProjects } from '../../../hooks/useReadData'
-import { useDeleteProject } from '../../../hooks/useUpdateData'
-import { useCustomFetch } from '../../../hooks/useCustomFetch'
 import { MediaToolbarButton } from '../../Button/Button'
 import { useGetDirHandle } from '../../../hooks/useFileSystem'
 import { useAppContext } from '../../../context/AppContext'
 import { FolderOpen } from 'lucide-react'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { DataTable } from './components/DataTable'
+import { Input } from '@/components/ui/input'
+import FileSyncInstructions from '../Welcome/FileSyncInstructions'
 
 const Dashboard = ({ onOpenProject }) => {
   const { 
@@ -17,14 +17,9 @@ const Dashboard = ({ onOpenProject }) => {
     loading: loadingProjects, 
     error: errorFetchingProjects
   } = useGetProjects()
-  const { 
-    deleteById,
-    loading: loadingDelete,
-    error: errorDeleting
-  } = useDeleteProject()
-  const { clearCacheByEndpoint } = useCustomFetch()
   const { dirHandle, getDirHandle } = useGetDirHandle()
   const { user, syncToFileSystem, cwd, setCwd } = useAppContext()
+  const tableRef = useRef(null)
 
   useEffect(() => {
     if (user || cwd) {
@@ -41,63 +36,52 @@ const Dashboard = ({ onOpenProject }) => {
   }, [errorFetchingProjects, loadingProjects])
 
   useEffect(() => {
-    if (!loadingDelete) {
-      if (errorDeleting) {
-        // handle error
-      }
-    fetchAllProjects()
-    }
-  }, [loadingDelete, errorDeleting, fetchAllProjects])
-
-  useEffect(() => {
     if (dirHandle) {
       setCwd(dirHandle)
     }
   }, [dirHandle, setCwd])
 
-  const handleDeleteProject = (projectId) => {
-    deleteById(projectId)
-    clearCacheByEndpoint("listProjects")
-  }
-
   return (
-    <WithToolbar>
-      <Toolbar>
-        <span className="font-bold">
+    <>
+      <Toolbar className="flex flex-row gap-3">
+        <span className="font-bold max-w-sm truncate overflow-hidden whitespace-nowrap">
           { (syncToFileSystem && cwd) ? `${cwd.name}` : "Library" }
         </span>
-        {syncToFileSystem && (
-          <MediaToolbarButton
-            size="xs"
-            className="ml-auto"
-            title="Open directory"
-            onClick={getDirHandle}
-          >
-            <FolderOpen />
-          </MediaToolbarButton>
-        )}
+        <div className="flex gap-3 ml-auto">
+          {projects && projects?.length > 0 && (
+            <Input
+              placeholder="Filter projects..."
+              value={tableRef.current?.getFilterValue("title")}
+              onChange={(event) => 
+                tableRef.current?.filterProjects("title", event.target.value)
+              }
+              className="max-w-xs min-w-[150px] h-6"
+            />
+          )}
+          {syncToFileSystem && (
+            <MediaToolbarButton
+              size="xs"
+              title="Open directory"
+              onClick={getDirHandle}
+            >
+              <FolderOpen /> Open directory
+            </MediaToolbarButton>
+          )}
+        </div>
       </Toolbar>
-      <div className="h-full overflow-y-scroll"> 
+      <div className="h-full overflow-auto">
         {projects ? (
-          <ScrollArea>
-            <ul>
-             {projects.sort().map(title => ( // TODO: should sort by date modified
-                <DashboardItem 
-                  key={title} 
-                  id={title} 
-                  onOpen={onOpenProject}
-                  onDelete={handleDeleteProject}
-                />
-              ))}
-            </ul>
-          </ScrollArea>
+          <DataTable 
+            columns={columns} 
+            data={projects} 
+            ref={tableRef} 
+            onRowClick={onOpenProject}
+          />
         ) : (
-          <div className="flex justify-center items-center h-full">
-            <p>No saved projects to display</p>
-          </div>
+          <FileSyncInstructions />
         )}
       </div>
-    </WithToolbar>
+    </>
   )
 }
 
