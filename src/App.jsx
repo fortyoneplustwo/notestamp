@@ -4,7 +4,6 @@ import { EventEmitter } from './utils/EventEmitter'
 import WelcomeMessage from './components/Screens/Welcome/WelcomeMessage'
 import Dashboard from './components/Screens/Dashboard/Dashboard'
 import MediaRenderer from './components/MediaRenderer/MediaRenderer'
-import { myMediaComponents as customMediaComponents } from './components/MediaRenderer/config'
 import { ProjectProvider } from './context/ProjectContext'
 import LeftPane from './components/Containers/LeftPane'
 import RightPane from './components/Containers/RightPane'
@@ -13,20 +12,16 @@ import { useGetProjectMetadata, useGetProjectNotes, useGetUserData } from './hoo
 import { ModalProvider } from './context/ModalContext'
 import { useAppContext } from './context/AppContext'
 import { Toaster } from 'sonner'
-import "./index.css"
 import { ThemeProvider } from './context/ThemeProvider'
+import { defaultMediaConfig } from './config'
+import { myMediaComponents } from './components/MediaRenderer/config'
+import "./index.css"
 
 const App = () => {
   const mediaRendererRef = useRef(null)
   const textEditorRef = useRef(null)
   const [isProjectOpen, setIsProjectOpen] = useState(null)
   const [currProjectMetadata, setCurrProjectMetadata] = useState(null)
-  const [mediaComponents, setMediaComponents] = useState([
-    { label: 'YouTube Player', type: 'youtube', path: './YoutubePlayer.js' },
-    { label: 'Audio Player', type: 'audio', path: './AudioPlayer.js' },
-    { label: 'Sound Recorder', type: 'recorder', path: './AudioRecorder.js' },
-    { label: 'Pdf Reader', type: 'pdf', path: './PdfReader.js' }
-  ])
 
   const { data: userData  } = useGetUserData()
   const { user, setUser, syncToFileSystem } = useAppContext()
@@ -42,15 +37,6 @@ const App = () => {
     loading: loadingNotes,
     error: errorFetchingNotes
   } = useGetProjectNotes()
-
-  /**
-    * Add custom media components on initial render 
-    */
-  useEffect(() => {
-    setMediaComponents(m => {
-      return [...m, ...customMediaComponents]
-    })
-  }, [])
 
   useEffect(() => {
     setUser(userData)
@@ -101,14 +87,9 @@ const App = () => {
     setIsProjectOpen(true)
   }
 
-  const handleGetMediaState = dateStampRequested => { 
-    if (mediaRendererRef.current) {
-      const stampData = mediaRendererRef.current.getState(dateStampRequested)
-      return stampData ? stampData : { label: null, value: null }
-    } else {
-      return { label: null, value: null }
-    }
-  }
+  const handleGetMediaState = dateStampRequested =>
+    mediaRendererRef.current?.getState(dateStampRequested) ??
+      { label: null, value: null }
 
   const handleSeekMedia = (_, stampValue) => {
     mediaRendererRef.current?.setState(stampValue)
@@ -132,7 +113,7 @@ const App = () => {
               <AppBar
                 showToolbar={isProjectOpen}
                 onCloseProject={() => setIsProjectOpen(false)}
-                navItems={mediaComponents}
+                navItems={defaultMediaConfig.concat(myMediaComponents)}
                 onNavItemClick={handleOpenNewProject}
                 metadata={currProjectMetadata}
               />

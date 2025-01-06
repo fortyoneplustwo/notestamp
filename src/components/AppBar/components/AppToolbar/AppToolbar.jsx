@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 
 const AppToolbar = ({ metadata, onClose }) => {
+  const [viewportWidth, setViewportWidth] = useState(window.innerWidth)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const { openModal, closeModal } = useModal()
@@ -44,9 +45,18 @@ const AppToolbar = ({ metadata, onClose }) => {
         toast.error("Delete failed")
         return
       }
+      toast.success("Project deleted", {
+        id: toastId,
+      })
       onClose()
     }
   }, [loadingDelete, deleteError, closeModal, onClose])
+
+  useEffect(() => {
+    const handleResize = () => setViewportWidth(window.innerWidth)
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
 
   const handleDeleteProject = () => {
     const snapshot = takeSnapshot()
@@ -148,7 +158,14 @@ const AppToolbar = ({ metadata, onClose }) => {
 
   return (
     <span className="flex flex-row h-full flex-grow gap-4">
-      <span className="font-bold self-center">
+      <span 
+        className="font-bold self-center truncate overflow-hidden whitespace-nowrap"
+        style={{ 
+          maxWidth: `${viewportWidth > 1000 
+            ? viewportWidth / 2.5 
+            : viewportWidth / 4.5}px`
+        }}
+      >
         <Label className="text-sm">{ metadata?.title || metadata?.label }</Label>
       </span>
       <span className="flex flex-row gap-3 ml-auto">
