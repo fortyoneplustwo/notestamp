@@ -3,7 +3,7 @@ import { myMediaComponents } from './config'
 import { useProjectContext } from '../../context/ProjectContext'
 import Loading from '../Screens/Loading/Loading'
 
-// Import core components
+// Import default components
 const mediaComponentMap = {
   audio: React.lazy(() => import('./media/AudioPlayer/AudioPlayer')),
   pdf: React.lazy(() => import('./media/PdfReader/PdfReader')),
@@ -11,7 +11,7 @@ const mediaComponentMap = {
   recorder: React.lazy(() => import('./media/AudioRecorder/AudioRecorder'))
 }
 
-// Import non-core components
+// Import custom components
 myMediaComponents.forEach(obj => {
   const key = obj.type
   const value = React.lazy(() => import(`./media/${obj.path}.jsx`))
