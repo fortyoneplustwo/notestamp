@@ -70,15 +70,15 @@ const Dashboard = ({ onOpenProject }) => {
         </div>
       </Toolbar>
       <div className="h-full overflow-auto">
-        {projects ? (
+        {!cwd ? (
+          <FileSyncInstructions />
+        ) : projects && (
           <DataTable 
             columns={columns} 
             data={projects} 
             ref={tableRef} 
             onRowClick={onOpenProject}
           />
-        ) : (
-          <FileSyncInstructions />
         )}
       </div>
     </>
