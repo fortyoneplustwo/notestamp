@@ -3,7 +3,7 @@ import { Document, Page } from 'react-pdf'
 import { pdfjs } from 'react-pdf'
 import '../../style/Background.css'
 import "react-pdf/dist/Page/TextLayer.css"
-import { WithToolbar, Toolbar } from '../../components/Toolbar'
+import { Toolbar } from '../../components/Toolbar'
 import { useGetProjectMedia } from '../../../../hooks/useReadData'
 import { MediaToolbarButton } from '@/components/Button/Button'
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react'
@@ -84,7 +84,7 @@ const PdfReader = React.forwardRef((props, ref) => {
 
 
   return (
-    <WithToolbar style={{ overflow: 'hidden' }} className="diagonal-background">
+    <div className="flex flex-col h-full overflow-hidden diagonal-background">
       <Toolbar className="dark:bg-[#1d2021]">
         { !props.src && !props.title &&
           <form onChange={e => { 
@@ -126,7 +126,7 @@ const PdfReader = React.forwardRef((props, ref) => {
           </Document>
         )}
       </div>
-    </WithToolbar>
+    </div>
   );
 })
 

@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect, useImperativeHandle } from 'react'
 import { EventEmitter } from '../../../../utils/EventEmitter'
 import '../../style/Background.css'
-import { Icon } from '../../../Editor/components/Toolbar'
 import './Button.css'
 import { formatTime } from '../../utils/formatTime'
 import { DefaultButton } from '@/components/Button/Button'

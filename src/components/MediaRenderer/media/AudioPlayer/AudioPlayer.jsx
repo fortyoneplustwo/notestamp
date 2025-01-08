@@ -1,6 +1,6 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { useGetProjectMedia } from '../../../../hooks/useReadData'
-import { WithToolbar, Toolbar } from '../../components/Toolbar'
+import { Toolbar } from '../../components/Toolbar'
 import '../../style/Background.css'
 import { formatTime } from '../../utils/formatTime'
 import { Input } from '@/components/ui/input'
@@ -74,8 +74,8 @@ const AudioPlayer = React.forwardRef((props, ref) => {
   }, [props])
 
   return (
-    <WithToolbar>
-      { (!props.src && !savedAudio) &&
+    <div className="flex flex-col h-full">
+      {(!props.src && !savedAudio) &&
         <Toolbar>
           <form 
             className="flex w-full max-w-sm items-center gap-1.5"
@@ -94,7 +94,7 @@ const AudioPlayer = React.forwardRef((props, ref) => {
       >
         <audio style={{ colorScheme: 'dark' }} controls ref={playerRef} />
       </div>
-    </WithToolbar>
+    </div>
   )
 })
 
