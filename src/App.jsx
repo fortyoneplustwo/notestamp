@@ -112,7 +112,10 @@ const App = () => {
             <header className="flex row-span-1 bg-transparent pt-2 px-2">
               <AppBar
                 showToolbar={isProjectOpen}
-                onCloseProject={() => setIsProjectOpen(false)}
+                onCloseProject={() => { 
+                  setIsProjectOpen(false)
+                  setCurrProjectMetadata(null)
+                }}
                 navItems={defaultMediaConfig.concat(myMediaComponents)}
                 onNavItemClick={handleOpenNewProject}
                 metadata={currProjectMetadata}
