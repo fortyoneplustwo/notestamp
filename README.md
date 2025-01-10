@@ -57,8 +57,6 @@ const myMediaComponents = [
 ## Step 2: Implement your custom media component
 Create a new directory in `/src/components/MediaRenderer/media` that will contain all the code related to your component. Navigate to that directory and create a `jsx` file for your component.
 
-Make sure your component implements the following handles in the example below:
-
 **Example: `VimeoPlayer.jsx`**
 
 ```javascript
@@ -93,7 +91,7 @@ const VimeoPlayer = React.forwardRef((props, ref) => {
 
 The props object will contain the properties you have declared in Step 1 plus some additional fields.
 
-- **`label`**: The text that appears in the title bar when starting a new project with your media component.
+- **`label`**: The name of your custom media component as it will appear within the application.
 - **`type`**: A unique identifier for your media component.
 - **`title`**: If opening an existing project, this value is the title of the project. If opening a new project, this value is an empty string.
 - **`mimetype`**: The MIME type of the media, e.g., `application/pdf` or `audio/wav`. This value is an empty string for new projects.
@@ -101,7 +99,7 @@ The props object will contain the properties you have declared in Step 1 plus so
 
 ### Exposed handles
 
-You must implement the following handles to synchronize your component with the main app.
+Implement the following handles to synchronize your component with the main app.
 
 #### `getState(dateStampRequested: Date)`
 
@@ -156,21 +154,6 @@ None
 
 ### (Optional) Add a toolbar to your component
 If you would like to add a toolbar, we provide a wrapper container together with a toolbar component that matches the design language of the application. You can import them from `/src/components/MediaRenderer/components/Toolbar`. These components are of higher-order, so you may override the `style` prop.
-
-```javascript
-import { WithToolbar, Toolbar } from '../../components/Toolbar'
-
-const myCustomMediaComponent = React.forwardRef((_, ref) => {
-  return (
-    <WithToolbar>
-      <Toolbar>
-        // ... Add your toolbar elements here e.g. buttons, inputs forms, etc.
-      </Toolbar>
-      // ... The body of your media component's JSX goes here.
-    </WithToolbar>
-  )
-}
-```
 
 # Install
 `npm install`
