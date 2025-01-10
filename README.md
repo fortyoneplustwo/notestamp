@@ -153,7 +153,7 @@ None
 - Otherwise, return `null`.
 
 ### (Optional) Add a toolbar to your component
-If you would like to add a toolbar, we provide a wrapper container together with a toolbar component that matches the design language of the application. You can import them from `/src/components/MediaRenderer/components/Toolbar`. These components are of higher-order, so you may override the `style` prop.
+If you would like to add a toolbar, we provide a toolbar component that matches the design language of the application. You can import them from `/src/components/MediaRenderer/components/Toolbar`. These components are of higher-order, so you may override the `style` prop.
 
 # Install
 `npm install`
