@@ -17,7 +17,7 @@ A single page web application for desktop that syncs notes with media using stam
 
 # Implementation
 ## Stack
-React, Slate, React-PDF.
+React, Slate, ShadCN, Tailwind.
 
 ## Custom text editor
 The application uses a [custom rich text editor](https://github.com/fortyoneplustwo/notestamp-editor-react) I built using [Slate](https://docs.slatejs.org/) wich can support clickable timestamps alongside text.
