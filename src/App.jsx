@@ -88,11 +88,11 @@ const App = () => {
   }
 
   const handleGetMediaState = dateStampRequested =>
-    mediaRendererRef.current?.getState(dateStampRequested) ??
+    mediaRendererRef.current?.getState?.(dateStampRequested) ??
       { label: null, value: null }
 
   const handleSeekMedia = (_, stampValue) => {
-    mediaRendererRef.current?.setState(stampValue)
+    mediaRendererRef.current?.setState?.(stampValue)
   }
   
   EventEmitter.subscribe('open-media-with-src', data => { 
