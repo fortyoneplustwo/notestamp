@@ -171,12 +171,14 @@ const AppToolbar = ({ metadata, onClose }) => {
       <span className="flex flex-row gap-3 ml-auto">
         {(user || cwd) && (
           <>
-            <AppBarButton
-              onClick={handleSaveProject}
-              disabled={isSaving}
-            >
-              <Save size={16} /> Save 
-            </AppBarButton>
+            {metadata?.type !== "recorder" && (
+              <AppBarButton
+                onClick={handleSaveProject}
+                disabled={isSaving}
+              >
+                <Save size={16} /> Save 
+              </AppBarButton>
+            )}
             {metadata?.title && (
               <AppBarButton 
                 onClick={handleDeleteProject}
