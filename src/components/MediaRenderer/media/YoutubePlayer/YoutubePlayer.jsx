@@ -28,7 +28,7 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
           const currentTime = player.current.getCurrentTime()
           return { 
             label: formatTime(currentTime),
-            value: currentTime !== null ? currentTime : null
+            value: currentTime
           }
         } else {
           return null
@@ -44,7 +44,6 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
             mimetype: ''
           }
       },
-      getMedia: () => { return null }
     }
   }, [props])
 

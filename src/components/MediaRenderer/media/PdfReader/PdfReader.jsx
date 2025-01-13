@@ -51,14 +51,13 @@ const PdfReader = React.forwardRef((props, ref) => {
   useImperativeHandle(ref, () => {
     return {
       getState: () => {
-        // Using ref to access the state rather than returning the state
-        // directly because of a weird bug that was returning only the 
-        // initial state.
+        // Using ref to access the current state because of a weird bug 
+        // that was returning only the initial state.
         if (source && pageNumberRef.current) {
           const pageNum = pageNumberRef.current
           return {
             label: pageNum ? `p. ${pageNum}` : null,
-            value: pageNum ? pageNum : null
+            value: pageNum
           } 
         }
       },
@@ -73,11 +72,7 @@ const PdfReader = React.forwardRef((props, ref) => {
         } 
       },
       getMedia: () => { 
-        return props.title 
-          ? null 
-          : source 
-            ? source 
-            : null 
+        return props.title ? null : source 
       }
     } 
   }, [source, props])
@@ -97,16 +92,32 @@ const PdfReader = React.forwardRef((props, ref) => {
         }
         <span
         className="flex ml-auto gap-2 items-right">
-          <MediaToolbarButton variant="ghost" title="Zoom out" onClick={() => { setPageScale(pageScale - 0.2) }}>
+          <MediaToolbarButton 
+            variant="ghost" 
+            title="Zoom out" 
+            onClick={() => { setPageScale(pageScale - 0.2) }}
+          >
             <ZoomOut />
           </MediaToolbarButton>
-          <MediaToolbarButton variant="ghost"  title="Zoom in" onClick={() => { setPageScale(pageScale + 0.2) }}>
+          <MediaToolbarButton 
+            variant="ghost"  
+            title="Zoom in" 
+            onClick={() => { setPageScale(pageScale + 0.2) }}
+          >
             <ZoomIn />
           </MediaToolbarButton>
-          <MediaToolbarButton variant="ghost" title="Previous page" onClick={() => { setPageNumber(pageNumber - 1) }}>
+          <MediaToolbarButton 
+            variant="ghost" 
+            title="Previous page" 
+            onClick={() => { setPageNumber(pageNumber - 1) }}
+          >
             <ChevronLeft />
           </MediaToolbarButton>
-          <MediaToolbarButton variant="ghost" title="Next page" onClick={() => { setPageNumber(pageNumber + 1) }}>
+          <MediaToolbarButton 
+            variant="ghost" 
+            title="Next page" 
+            onClick={() => { setPageNumber(pageNumber + 1) }}
+          >
             <ChevronRight />
           </MediaToolbarButton>
         </span>

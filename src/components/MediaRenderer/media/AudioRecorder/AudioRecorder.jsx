@@ -25,16 +25,11 @@ const AudioRecorder = React.forwardRef((props, ref) => {
   const [recordButtonClassName, setRecordButtonClassname] = useState('')
   const [stopButtonDisabled, setStopButtonDisabled] = useState(true)
 
-  ////////////////////////////////
-  /// Initialize controller //////
-  ////////////////////////////////
-  
   useImperativeHandle(ref, () => {
     return {
       getState: data => {
         const dateStampDataRequested = data
         let timestamp = null
-        // If-statement checks if the recorder was stopped while still recording
         if (dateWhenRecLastActive > dateWhenRecLastInactive) {
           timestamp = recDuration + (dateStampDataRequested - dateWhenRecLastActive)
         } else {
@@ -43,18 +38,12 @@ const AudioRecorder = React.forwardRef((props, ref) => {
         timestamp = Math.floor(timestamp / 1000)
         return {
           label: formatTime(timestamp),
-          value: timestamp ? timestamp : null
+          value: timestamp
         }
       },
-      setState: () => {},
-      getMetadata: () => {return { ...props }},
-      getMedia: () => {return null }
+      getMetadata: () => { return { ...props } },
     } 
   }, [props])
-
-  ////////////////////////////////
-  /// Initialize recorder  ///////
-  ////////////////////////////////
 
   const initPlayer = () => {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !mediaRecorder.current) {
@@ -101,10 +90,6 @@ const AudioRecorder = React.forwardRef((props, ref) => {
     initPlayer() 
   }, [])
 
-  ////////////////////////////////
-  ///  Methods  //////////////////
-  ////////////////////////////////
-  
   const toggleRecord = () => {
     if (mediaRecorder.current.state === 'inactive') {
       mediaRecorder.current.start()
@@ -126,18 +111,8 @@ const AudioRecorder = React.forwardRef((props, ref) => {
     mediaRecorder.current.stop()
   }
 
-  ////////////////////////////////
-  ///  JSX  //////////////////////
-  ////////////////////////////////
-
   return (
-    <div className='diagonal-background'
-      style={{ display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100%',
-        gap: '0.5em'
-    }}>
+    <div className='diagonal-background flex justify-center items-center h-full gap-2'>
       <DefaultButton
         size="lg"
         className='font-bold text-white bg-[orangered] hover:bg-[orangered]/90'

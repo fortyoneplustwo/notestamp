@@ -17,7 +17,7 @@ const AudioPlayer = React.forwardRef((props, ref) => {
           const currentTime = playerRef.current.currentTime
           return { 
             label: currentTime ? formatTime(currentTime) : null,
-            value: currentTime ? currentTime : null 
+            value: currentTime
           }
         } else {
           return null
@@ -30,16 +30,13 @@ const AudioPlayer = React.forwardRef((props, ref) => {
       getMetadata: () => {
         return playerRef.current
           ? { 
-            ...props,
-            mimetype: audio?.type 
-              || props.mimetype,
-            src: ''
-          }
+              ...props,
+              mimetype: audio?.type || props.mimetype,
+              src: ''
+            }
           : null
       },
-      getMedia: () => {
-        return audio
-      }
+      getMedia: () => { return audio }
     } 
   }, [props, audio])
 
@@ -88,10 +85,7 @@ const AudioPlayer = React.forwardRef((props, ref) => {
           </form>
         </Toolbar>
       }
-      <div 
-        className='diagonal-background' 
-        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: '1' }}
-      >
+      <div className='diagonal-background flex h-full justify-center items-center'>
         <audio style={{ colorScheme: 'dark' }} controls ref={playerRef} />
       </div>
     </div>
