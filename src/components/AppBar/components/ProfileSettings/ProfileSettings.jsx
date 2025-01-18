@@ -87,7 +87,9 @@ const ProfileSettings = () => {
 
   return (
     <span className="flex ml-auto gap-4">
-      <Toggle onToggle={handleToggleSyncToFileSystem}>File Sync</Toggle>
+      <span className="file-sync-switch">
+        <Toggle onToggle={handleToggleSyncToFileSystem}>File Sync</Toggle>
+      </span>
       <ModeToggle />
       {!user && false && (
         <AppBarButton 

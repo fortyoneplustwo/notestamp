@@ -13,15 +13,19 @@ import { ModalProvider } from './context/ModalContext'
 import { useAppContext } from './context/AppContext'
 import { Toaster } from 'sonner'
 import { ThemeProvider } from './context/ThemeProvider'
-import { defaultMediaConfig } from './config'
+import { defaultMediaConfig, tourSteps } from './config'
 import { myMediaComponents } from './components/MediaRenderer/config'
+import Joyride, { ACTIONS, EVENTS, STATUS } from 'react-joyride';
 import "./index.css"
 
 const App = () => {
+
   const mediaRendererRef = useRef(null)
   const textEditorRef = useRef(null)
   const [isProjectOpen, setIsProjectOpen] = useState(null)
   const [currProjectMetadata, setCurrProjectMetadata] = useState(null)
+  const [run, setRun] = useState(false)
+  const [stepIndex, setStepIndex] = useState(0)
 
   const { data: userData  } = useGetUserData()
   const { user, setUser, syncToFileSystem } = useAppContext()
@@ -104,6 +108,19 @@ const App = () => {
     setIsProjectOpen(true)
   })
 
+  const handleOnBeginTour = () => setRun(true)
+
+
+  const handleJoyrideCallback = (data) => {
+    const { action, index, status, type } = data
+    if ([EVENTS.STEP_AFTER, EVENTS.TARGET_NOT_FOUND].includes(type)) {
+      setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1))
+    } else if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+      setRun(false)
+      setStepIndex(0)
+    }
+  }
+
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <div className="grid grid-rows-[auto,1fr] h-screen bg-[#f5f5f7] dark:bg-mybgprim">
@@ -132,7 +149,7 @@ const App = () => {
                 ) : (user || syncToFileSystem) ? (
                     <Dashboard onOpenProject={handleOpenProject} />
                   ) : (
-                      <WelcomeMessage />
+                      <WelcomeMessage onClickTourButton={handleOnBeginTour} />
                     )}
               </LeftPane>
               <RightPane>
@@ -147,6 +164,18 @@ const App = () => {
           </ModalProvider>
         </ProjectProvider>
       </div>
+      <Joyride 
+        locale={{ close: "Next" }}
+        stepIndex={stepIndex} 
+        steps={tourSteps} 
+        run={run} 
+        callback={handleJoyrideCallback} 
+        spotlightClicks={true}
+        hideCloseButton={true}
+        disableOverlayClose={true}
+        showProgress={true}
+        continuous={true}
+      />
     </ThemeProvider>
   )
 }

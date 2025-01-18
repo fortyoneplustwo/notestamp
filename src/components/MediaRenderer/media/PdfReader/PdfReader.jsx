@@ -14,9 +14,10 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 const PdfReader = React.forwardRef((props, ref) => {
   const [source, setSource] = useState(null)
   const [pageNumber, setPageNumber] = useState(null)
-  const pageNumberRef = useRef(null)
+  const [numPages, setNumPages] = useState(0)
   const [pageScale, setPageScale] = useState(1)
   const [containerWidth, setContainerWidth] = useState(0);
+  const pageNumberRef = useRef(null)
   const containerRef = useRef(null);
   const { data: pdf, fetchById: fetchPdfById } = useGetProjectMedia()
 
@@ -81,17 +82,15 @@ const PdfReader = React.forwardRef((props, ref) => {
   return (
     <div className="flex flex-col h-full overflow-hidden diagonal-background">
       <Toolbar className="dark:bg-[#1d2021]">
-        { !props.src && !props.title &&
-          <form onChange={e => { 
-            setSource(e.target.files[0])
-          }} 
-            className="flex w-full max-w-sm items-center gap-1.5"
-          >
-            <Input className="h-6 p-0 text-xs" type="file" accept="application/pdf" />
-          </form>
-        }
-        <span
-        className="flex ml-auto gap-2 items-right">
+        {!props.src && !props.title && (
+            <form 
+              onChange={e => setSource(e.target.files[0])} 
+              className="flex w-full max-w-sm items-center gap-1.5"
+            >
+              <Input className="h-6 p-0 text-xs" type="file" accept="application/pdf" />
+            </form>
+        )}
+        <span className="flex ml-auto gap-2 items-right">
           <MediaToolbarButton 
             variant="ghost" 
             title="Zoom out" 
@@ -109,14 +108,37 @@ const PdfReader = React.forwardRef((props, ref) => {
           <MediaToolbarButton 
             variant="ghost" 
             title="Previous page" 
-            onClick={() => { setPageNumber(pageNumber - 1) }}
+            onClick={() => { pageNumber > 1 && setPageNumber(pageNumber - 1) }}
           >
             <ChevronLeft />
           </MediaToolbarButton>
+          {source && (
+            <span className="text-sm w-20 p-0 text-center inline-block">
+              <span>
+                <Input 
+                  className="h-6 text-sm p-0 w-10 inline-block text-center" 
+                  value={pageNumber}
+                  onSubmit={(e) => {
+                    if (e.target.value > 0 && e.target.value < numPages) {
+                      setPageNumber(e.target.value)
+                  }}}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    if (/^\d*$/.test(value)) {
+                      setPageNumber(value === "" ? "" : parseInt(value, 10))
+                    }
+                  }}
+                  type="text"
+                />
+              </span>
+              <span className="mx-1">/</span>
+              <span>{numPages}</span>
+            </span>
+          )}
           <MediaToolbarButton 
             variant="ghost" 
             title="Next page" 
-            onClick={() => { setPageNumber(pageNumber + 1) }}
+            onClick={() => { pageNumber < numPages && setPageNumber(pageNumber + 1) }}
           >
             <ChevronRight />
           </MediaToolbarButton>
@@ -127,7 +149,10 @@ const PdfReader = React.forwardRef((props, ref) => {
         ref={containerRef}
       >
         {source && (
-          <Document file={source}>
+          <Document 
+            file={source} 
+            onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+          >
             <Page pageNumber={pageNumber} 
               renderAnnotationLayer={false} 
               renderTextLayer={false} 

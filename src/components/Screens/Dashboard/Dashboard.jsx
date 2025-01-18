@@ -42,7 +42,7 @@ const Dashboard = ({ onOpenProject }) => {
   }, [dirHandle, setCwd])
 
   return (
-    <>
+    <div className="dashboard h-full">
       <Toolbar className="flex flex-row gap-3">
         <span className="font-bold max-w-sm truncate overflow-hidden whitespace-nowrap">
           { (syncToFileSystem && cwd) ? `${cwd.name}` : "Library" }
@@ -60,6 +60,7 @@ const Dashboard = ({ onOpenProject }) => {
           )}
           {syncToFileSystem && (
             <MediaToolbarButton
+              className="open-dir-btn"
               size="xs"
               title="Open directory"
               onClick={getDirHandle}
@@ -81,7 +82,7 @@ const Dashboard = ({ onOpenProject }) => {
           />
         )}
       </div>
-    </>
+    </div>
   )
 }
 

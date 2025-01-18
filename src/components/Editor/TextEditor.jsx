@@ -248,7 +248,7 @@ const TextEditor = React.forwardRef(({ onStampInsert, onStampClick }, ref) => {
   }
 
   return (
-    <div className="border-none bg-transparent h-full" >
+    <div className="editor border-none bg-transparent h-full" >
       <SlateReact.Slate editor={editor} initialValue={initialValue}
         onChange={value => {
           const isAstChange = editor.operations.some(op => 'set_selection' !== op.type)

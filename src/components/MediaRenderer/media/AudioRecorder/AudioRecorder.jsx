@@ -115,7 +115,7 @@ const AudioRecorder = React.forwardRef((props, ref) => {
     <div className='diagonal-background flex justify-center items-center h-full gap-2'>
       <DefaultButton
         size="lg"
-        className='font-bold text-white bg-[orangered] hover:bg-[orangered]/90'
+        className='record-btn font-bold text-white bg-[orangered] hover:bg-[orangered]/90'
         ref={recordButtonRef}
         onClick={toggleRecord}
       >
@@ -125,7 +125,7 @@ const AudioRecorder = React.forwardRef((props, ref) => {
       <DefaultButton
         variant="default"
         size="lg"
-        className='font-bold'
+        className='font-bold stop-btn'
         ref={stopButtonRef}
         disabled={stopButtonDisabled}
         onClick={toggleStop}

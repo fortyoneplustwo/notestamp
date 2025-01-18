@@ -72,7 +72,7 @@ const AudioPlayer = React.forwardRef((props, ref) => {
 
   return (
     <div className="flex flex-col h-full">
-      {(!props.src && !savedAudio) &&
+      {!props.src && !props.title && (
         <Toolbar>
           <form 
             className="flex w-full max-w-sm items-center gap-1.5"
@@ -84,7 +84,7 @@ const AudioPlayer = React.forwardRef((props, ref) => {
             <Input className="h-6 p-0 text-xs" type="file" accept="audio/*" />
           </form>
         </Toolbar>
-      }
+      )}
       <div className='diagonal-background flex h-full justify-center items-center'>
         <audio style={{ colorScheme: 'dark' }} controls ref={playerRef} />
       </div>

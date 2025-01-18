@@ -190,6 +190,7 @@ const AppToolbar = ({ metadata, onClose }) => {
           </>
         )}
         <AppBarButton
+          className="close-btn"
           variant="destructive"
           onClick={handleCloseProject}
         >
