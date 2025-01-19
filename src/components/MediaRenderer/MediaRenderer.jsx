@@ -12,14 +12,18 @@ const mediaComponentMap = {
 }
 
 // Import custom components
+const allMediaComponents = import.meta.glob(`./media/**/*.jsx`)
+const customMediaComponents = {}
 myMediaComponents.forEach(obj => {
-  const key = obj.type
-  const value = React.lazy(() => import(`./media/${obj.path}.jsx`))
-  mediaComponentMap[key] = value
+  const regex = new RegExp(`${obj.path.slice(2)}`)
+  const [_, component] = Object.entries(allMediaComponents).find(([key, _]) => regex.test(key))
+  if (component) customMediaComponents[obj.type] = React.lazy(component)
 })
 
-const MediaRenderer = React.forwardRef(({ metadata, loading }, ref) => {
+// merge default and custom components
+Object.assign(mediaComponentMap, customMediaComponents)
 
+const MediaRenderer = React.forwardRef(({ metadata, loading }, ref) => {
   const { setMediaRef } = useProjectContext()
   let MediaComponent = null
 

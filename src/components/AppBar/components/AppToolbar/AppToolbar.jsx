@@ -92,9 +92,7 @@ const AppToolbar = ({ metadata, onClose }) => {
       metadata: { ...snapshot.metadata },
       onClose: closeModal,
       onSave: (title) => {
-        // TODO: fix this
-        if ((snapshot.metadata.type === "youtube" && !snapshot.metadata.src) ||
-          (snapshot.metadata.type !== "youtube" && !snapshot.media)) {
+        if (!snapshot.metadata && !snapshot.src) {
           toast.warning("No media detected")
           return
         }

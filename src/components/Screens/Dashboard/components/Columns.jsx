@@ -8,6 +8,9 @@ import {
 import { ArrowUpDown, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { defaultMediaConfig } from "@/config";
+import { myMediaComponents } from "@/components/MediaRenderer/config";
+
+const mediaComponents = [...defaultMediaConfig, ...myMediaComponents]
 
 export const columns = [
   {
@@ -54,7 +57,7 @@ export const columns = [
             >
               All
             </DropdownMenuCheckboxItem>
-            {defaultMediaConfig
+            {mediaComponents
               .filter(media => media.type !== "recorder")
               .map(media => (
                 <DropdownMenuCheckboxItem
@@ -73,7 +76,7 @@ export const columns = [
     },
     cell: ({ row }) => 
       <div className="flex justify-center">
-        {defaultMediaConfig
+        {mediaComponents
           .find((media) => media.type === row.original.type)
           .icon
         }
