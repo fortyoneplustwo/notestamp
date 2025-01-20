@@ -22,18 +22,18 @@ Vite, React, Slate, ShadCN, Tailwind.
 
 ## Custom Text-Editor
 
-We implemented a unique [custom rich-text editor](https://github.com/fortyoneplustwo/notestamp-editor-react) that inserts clickable stamps alongside text whenever the `<Enter>` key is pressed.
+I implemented a unique [custom rich-text editor](https://github.com/fortyoneplustwo/notestamp-editor-react) that inserts clickable stamps alongside text whenever the `<Enter>` key is pressed.
 
 This stand-alone editor is available as an [npm package](https://www.npmjs.com/package/notestamp) for React applications. Its stamps can hold arbitrary values, offering exceptional versatility.
 
 ## File System Access
-As the back-end is still under development, we have introduced **File Sync** mode. When enabled, this mode allows the application to access and modify files within a specified directory on your local device. Saving a project downloads the files directly to the chosen folder. Projects saved in this folder are automatically detected by the app, enabling seamless opening, editing, and management. 
+As the back-end is still under development, I have introduced **File Sync** mode. When enabled, this mode allows the application to access and modify files within a specified directory on your local device. Saving a project downloads the files directly to the chosen folder. Projects saved in this folder are automatically detected by the app, enabling seamless opening, editing, and management. 
 
 This approach delivers a near-native user experience while remaining accessible to anyone with a web browser.
 
 ## Framework to extend the app with more media
 
-We have designed an intuitive framework to seamlessly integrate custom media components beyond the default options. This simplifies development while allowing users with React knowledge to add their own functionality.
+I have designed an intuitive framework to seamlessly integrate custom media components beyond the default options. This simplifies development while allowing users with React knowledge to add their own functionality.
 
 The framework is straightforward—it requires editing a configuration file and, at most, overriding four functions within the media component.
 
