@@ -17,7 +17,6 @@ const PdfReader = React.forwardRef((props, ref) => {
   const [numPages, setNumPages] = useState(0)
   const [pageScale, setPageScale] = useState(1)
   const [containerWidth, setContainerWidth] = useState(0);
-  const pageNumberRef = useRef(null)
   const containerRef = useRef(null);
   const { data: pdf, fetchById: fetchPdfById } = useGetProjectMedia()
 
@@ -45,20 +44,15 @@ const PdfReader = React.forwardRef((props, ref) => {
     return () => window.removeEventListener('resize', updateWidth)
   }, [])
 
-  useEffect(() => { pageNumberRef.current = pageNumber }, [pageNumber])
-
   useEffect(() => { source ? setPageNumber(1) : setPageNumber(null) }, [source])
 
   useImperativeHandle(ref, () => {
     return {
       getState: () => {
-        // Using ref to access the current state because of a weird bug 
-        // that was returning only the initial state.
-        if (source && pageNumberRef.current) {
-          const pageNum = pageNumberRef.current
+        if (source) {
           return {
-            label: pageNum ? `p. ${pageNum}` : null,
-            value: pageNum
+            label: pageNumber ? `p. ${pageNumber}` : null,
+            value: pageNumber
           } 
         }
       },
@@ -76,7 +70,7 @@ const PdfReader = React.forwardRef((props, ref) => {
         return props.title ? null : source 
       }
     } 
-  }, [source, props])
+  }, [source, props, pageNumber])
 
 
   return (
@@ -144,10 +138,7 @@ const PdfReader = React.forwardRef((props, ref) => {
           </MediaToolbarButton>
         </span>
       </Toolbar>
-      <div 
-        className='diagonal-background overflow-auto' 
-        ref={containerRef}
-      >
+      <div className='diagonal-background overflow-auto' ref={containerRef}>
         {source && (
           <Document 
             file={source} 
