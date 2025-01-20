@@ -10,6 +10,8 @@
  *
  */
 
+import { Palette } from "lucide-react";
+
 export const myMediaComponents = [
   /*
    * Example:
