@@ -43,9 +43,3 @@ While the documentation is being updated, you can refer to this [tutorial](https
 `npm install`
 
 `npm start`
-
-
-# Install
-`npm install`
-
-`npm start`
