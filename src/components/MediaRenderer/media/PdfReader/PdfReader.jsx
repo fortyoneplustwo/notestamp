@@ -13,7 +13,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 const PdfReader = React.forwardRef((props, ref) => {
   const [source, setSource] = useState(null)
-  const [pageNumber, setPageNumber] = useState(null)
+  const [pageNumber, setPageNumber] = useState(1)
   const [numPages, setNumPages] = useState(0)
   const [pageScale, setPageScale] = useState(1)
   const [containerWidth, setContainerWidth] = useState(0);
