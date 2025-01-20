@@ -49,7 +49,8 @@ const isValidProject = async (dir) => {
             return false
           }
         }
-        return true // Metadata file found and is valid
+        metadata.lastModified = new Date(metadataFile.lastModified)
+        return metadata // Metadata file found and is valid
       }
     }
     return false // No metadata file found
@@ -77,8 +78,8 @@ export const fsFetch = async (endpoint, params=null) => {
         const validProjects = []
         const promises = []
         for await (const entry of params?.cwd?.values()) {
-          promises.push(isValidProject(entry).then(isValid => 
-            isValid && validProjects.push(entry.name) 
+          promises.push(isValidProject(entry).then(metadata =>
+            metadata && validProjects.push(metadata)
           ))
         }
         await Promise.all(promises) // Check for validity in parallel
@@ -87,45 +88,47 @@ export const fsFetch = async (endpoint, params=null) => {
 
       case "getProjectMetadata":
         for await (const entry of params?.cwd?.values()) {
-          if (entry.name === params?.projectId && await isValidProject(entry)) {
-            const metadataFileHandle = await entry.getFileHandle("metadata")
-            const metadataFile = await metadataFileHandle.getFile()
-            const metadataString = await metadataFile.text()
-            return new FsFetchResponse(metadataString, true)
+          if (entry.name === params?.projectId) {
+            const metadata = await isValidProject(entry)
+            if (metadata) {
+              return new FsFetchResponse(JSON.stringify(metadata), true)
+            } else {
+              return new FsFetchResponse() // Metadata invalid
+            }
           }
         }
         return new FsFetchResponse() // Project not found
 
       case "getProjectMedia":
         for await (const entry of params?.cwd?.values()) {
-          if (entry.name === params?.projectId && await isValidProject(entry)) {
-            const metadataFileHandle = await entry.getFileHandle("metadata")
-            const metadataFile = await metadataFileHandle.getFile()
-            const metadataString = await metadataFile.text()
-            const metadata = await JSON.parse(metadataString)
-            
-            const mediaFileHandle = await entry.getFileHandle(
-              `${metadata.title}.${metadata.mimetype.split("/")[1]}`
-            )
-            const mediaFile = await mediaFileHandle.getFile()
-            return new FsFetchResponse(mediaFile, true)
+          if (entry.name === params?.projectId) {
+            const metadata = await isValidProject(entry)
+            if (metadata) {
+              const mediaFileHandle = await entry.getFileHandle(
+                `${metadata.title}.${metadata.mimetype.split("/")[1]}`
+              )
+              const mediaFile = await mediaFileHandle.getFile()
+              return new FsFetchResponse(mediaFile, true)
+            } else {
+              return new FsFetchResponse() // Metadata invalid
+            }
           }
         }
         return new FsFetchResponse() // Project not found
         
       case "getProjectNotes":
         for await (const entry of params?.cwd?.values()) {
-          if (entry.name === params?.projectId && await isValidProject(entry)) {
-            const metadataFileHandle = await entry.getFileHandle("metadata")
-            const metadataFile = await metadataFileHandle.getFile()
-            const metadataString = await metadataFile.text()
-            const metadata = await JSON.parse(metadataString)
-            
-            const notesFileHandle = await entry.getFileHandle(
-              `${metadata.title}.stmp`
-            )
-            const notesFile = await notesFileHandle.getFile()
-            return new FsFetchResponse(notesFile, true)
+          if (entry.name === params?.projectId) {
+            const metadata = await isValidProject(entry)
+            if (metadata) {
+              const notesFileHandle = await entry.getFileHandle(
+                `${metadata.title}.stmp`
+              )
+              const notesFile = await notesFileHandle.getFile()
+              return new FsFetchResponse(notesFile, true)
+            } else {
+              return new FsFetchResponse() // Metadata invalid
+            }
           }
         }
         return new FsFetchResponse() // Project not found
@@ -162,9 +165,14 @@ export const fsFetch = async (endpoint, params=null) => {
 
       case "deleteProject":
         for await (const entry of params?.cwd?.values()) {
-          if (entry.name === params?.projectId && await isValidProject(entry)) {
-            await params?.cwd?.removeEntry(params?.projectId, { recursive: true }) 
-            return new FsFetchResponse(JSON.stringify({ msg: "deleted" }), true)
+          if (entry.name === params?.projectId) {
+            const metadata = await isValidProject(entry)
+            if (metadata) {
+              await params?.cwd?.removeEntry(params?.projectId, { recursive: true }) 
+              return new FsFetchResponse(JSON.stringify({ msg: "deleted" }), true)
+            } else {
+              return new FsFetchResponse() // Metadata invalid
+            }
           }
         }
         return new FsFetchResponse() // Project not found

@@ -1,6 +1,6 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { useGetProjectMedia } from '../../../../hooks/useReadData'
-import { WithToolbar, Toolbar } from '../../components/Toolbar'
+import { Toolbar } from '../../components/Toolbar'
 import '../../style/Background.css'
 import { formatTime } from '../../utils/formatTime'
 import { Input } from '@/components/ui/input'
@@ -17,7 +17,7 @@ const AudioPlayer = React.forwardRef((props, ref) => {
           const currentTime = playerRef.current.currentTime
           return { 
             label: currentTime ? formatTime(currentTime) : null,
-            value: currentTime ? currentTime : null 
+            value: currentTime
           }
         } else {
           return null
@@ -30,16 +30,13 @@ const AudioPlayer = React.forwardRef((props, ref) => {
       getMetadata: () => {
         return playerRef.current
           ? { 
-            ...props,
-            mimetype: audio?.type 
-              || props.mimetype,
-            src: ''
-          }
+              ...props,
+              mimetype: audio?.type || props.mimetype,
+              src: ''
+            }
           : null
       },
-      getMedia: () => {
-        return audio
-      }
+      getMedia: () => { return audio }
     } 
   }, [props, audio])
 
@@ -74,8 +71,8 @@ const AudioPlayer = React.forwardRef((props, ref) => {
   }, [props])
 
   return (
-    <WithToolbar>
-      { (!props.src && !savedAudio) &&
+    <div className="flex flex-col h-full">
+      {!props.src && !props.title && (
         <Toolbar>
           <form 
             className="flex w-full max-w-sm items-center gap-1.5"
@@ -87,14 +84,11 @@ const AudioPlayer = React.forwardRef((props, ref) => {
             <Input className="h-6 p-0 text-xs" type="file" accept="audio/*" />
           </form>
         </Toolbar>
-      }
-      <div 
-        className='diagonal-background' 
-        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: '1' }}
-      >
+      )}
+      <div className='diagonal-background flex h-full justify-center items-center'>
         <audio style={{ colorScheme: 'dark' }} controls ref={playerRef} />
       </div>
-    </WithToolbar>
+    </div>
   )
 })
 

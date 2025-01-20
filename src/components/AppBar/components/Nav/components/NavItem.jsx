@@ -1,23 +1,19 @@
 import { AppBarButton } from "@/components/Button/Button"
-import { FileText, Headphones, Mic, TvMinimalPlay } from "lucide-react"
 
 const NavItem = (props) => {
-  const { type, onClick, children } = props
+  const { type, icon, onClick, children } = props
 
   return (
     <AppBarButton 
       variant="outline"
       size="xs"
+      className={type === "recorder" ? "sound-recorder-btn" : ""}
       onClick={() => onClick(children, type)}
     >
-      {type === "youtube" && <TvMinimalPlay size={16} />}
-      {type === "audio" && <Headphones size={16} />}
-      {type === "recorder" && <Mic size={16} />}
-      {type === "pdf" && <FileText size={16} />}
+      { icon }
       { children }
     </AppBarButton>
   )
-
 }
 
 export default NavItem

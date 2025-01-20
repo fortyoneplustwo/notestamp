@@ -4,7 +4,6 @@ import { EventEmitter } from './utils/EventEmitter'
 import WelcomeMessage from './components/Screens/Welcome/WelcomeMessage'
 import Dashboard from './components/Screens/Dashboard/Dashboard'
 import MediaRenderer from './components/MediaRenderer/MediaRenderer'
-import { myMediaComponents as customMediaComponents } from './components/MediaRenderer/config'
 import { ProjectProvider } from './context/ProjectContext'
 import LeftPane from './components/Containers/LeftPane'
 import RightPane from './components/Containers/RightPane'
@@ -13,20 +12,20 @@ import { useGetProjectMetadata, useGetProjectNotes, useGetUserData } from './hoo
 import { ModalProvider } from './context/ModalContext'
 import { useAppContext } from './context/AppContext'
 import { Toaster } from 'sonner'
-import "./index.css"
 import { ThemeProvider } from './context/ThemeProvider'
+import { defaultMediaConfig, tourSteps } from './config'
+import { myMediaComponents } from './components/MediaRenderer/config'
+import Joyride, { ACTIONS, EVENTS, STATUS } from 'react-joyride';
+import "./index.css"
 
 const App = () => {
+
   const mediaRendererRef = useRef(null)
   const textEditorRef = useRef(null)
   const [isProjectOpen, setIsProjectOpen] = useState(null)
   const [currProjectMetadata, setCurrProjectMetadata] = useState(null)
-  const [mediaComponents, setMediaComponents] = useState([
-    { label: 'YouTube Player', type: 'youtube', path: './YoutubePlayer.js' },
-    { label: 'Audio Player', type: 'audio', path: './AudioPlayer.js' },
-    { label: 'Sound Recorder', type: 'recorder', path: './AudioRecorder.js' },
-    { label: 'Pdf Reader', type: 'pdf', path: './PdfReader.js' }
-  ])
+  const [run, setRun] = useState(false)
+  const [stepIndex, setStepIndex] = useState(0)
 
   const { data: userData  } = useGetUserData()
   const { user, setUser, syncToFileSystem } = useAppContext()
@@ -42,15 +41,6 @@ const App = () => {
     loading: loadingNotes,
     error: errorFetchingNotes
   } = useGetProjectNotes()
-
-  /**
-    * Add custom media components on initial render 
-    */
-  useEffect(() => {
-    setMediaComponents(m => {
-      return [...m, ...customMediaComponents]
-    })
-  }, [])
 
   useEffect(() => {
     setUser(userData)
@@ -101,17 +91,12 @@ const App = () => {
     setIsProjectOpen(true)
   }
 
-  const handleGetMediaState = dateStampRequested => { 
-    if (mediaRendererRef.current) {
-      const stampData = mediaRendererRef.current.getState(dateStampRequested)
-      return stampData ? stampData : { label: null, value: null }
-    } else {
-      return { label: null, value: null }
-    }
-  }
+  const handleGetMediaState = dateStampRequested =>
+    mediaRendererRef.current?.getState?.(dateStampRequested) ??
+      { label: null, value: null }
 
   const handleSeekMedia = (_, stampValue) => {
-    mediaRendererRef.current?.setState(stampValue)
+    mediaRendererRef.current?.setState?.(stampValue)
   }
   
   EventEmitter.subscribe('open-media-with-src', data => { 
@@ -123,6 +108,19 @@ const App = () => {
     setIsProjectOpen(true)
   })
 
+  const handleOnBeginTour = () => setRun(true)
+
+
+  const handleJoyrideCallback = (data) => {
+    const { action, index, status, type } = data
+    if ([EVENTS.STEP_AFTER, EVENTS.TARGET_NOT_FOUND].includes(type)) {
+      setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1))
+    } else if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+      setRun(false)
+      setStepIndex(0)
+    }
+  }
+
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <div className="grid grid-rows-[auto,1fr] h-screen bg-[#f5f5f7] dark:bg-mybgprim">
@@ -131,8 +129,11 @@ const App = () => {
             <header className="flex row-span-1 bg-transparent pt-2 px-2">
               <AppBar
                 showToolbar={isProjectOpen}
-                onCloseProject={() => setIsProjectOpen(false)}
-                navItems={mediaComponents}
+                onCloseProject={() => { 
+                  setIsProjectOpen(false)
+                  setCurrProjectMetadata(null)
+                }}
+                navItems={defaultMediaConfig.concat(myMediaComponents)}
                 onNavItemClick={handleOpenNewProject}
                 metadata={currProjectMetadata}
               />
@@ -148,7 +149,7 @@ const App = () => {
                 ) : (user || syncToFileSystem) ? (
                     <Dashboard onOpenProject={handleOpenProject} />
                   ) : (
-                      <WelcomeMessage />
+                      <WelcomeMessage onClickTourButton={handleOnBeginTour} />
                     )}
               </LeftPane>
               <RightPane>
@@ -163,6 +164,18 @@ const App = () => {
           </ModalProvider>
         </ProjectProvider>
       </div>
+      <Joyride 
+        locale={{ close: "Next" }}
+        stepIndex={stepIndex} 
+        steps={tourSteps} 
+        run={run} 
+        callback={handleJoyrideCallback} 
+        spotlightClicks={true}
+        hideCloseButton={true}
+        disableOverlayClose={true}
+        showProgress={true}
+        continuous={true}
+      />
     </ThemeProvider>
   )
 }

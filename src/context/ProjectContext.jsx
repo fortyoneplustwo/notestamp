@@ -21,9 +21,9 @@ export const ProjectProvider = ({ children }) => {
 
   const takeSnapshot = useCallback(() => {
     return {
-      metadata: mediaRef.current?.getMetadata(),
-      notes: editorRef.current?.getContent(),
-      media: mediaRef.current?.getMedia(),
+      metadata: mediaRef.current?.getMetadata?.(),
+      notes: editorRef.current?.getContent?.(),
+      media: mediaRef.current?.getMedia?.(),
     }
   }, [])
 
