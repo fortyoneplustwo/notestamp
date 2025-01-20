@@ -166,35 +166,37 @@ const AppToolbar = ({ metadata, onClose }) => {
       >
         <Label className="text-sm">{ metadata?.title || metadata?.label }</Label>
       </span>
-      <span className="flex flex-row gap-3 ml-auto">
-        {(user || cwd) && (
-          <>
-            {metadata?.type !== "recorder" && (
-              <AppBarButton
-                onClick={handleSaveProject}
-                disabled={isSaving}
-              >
-                <Save size={16} /> Save 
-              </AppBarButton>
-            )}
-            {metadata?.title && (
-              <AppBarButton 
-                onClick={handleDeleteProject}
-                disabled={isDeleting}
-              >
-                <Trash size={16} /> Delete
-              </AppBarButton>
-            )}
-          </>
-        )}
-        <AppBarButton
-          className="close-btn"
-          variant="destructive"
-          onClick={handleCloseProject}
-        >
-          <CircleX size={16} /> Close
-        </AppBarButton>
-      </span>
+      {metadata && (
+        <span className="flex flex-row gap-3 ml-auto">
+          {(user || cwd) && (
+            <>
+              {metadata?.type !== "recorder" && (
+                <AppBarButton
+                  onClick={handleSaveProject}
+                  disabled={isSaving}
+                >
+                  <Save size={16} /> Save 
+                </AppBarButton>
+              )}
+              {metadata?.title && (
+                <AppBarButton 
+                  onClick={handleDeleteProject}
+                  disabled={isDeleting}
+                >
+                  <Trash size={16} /> Delete
+                </AppBarButton>
+              )}
+            </>
+          )}
+          <AppBarButton
+            className="close-btn"
+            variant="destructive"
+            onClick={handleCloseProject}
+          >
+            <CircleX size={16} /> Close
+          </AppBarButton>
+        </span>
+      )}
       <Separator orientation="vertical" />
     </span>
   )
