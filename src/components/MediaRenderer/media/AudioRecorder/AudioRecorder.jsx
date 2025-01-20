@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect, useImperativeHandle } from 'react'
 import { EventEmitter } from '../../../../utils/EventEmitter'
 import '../../style/Background.css'
-import './Button.css'
 import { formatTime } from '../../utils/formatTime'
 import { DefaultButton } from '@/components/Button/Button'
 import { RadiobuttonIcon } from '@radix-ui/react-icons'
@@ -95,7 +94,7 @@ const AudioRecorder = React.forwardRef((props, ref) => {
       mediaRecorder.current.start()
       setStopButtonDisabled(false)
       setRecordButtonText('Pause')
-      setRecordButtonClassname('blink')
+      setRecordButtonClassname('animate-pulse')
     } else if (mediaRecorder.current.state === 'recording') {
       mediaRecorder.current.pause()
       setRecordButtonText('Resume')
@@ -103,7 +102,7 @@ const AudioRecorder = React.forwardRef((props, ref) => {
     } else {
       mediaRecorder.current.resume()
       setRecordButtonText('Pause')
-      setRecordButtonClassname('blink')
+      setRecordButtonClassname('animate-pulse')
     }
   }
 
