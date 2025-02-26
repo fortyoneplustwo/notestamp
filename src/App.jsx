@@ -174,7 +174,6 @@ const App = () => {
         hideCloseButton={true}
         disableOverlayClose={true}
         showProgress={true}
-        continuous={true}
       />
     </ThemeProvider>
   )

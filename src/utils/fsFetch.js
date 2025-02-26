@@ -43,7 +43,7 @@ const isValidProject = async (dir) => {
         const metadataFile = await file.getFile()
         const metadataString = await metadataFile.text()
         const metadata = JSON.parse(metadataString)
-        const validKeys = ["title", "label", "type", "mimetype", "src"]
+        const validKeys = ["title", "label", "type", "mimetype", "src", "lastModified"]
         for (const key in metadata) {
           if (!validKeys.includes(key)) {
             return false

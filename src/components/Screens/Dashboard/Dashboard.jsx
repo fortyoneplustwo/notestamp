@@ -62,18 +62,16 @@ const Dashboard = ({ onOpenProject }) => {
             <MediaToolbarButton
               className="open-dir-btn"
               size="xs"
-              title="Open directory"
+              title="Change directory"
               onClick={getDirHandle}
             >
-              <FolderOpen /> Open directory
+              <FolderOpen />
             </MediaToolbarButton>
           )}
         </div>
       </Toolbar>
       <div className="h-full overflow-auto">
-        {!cwd ? (
-          <FileSyncInstructions />
-        ) : projects && (
+        {cwd && projects && (
           <DataTable 
             columns={columns} 
             data={projects} 

@@ -27,19 +27,13 @@ export const tourSteps = [
     {
       target: ".file-sync-switch",
       title: <h2>Toggle File Sync</h2>,
-      content: "File Sync allows you to pick a designated folder on your device from which your existing projects will be sourced and to which new projects will be saved.",
-      disableBeacon: true,
-    },
-    {
-      target: ".open-dir-btn",
-      title: <h2>Pick a folder on your device</h2>,
-      content: "You may click this button at any time to switch directories. Make sure to give persimission to edit files.",
+      content: "File Sync enables you to select a folder on your device to manage your projects. Existing projects in the folder will be loaded automatically, and new projects will be saved there. Simply toggle the switch, choose a folder, and grant file editing permissions if prompted.",
       disableBeacon: true,
     },
     {
       target: ".dashboard",
       title: <h2>Dashboard</h2>,
-      content: "This is where your saved projects will appear. It is empty for now, so let's create a new project.",
+      content: "This is where your list of projects will appear. It is empty for now, so let's create a new project.",
       placement: "right",
       disableBeacon: true,
     },

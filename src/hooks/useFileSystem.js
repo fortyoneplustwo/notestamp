@@ -22,14 +22,17 @@ export const useGetDirHandle = () => {
     try {
       const handle = await window.showDirectoryPicker({ mode: "readwrite" })
       const permissionGranted = await verifyPermission(handle, ["readwrite"])
-      if (permissionGranted) {
+      if (permissionGranted && handle) {
         setDirHandle(handle)
         setError(false)
+        return handle
       }
+      throw new Error("Handle is either undefined or permissions not granted")
     } catch (e) {
       console.error(e)
       setDirHandle(null)
       setError(true)
+      throw e
     }
   }, [verifyPermission])
 

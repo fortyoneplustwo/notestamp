@@ -120,9 +120,9 @@ const AppToolbar = ({ metadata, onClose }) => {
   // TODO: rewrite this when caching has been reworked
   const handleCheckForUnsavedChanges = async () => {
     const snapshot = takeSnapshot()
-    const cachedNotesFile = await fetchNotesById(metadata.title)
-
-    if (cachedNotesFile) {
+    try {
+      const cachedNotesFile = await fetchNotesById(metadata.title)
+      if (!cachedNotesFile) return onClose()
       const reader = new FileReader()
       reader.onload = (e) => {
         const cachedNotes = e.target.result
@@ -143,6 +143,8 @@ const AppToolbar = ({ metadata, onClose }) => {
         }
       }
       reader.readAsText(cachedNotesFile)
+    } catch (error) {
+      console.error(error)
     }
   }
 

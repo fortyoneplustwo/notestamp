@@ -56,10 +56,10 @@ const TextEditor = React.forwardRef(({ onStampInsert, onStampClick }, ref) => {
         onClick={() => onStampClick(element.label, element.value)}
         className="badge"
       >
-        {children}
         <InlineChromiumBugfix />
         {element.label}
         <InlineChromiumBugfix />
+        {children}
       </span>
     )
   }
@@ -167,10 +167,11 @@ const TextEditor = React.forwardRef(({ onStampInsert, onStampClick }, ref) => {
       const copiedLinesToString = copiedLines.reduce((acc, line) => {
         return acc 
           + (line.reduce((acc, textNode) => {
-            return acc + textNode.text
+            return acc + textNode ? textNode.text : ''
           }, '')) 
           + '\n'
       }, '')
+
 
       event.clipboardData.setData('text/plain', copiedLinesToString)
       setInternalClipboard(copiedLines)
@@ -189,16 +190,19 @@ const TextEditor = React.forwardRef(({ onStampInsert, onStampClick }, ref) => {
     const internalClipboardToText = internalClipboard.reduce((acc, line) => {
       return acc 
         + (line.reduce((acc, textNode) => {
-          return acc + textNode.text
+          return acc + textNode ? textNode.text : ''
         }, '')) 
         + '\n'
     }, '')
 
+
     const deviceClipboardData = event.clipboardData.getData('Text')
     if (internalClipboardToText === deviceClipboardData) {
       for (let i = 0; i < internalClipboard.length; i++) {
-        for (const textNode of internalClipboard[i]) {
-          Transforms.insertNodes(editor, { ...textNode })
+        for (const node of internalClipboard[i]) {
+          // shoulg get only the text nodes.
+          if (node?.type === 'stamp') continue
+          Transforms.insertNodes(editor, { ...node })
         }
         if (i < internalClipboard.length - 1) {
           Transforms.insertNodes(editor, { text: '\n'})
@@ -388,7 +392,6 @@ const handleBackspace = (editor, event) => {
   const [block] = Editor.parent(editor, startPath)
 
   if (selection.isFocused && Point.compare(selection.anchor, selection.focus)) {
-    console.log("triggered")
     return
   }
 
