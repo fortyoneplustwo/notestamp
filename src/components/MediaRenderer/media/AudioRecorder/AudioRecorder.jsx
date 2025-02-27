@@ -81,48 +81,48 @@ const AudioRecorder = React.forwardRef((props, ref) => {
 
   return (
     <div className='flex flex-col h-full'>
-      <Toolbar className="flex justify-center gap-2">
+      <Toolbar className="flex justify-end gap-2">
         {!isRecordingInProgress && (
           <MediaToolbarButton 
             className="record-btn"
-            variant="outline"
+            variant="ghost"
             title="Record" 
             onClick={startRecording}
           >
-            <Mic /> Record
+            <Mic />
           </MediaToolbarButton>
         )}
         {isRecordingInProgress && !isPausedRecording && (
           <MediaToolbarButton 
-            variant="outline"
+            variant="ghost"
             title="Pause" 
             onClick={togglePauseResume}
           >
-            <Pause /> Pause
+            <Pause />
           </MediaToolbarButton>
         )}
         {isRecordingInProgress && isPausedRecording && (
           <MediaToolbarButton 
-            variant="outline"
+            variant="ghost"
             title="Resume" 
             onClick={togglePauseResume}
           >
-            <Mic /> Resume
+            <Mic />
           </MediaToolbarButton>
         )}
         <MediaToolbarButton 
           className="stop-btn"
           disabled={!isRecordingInProgress}
-          variant="outline"
+          variant="ghost"
           title="Stop" 
           onClick={stopRecording}
         >
-          <Square /> Stop
+          <Square />
         </MediaToolbarButton>
       </Toolbar>
 
       <div className="diagonal-background flex items-center w-full h-full">
-        <div className="w-full">
+        <div className="w-full bg-white dark:bg-mybgsec border-y border-solid dark:border-[#3f3f46]">
           <VoiceVisualizer 
             controls={recorderControls} 
             isControlPanelShown={false}
