@@ -84,6 +84,7 @@ const AudioRecorder = React.forwardRef((props, ref) => {
       <Toolbar className="flex justify-center gap-2">
         {!isRecordingInProgress && (
           <MediaToolbarButton 
+            className="record-btn"
             variant="outline"
             title="Record" 
             onClick={startRecording}
@@ -110,6 +111,7 @@ const AudioRecorder = React.forwardRef((props, ref) => {
           </MediaToolbarButton>
         )}
         <MediaToolbarButton 
+          className="stop-btn"
           disabled={!isRecordingInProgress}
           variant="outline"
           title="Stop" 
