@@ -1,10 +1,11 @@
-import React, { useRef, useState, useEffect, useImperativeHandle } from 'react'
+import React, { useEffect, useImperativeHandle } from 'react'
 import { EventEmitter } from '../../../../utils/EventEmitter'
 import '../../style/Background.css'
 import { formatTime } from '../../utils/formatTime'
-import { DefaultButton } from '@/components/Button/Button'
-import { RadiobuttonIcon } from '@radix-ui/react-icons'
-import { CircleStop } from 'lucide-react'
+import { Mic, Square, Pause } from 'lucide-react'
+import { Toolbar } from '../../components/Toolbar'
+import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer"
+import { MediaToolbarButton } from '@/components/Button/Button'
 
 // Variables needed to calculate timestamp.
 // Declared outside of component so they remain unaffected by re-renders.
@@ -14,15 +15,42 @@ let dateWhenRecLastInactive
 let recDuration
 
 const AudioRecorder = React.forwardRef((props, ref) => {
-  const mediaRecorder = useRef(null)
-  const chunks = useRef(null)
+  const recorderControls = useVoiceVisualizer()
+  const {
+    recordedBlob,
+    error,
+    mediaRecorder,
+    isRecordingInProgress,
+    stopRecording,
+    startRecording,
+    togglePauseResume,
+    isPausedRecording,
+  } = recorderControls;
 
-  const recordButtonRef = useRef(null)
-  const stopButtonRef = useRef(null)
+  useEffect(() => {
+    if (!recordedBlob) return
+    EventEmitter.dispatch('open-media-with-src', { type: 'audio', src: recordedBlob })
+  }, [recordedBlob, error])
 
-  const [recordButtonText, setRecordButtonText] = useState('Record')
-  const [recordButtonClassName, setRecordButtonClassname] = useState('')
-  const [stopButtonDisabled, setStopButtonDisabled] = useState(true)
+  useEffect(() => {
+    if (!error) return;
+    console.error(error)
+  }, [error])
+
+  useEffect(() => {
+    if (!mediaRecorder) return
+
+    mediaRecorder.onstart = () => dateWhenRecLastActive = new Date()
+    mediaRecorder.onresume = () => dateWhenRecLastActive = new Date()
+    mediaRecorder.onpause = () => {
+      dateWhenRecLastInactive = new Date()
+      recDuration += (dateWhenRecLastInactive - dateWhenRecLastActive)
+    }
+    mediaRecorder.onstop = () => {
+      dateWhenRecLastInactive = new Date()
+      recDuration += (dateWhenRecLastInactive - dateWhenRecLastActive)
+    }
+  }, [mediaRecorder]);
 
   useImperativeHandle(ref, () => {
     return {
@@ -44,94 +72,62 @@ const AudioRecorder = React.forwardRef((props, ref) => {
     } 
   }, [props])
 
-  const initPlayer = () => {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !mediaRecorder.current) {
-      navigator.mediaDevices
-        .getUserMedia({ audio: true, })
-        // Success callback: Register event listeners
-        .then((stream) => {
-          mediaRecorder.current = new MediaRecorder(stream)
-          mediaRecorder.current.onstart = () => {
-            chunks.current = []
-            dateWhenRecLastActive = new Date()
-          }
-          mediaRecorder.current.ondataavailable = (e) => {
-            chunks.current.push(e.data)
-          }
-          mediaRecorder.current.onresume = () => {
-            dateWhenRecLastActive = new Date()
-            mediaRecorder.current.requestData()
-          }
-          mediaRecorder.current.onpause = () => {
-            dateWhenRecLastInactive = new Date()
-            recDuration += (dateWhenRecLastInactive - dateWhenRecLastActive)
-          }
-          mediaRecorder.current.onstop = () => {
-            dateWhenRecLastInactive = new Date()
-            recDuration += (dateWhenRecLastInactive - dateWhenRecLastActive)
-            const blob = new Blob(chunks.current, {type: "audio/ogg"})
-            EventEmitter.dispatch('open-media-with-src', { type: 'audio', src: blob })
-          }
-        })
-        // Error callback
-        .catch(function (err) {
-          console.error(`The following getUserMedia error occurred: ${err}`);
-        });
-    } else {
-      console.log("getUserMedia not supported on your browser!");
-    }
-  }
 
   useEffect(() => { 
     dateWhenRecLastActive = new Date()
     dateWhenRecLastInactive = dateWhenRecLastActive
     recDuration = 0
-    initPlayer() 
   }, [])
 
-  const toggleRecord = () => {
-    if (mediaRecorder.current.state === 'inactive') {
-      mediaRecorder.current.start()
-      setStopButtonDisabled(false)
-      setRecordButtonText('Pause')
-      setRecordButtonClassname('animate-pulse')
-    } else if (mediaRecorder.current.state === 'recording') {
-      mediaRecorder.current.pause()
-      setRecordButtonText('Resume')
-      setRecordButtonClassname('')
-    } else {
-      mediaRecorder.current.resume()
-      setRecordButtonText('Pause')
-      setRecordButtonClassname('animate-pulse')
-    }
-  }
-
-  const toggleStop = () => {
-    mediaRecorder.current.stop()
-  }
-
   return (
-    <div className='diagonal-background flex justify-center items-center h-full gap-2'>
-      <DefaultButton
-        size="lg"
-        className='record-btn font-bold text-white bg-[orangered] hover:bg-[orangered]/90'
-        ref={recordButtonRef}
-        onClick={toggleRecord}
-      >
-        <RadiobuttonIcon className={recordButtonClassName} />
-        {recordButtonText}
-      </DefaultButton>
-      <DefaultButton
-        variant="default"
-        size="lg"
-        className='font-bold stop-btn'
-        ref={stopButtonRef}
-        disabled={stopButtonDisabled}
-        onClick={toggleStop}
-      >
-        <CircleStop />
-        Stop
-      </DefaultButton>
+    <div className='flex flex-col h-full'>
+      <Toolbar className="flex justify-center gap-2">
+        {!isRecordingInProgress && (
+          <MediaToolbarButton 
+            variant="outline"
+            title="Record" 
+            onClick={startRecording}
+          >
+            <Mic /> Record
+          </MediaToolbarButton>
+        )}
+        {isRecordingInProgress && !isPausedRecording && (
+          <MediaToolbarButton 
+            variant="outline"
+            title="Pause" 
+            onClick={togglePauseResume}
+          >
+            <Pause /> Pause
+          </MediaToolbarButton>
+        )}
+        {isRecordingInProgress && isPausedRecording && (
+          <MediaToolbarButton 
+            variant="outline"
+            title="Resume" 
+            onClick={togglePauseResume}
+          >
+            <Mic /> Resume
+          </MediaToolbarButton>
+        )}
+        <MediaToolbarButton 
+          disabled={!isRecordingInProgress}
+          variant="outline"
+          title="Stop" 
+          onClick={stopRecording}
+        >
+          <Square /> Stop
+        </MediaToolbarButton>
+      </Toolbar>
+
+      <div className="diagonal-background flex items-center w-full h-full">
+        <div className="w-full">
+          <VoiceVisualizer 
+            controls={recorderControls} 
+            isControlPanelShown={false}
+            mainBarColor="orangered"
+          />
+        </div>
+      </div>
     </div>
   )
 })
