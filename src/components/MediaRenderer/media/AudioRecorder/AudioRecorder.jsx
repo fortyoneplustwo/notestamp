@@ -29,7 +29,6 @@ const AudioRecorder = React.forwardRef((props, ref) => {
 
   useEffect(() => {
     if (!recordedBlob) return
-    console.log(recordedBlob)
     EventEmitter.dispatch('open-media-with-src', { type: 'audio', src: recordedBlob })
   }, [recordedBlob, error])
 
@@ -58,8 +57,6 @@ const AudioRecorder = React.forwardRef((props, ref) => {
       getState: data => {
         const dateStampDataRequested = data
         let timestamp = null
-        console.log(dateWhenRecLastActive)
-        console.log(dateWhenRecLastInactive)
         if (dateWhenRecLastActive > dateWhenRecLastInactive) {
           timestamp = recDuration + (dateStampDataRequested - dateWhenRecLastActive)
         } else {
