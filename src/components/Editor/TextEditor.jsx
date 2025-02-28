@@ -14,6 +14,7 @@ import { Toolbar, Button, Icon } from './components/Toolbar'
 import './style/Editor.css'
 import { useProjectContext } from '../../context/ProjectContext'
 import { downloadPdf } from './utils/PdfDownloader'
+import { css } from '@emotion/css'
 
 const markButtonHotkeys = {
   'mod+b': 'bold',
@@ -57,9 +58,8 @@ const TextEditor = React.forwardRef(({ onStampInsert, onStampClick }, ref) => {
         className="badge"
       >
         <InlineChromiumBugfix />
-        {element.label}
+        {children}{element.label}
         <InlineChromiumBugfix />
-        {children}
       </span>
     )
   }
@@ -385,15 +385,12 @@ const handleInsertStamp = (getStampData, editor) => {
   return
 }
 
-// TODO: This is a temp solution with some caveats. Needs to be rewritten.
 const handleBackspace = (editor, event) => {
   const { selection } = editor
   const startPath = Editor.start(editor, selection)
   const [block] = Editor.parent(editor, startPath)
 
-  if (selection.isFocused && Point.compare(selection.anchor, selection.focus)) {
-    return
-  }
+  if (Point.compare(selection.anchor, selection.focus)) return
 
   // Fix: manually delete empty block to make sure caret appears at the 
   // end of previous block after delete operation 
