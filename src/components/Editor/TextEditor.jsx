@@ -7,6 +7,11 @@ import {
   createEditor,
   Element as SlateElement,
   Point,
+  Node,
+  Range,
+  Element,
+  Path,
+  Location,
 } from 'slate'
 import { withHistory } from 'slate-history'
 import isHotkey from 'is-hotkey'
@@ -232,6 +237,9 @@ const TextEditor = React.forwardRef(({ onStampInsert, onStampClick }, ref) => {
       case "Backspace":
         handleBackspace(editor, event)
         break
+      case "ArrowRight":
+        handleArrowRight(editor, event)
+        break
       default:
         for (let hotkey in markButtonHotkeys) {
           if (isHotkey(hotkey, event)) {
@@ -385,20 +393,59 @@ const handleInsertStamp = (getStampData, editor) => {
   return
 }
 
+/**
+ * This function prevents the user from positioning the caret before a stamp
+ * by pressing ArrowRight when the caret is at the end of the previous line
+ */
+const handleArrowRight = (editor, event) => {
+  const { selection } = editor
+
+  // Ensure the caret is positioned at the end of the current block
+  if (selection && !Range.isCollapsed(selection)) return
+  const { anchor } = selection
+  const block = Editor.above(editor, {
+    at: anchor,
+    match: (n) => Editor.isBlock(editor, n),
+  })
+  if (!block) return
+  const [_, blockPath] = block
+  const blockEnd = Editor.end(editor, blockPath)
+  if (!Point.equals(anchor, blockEnd)) return
+
+  // If next block begins with a stamp we position the caret after it
+  const nextInlineEntry = Editor.next(editor, {
+    at: blockEnd,
+    match: (n) =>
+    Editor.isInline(editor, n)
+  })
+  if (!nextInlineEntry) return
+  const [nextInline, nextInlinePath] = nextInlineEntry
+  if (nextInline.type !== "stamp") return
+
+  const nextValidPath = Path.next(nextInlinePath) 
+  if (!nextValidPath) return
+
+  event.preventDefault()
+  Transforms.select(editor, {
+    anchor: Editor.start(editor, nextValidPath),
+    focus: Editor.start(editor, nextValidPath),
+  })
+  return
+}
+
 const handleBackspace = (editor, event) => {
   const { selection } = editor
   const startPath = Editor.start(editor, selection)
-  const [block] = Editor.parent(editor, startPath)
+  const [block, blockPath] = Editor.parent(editor, startPath)
 
   if (Point.compare(selection.anchor, selection.focus)) return
 
-  // Fix: manually delete empty block to make sure caret appears at the 
-  // end of previous block after delete operation 
-  // Make sure not to delete last remaining block
+  // Fix: Programatically delete an empty block to make sure caret appears at
+  // the end of the previous block after deletion, but do not delete
+  // the empty block if the editor has only one child block.
   if (editor.children.length > 1 
     || (editor.children.length === 1 
-      && block.type === 'list-item' 
-      && editor.children[0].children.length > 1)) {
+      && Node.parent(editor, blockPath)?.children.length > 1)) {
     if (block.children.length === 1 && block.children[0].text === '') {
       event.preventDefault()
       Transforms.removeNodes(editor, { at: startPath }) 
