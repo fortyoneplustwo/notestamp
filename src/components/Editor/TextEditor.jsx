@@ -9,9 +9,8 @@ import {
   Point,
   Node,
   Range,
-  Element,
   Path,
-  Location,
+  Text,
 } from 'slate'
 import { withHistory } from 'slate-history'
 import isHotkey from 'is-hotkey'
@@ -19,7 +18,6 @@ import { Toolbar, Button, Icon } from './components/Toolbar'
 import './style/Editor.css'
 import { useProjectContext } from '../../context/ProjectContext'
 import { downloadPdf } from './utils/PdfDownloader'
-import { css } from '@emotion/css'
 
 const markButtonHotkeys = {
   'mod+b': 'bold',
@@ -41,7 +39,7 @@ const TextEditor = React.forwardRef(({ onStampInsert, onStampClick }, ref) => {
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
   const { setEditorRef } = useProjectContext()
 
-  const editor = useMemo(() => withInlines(withReact(withHistory(createEditor()))), [])
+  const editor = useMemo(() => withCustomNormalize(withInlines(withReact(withHistory(createEditor())))), [])
 
   const initialValue = useMemo(
     () =>
@@ -109,7 +107,6 @@ const TextEditor = React.forwardRef(({ onStampInsert, onStampClick }, ref) => {
       anchor: Editor.start(editor, []),
       focus: Editor.end(editor, []),
     })
-
     Transforms.unwrapNodes(editor)
     Transforms.removeNodes(editor)
     Transforms.insertNodes(editor, children)
@@ -148,37 +145,10 @@ const TextEditor = React.forwardRef(({ onStampInsert, onStampClick }, ref) => {
     event.preventDefault()
     const { selection } = editor
     if (selection) {
-      const fragment = editor.getFragment()
-
-      // Each item in copiedLines is an array that contains the text nodes of a single line
-      const copiedLines = []
-      for (const block of fragment) {
-        if (block.type === 'paragraph') {
-          const line = block.children.map(child => {
-            return child
-          })
-          copiedLines.push(line)
-        } else { // list block
-          for (const listItem of block.children) {
-            const line = listItem.children.map(child => {
-              return child
-            })
-            copiedLines.push(line)
-          }
-        }
-      }
-      
-      // join the copied lines into a single string
-      const copiedLinesToString = copiedLines.reduce((acc, line) => {
-        return acc 
-          + (line.reduce((acc, textNode) => {
-            return acc + textNode ? textNode.text : ''
-          }, '')) 
-          + '\n'
-      }, '')
-
-
-      event.clipboardData.setData('text/plain', copiedLinesToString)
+      const fragment = editor.getFragment() 
+      const copiedLines = fragment.flatMap((node) => getLines(editor, node))
+      const copiedString = linesToString(copiedLines)
+      event.clipboardData.setData('text/plain', copiedString)
       setInternalClipboard(copiedLines)
     }
   }
@@ -190,32 +160,26 @@ const TextEditor = React.forwardRef(({ onStampInsert, onStampClick }, ref) => {
    */
   const handlePaste = event => {
     event.preventDefault()
-
-    // convert editor clipboard to string
-    const internalClipboardToText = internalClipboard.reduce((acc, line) => {
-      return acc 
-        + (line.reduce((acc, textNode) => {
-          return acc + textNode ? textNode.text : ''
-        }, '')) 
-        + '\n'
-    }, '')
-
-
+    const internalClipboardToString = linesToString(internalClipboard)
     const deviceClipboardData = event.clipboardData.getData('Text')
-    if (internalClipboardToText === deviceClipboardData) {
-      for (let i = 0; i < internalClipboard.length; i++) {
-        for (const node of internalClipboard[i]) {
-          // shoulg get only the text nodes.
-          if (node?.type === 'stamp') continue
-          Transforms.insertNodes(editor, { ...node })
-        }
-        if (i < internalClipboard.length - 1) {
-          Transforms.insertNodes(editor, { text: '\n'})
-        }
-      }
-    }
-    else {
+    if (internalClipboardToString !== deviceClipboardData) {
       Transforms.insertText(editor, deviceClipboardData.toString())
+    }
+
+    const { selection } = editor
+    const enclosingBlock = Editor.above(editor, {
+      at: selection.anchor,
+      match: (n) => Editor.isBlock(editor, n) && SlateElement.isElement(n)
+    })
+    if (!enclosingBlock) return
+    const [block, _] = enclosingBlock
+    const [first, ...rest] = internalClipboard
+    Transforms.insertNodes(editor, first)
+    for (const line of rest) {
+      Transforms.insertNodes(editor, {
+        type: block.type,
+        children: line
+      })
     }
   }
 
@@ -402,9 +366,8 @@ const handleArrowRight = (editor, event) => {
 
   // Ensure the caret is positioned at the end of the current block
   if (selection && !Range.isCollapsed(selection)) return
-  const { anchor } = selection
   const block = Editor.above(editor, {
-    at: anchor,
+    at: selection.anchor,
     match: (n) => Editor.isBlock(editor, n),
   })
   if (!block) return
@@ -462,6 +425,34 @@ const handleEscapeStamp = (editor) => {
   // Fix: Restore marks
   for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
   return 
+}
+
+const linesToString = (lines) => 
+  lines.reduce((acc, textList) => {
+    return acc 
+      + textList.reduce((acc, textNode) => acc + textNode.text, "")
+      + "\n"
+  }, "")
+
+/**
+ * Returns an array of type Text[][] where each item represents
+ * the text nodes of a single line within the node
+ */
+const getLines = (editor, node) => {
+  // Base case
+  if (!Editor.hasBlocks(editor, node)) {
+    if (Text.isTextList(node.children)) {
+      return [node.children]
+    }
+    const textChildren = []
+    const textNodes = Node.texts(node)
+    for (let [t] = textNodes.next(); t; [t] = textNodes.next()) {
+      textChildren.push(t)
+    }
+    return [textChildren]
+  }
+  // Recursive step
+  return node.children.flatMap((block) => getLines(editor, block))
 }
 
 /** 
@@ -552,6 +543,33 @@ const isBlockActive = (editor, format, blockType = 'type') => {
 const isMarkActive = (editor, format) => {
   const marks = Editor.marks(editor)
   return marks ? marks[format] === true : false
+}
+
+// This handles pasting content from outside sources
+const withCustomNormalize = editor => {
+  const { normalizeNode } = editor
+  editor.normalizeNode = entry => {
+    const [node, path] = entry
+    // If a block has a child text node containing a "\n",
+    // split it into two blocks
+    if (Text.isText(node)) {
+      const newlineIndex = node.text.search(/(?<!\\)\n/)
+      if (newlineIndex < 0) return 
+      Editor.withoutNormalizing(editor, () => {
+        Transforms.delete(editor, {
+          at: { path: path, offset: newlineIndex },
+          distance: 1,
+          unit: 'character',
+        })
+        Transforms.splitNodes(editor, {
+          at: { path: path, offset: newlineIndex },
+        })
+      })
+      return
+    }
+    normalizeNode(entry)
+  }
+  return editor
 }
 
 /** 
