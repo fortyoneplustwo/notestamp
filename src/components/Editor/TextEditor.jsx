@@ -201,9 +201,6 @@ const TextEditor = React.forwardRef(({ onStampInsert, onStampClick }, ref) => {
       case "Backspace":
         handleBackspace(editor, event)
         break
-      case "ArrowRight":
-        handleArrowRight(editor, event)
-        break
       default:
         for (let hotkey in markButtonHotkeys) {
           if (isHotkey(hotkey, event)) {
@@ -354,45 +351,6 @@ const handleInsertStamp = (getStampData, editor) => {
 
   // Fix: restore marks
   for (const mark in marks) if (marks[mark]) Editor.addMark(editor, mark, true) 
-  return
-}
-
-/**
- * This function prevents the user from positioning the caret before a stamp
- * by pressing ArrowRight when the caret is at the end of the previous line
- */
-const handleArrowRight = (editor, event) => {
-  const { selection } = editor
-
-  // Ensure the caret is positioned at the end of the current block
-  if (selection && !Range.isCollapsed(selection)) return
-  const block = Editor.above(editor, {
-    at: selection.anchor,
-    match: (n) => Editor.isBlock(editor, n),
-  })
-  if (!block) return
-  const [_, blockPath] = block
-  const blockEnd = Editor.end(editor, blockPath)
-  if (!Point.equals(anchor, blockEnd)) return
-
-  // If next block begins with a stamp we position the caret after it
-  const nextInlineEntry = Editor.next(editor, {
-    at: blockEnd,
-    match: (n) =>
-    Editor.isInline(editor, n)
-  })
-  if (!nextInlineEntry) return
-  const [nextInline, nextInlinePath] = nextInlineEntry
-  if (nextInline.type !== "stamp") return
-
-  const nextValidPath = Path.next(nextInlinePath) 
-  if (!nextValidPath) return
-
-  event.preventDefault()
-  Transforms.select(editor, {
-    anchor: Editor.start(editor, nextValidPath),
-    focus: Editor.start(editor, nextValidPath),
-  })
   return
 }
 
@@ -548,6 +506,7 @@ const isMarkActive = (editor, format) => {
 // This handles pasting content from outside sources
 const withCustomNormalize = editor => {
   const { normalizeNode } = editor
+
   editor.normalizeNode = entry => {
     const [node, path] = entry
     // If a block has a child text node containing a "\n",
@@ -569,6 +528,7 @@ const withCustomNormalize = editor => {
     }
     normalizeNode(entry)
   }
+
   return editor
 }
 
