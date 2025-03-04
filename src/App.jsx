@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import TextEditor from './components/Editor/TextEditor'
+import { TextEditor, useEditor } from './components/Editor/TextEditor'
 import { EventEmitter } from './utils/EventEmitter'
 import WelcomeMessage from './components/Screens/Welcome/WelcomeMessage'
 import Dashboard from './components/Screens/Dashboard/Dashboard'
@@ -19,14 +19,13 @@ import Joyride, { ACTIONS, EVENTS, STATUS } from 'react-joyride';
 import "./index.css"
 
 const App = () => {
-
   const mediaRendererRef = useRef(null)
-  const textEditorRef = useRef(null)
   const [isProjectOpen, setIsProjectOpen] = useState(null)
   const [currProjectMetadata, setCurrProjectMetadata] = useState(null)
   const [run, setRun] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
 
+  const { editor } = useEditor()
   const { data: userData  } = useGetUserData()
   const { user, setUser, syncToFileSystem } = useAppContext()
   const { 
@@ -56,7 +55,7 @@ const App = () => {
  useEffect(() => {
     if (!fetchedNotes) return
     const reader = new FileReader();
-    reader.onload = () => textEditorRef.current?.setContent(reader.result)
+    reader.onload = () => editor.setContent(reader.result)
     reader.onerror = (error) => console.error(`Error reading notes file:\n${error}`)
     reader.readAsText(fetchedNotes)
   }, [fetchedNotes])
@@ -154,7 +153,7 @@ const App = () => {
               </LeftPane>
               <RightPane>
                 <TextEditor 
-                  ref={textEditorRef} 
+                  editor={editor}
                   onStampInsert={handleGetMediaState} 
                   onStampClick={handleSeekMedia}
                 />

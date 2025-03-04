@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState, useImperativeHandle, useEffect } from 'react'
+import React, { useMemo, useCallback, useState, useEffect } from 'react'
 import { Editable, withReact, useSlate } from 'slate-react'
 import * as SlateReact from 'slate-react'
 import {
@@ -8,8 +8,6 @@ import {
   Element as SlateElement,
   Point,
   Node,
-  Range,
-  Path,
   Text,
 } from 'slate'
 import { withHistory } from 'slate-history'
@@ -18,6 +16,74 @@ import { Toolbar, Button, Icon } from './components/Toolbar'
 import './style/Editor.css'
 import { useProjectContext } from '../../context/ProjectContext'
 import { downloadPdf } from './utils/PdfDownloader'
+
+export const useEditor = () => {
+  const [internalClipboard, setInternalClipboard] = useState([])
+
+  const editor = useMemo(() => 
+    withCustomNormalize(
+      withInlines(
+        withReact(
+          withHistory(
+            createEditor())))), [])
+
+  editor.getContent = () => editor.children
+
+  editor.setContent = (contentString) => {
+    try {
+      const children = JSON.parse(contentString)
+      // Select entire content to ensure all nodes get removed
+      Transforms.select(editor, {
+        anchor: Editor.start(editor, []),
+        focus: Editor.end(editor, []),
+      })
+      Transforms.unwrapNodes(editor)
+      Transforms.removeNodes(editor)
+      Transforms.insertNodes(editor, children)
+    } catch (error) {
+      console.error(`Invalid editor content:\n${error}`)
+    }
+  }
+
+  editor.handleCopy = (event) => {
+    event?.preventDefault()
+    const { selection } = editor
+    if (selection) {
+      const fragment = editor.getFragment() 
+      const copiedLines = fragment.flatMap((node) => getLines(editor, node))
+      const copiedString = linesToString(copiedLines)
+      event.clipboardData.setData('text/plain', copiedString)
+      setInternalClipboard(copiedLines)
+    }
+  }
+
+  editor.handlePaste = (event) => {
+    event?.preventDefault()
+    const internalClipboardToString = linesToString(internalClipboard)
+    const deviceClipboardData = event.clipboardData.getData('Text')
+    if (internalClipboardToString !== deviceClipboardData) {
+      Transforms.insertText(editor, deviceClipboardData.toString())
+    }
+
+    const { selection } = editor
+    const enclosingBlock = Editor.above(editor, {
+      at: selection.anchor,
+      match: (n) => Editor.isBlock(editor, n) && SlateElement.isElement(n)
+    })
+    if (!enclosingBlock) return
+    const [block, _] = enclosingBlock
+    const [first, ...rest] = internalClipboard
+    Transforms.insertNodes(editor, first)
+    for (const line of rest) {
+      Transforms.insertNodes(editor, {
+        type: block.type,
+        children: line
+      })
+    }
+  }
+
+  return { editor }
+}
 
 const markButtonHotkeys = {
   'mod+b': 'bold',
@@ -33,13 +99,10 @@ const blockButtonHotkeys = {
 
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
-const TextEditor = React.forwardRef(({ onStampInsert, onStampClick }, ref) => {
-  const [internalClipboard, setInternalClipboard] = useState([])
+export const TextEditor = ({ onStampInsert, onStampClick, editor }) => {
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
   const { setEditorRef } = useProjectContext()
-
-  const editor = useMemo(() => withCustomNormalize(withInlines(withReact(withHistory(createEditor())))), [])
 
   const initialValue = useMemo(
     () =>
@@ -101,87 +164,14 @@ const TextEditor = React.forwardRef(({ onStampInsert, onStampClick }, ref) => {
     }
   }
 
-  const setEditorChildren = useCallback((children) => {
-    // Select entire content to ensure all nodes get removed
-    Transforms.select(editor, {
-      anchor: Editor.start(editor, []),
-      focus: Editor.end(editor, []),
-    })
-    Transforms.unwrapNodes(editor)
-    Transforms.removeNodes(editor)
-    Transforms.insertNodes(editor, children)
-  }, [editor])
-
-
   useEffect(() => {
-    setEditorRef(ref.current)
+    setEditorRef(editor)
 
     return () => {
       setEditorRef(null)
     }
-  }, [setEditorRef, ref])
+  }, [setEditorRef])
 
-  useImperativeHandle(ref, () => {
-    return {
-      setContent: contentString => {
-        try {
-          const children = JSON.parse(contentString)
-          setEditorChildren(children)
-        } catch (error) {
-          console.error(`Invalid editor content:\n${error}`)
-        }
-      },
-      getContent: () => {
-        return editor.children
-      }
-    }
-  }, [editor, setEditorChildren])
-
-  /** 
-   * Override copy:
-   * Copy nodes to editor clipboard and text to device clipboard
-   */
-  const handleCopy = event => {
-    event.preventDefault()
-    const { selection } = editor
-    if (selection) {
-      const fragment = editor.getFragment() 
-      const copiedLines = fragment.flatMap((node) => getLines(editor, node))
-      const copiedString = linesToString(copiedLines)
-      event.clipboardData.setData('text/plain', copiedString)
-      setInternalClipboard(copiedLines)
-    }
-  }
-
-  /** 
-   * Override paste:
-   * Paste nodes from editor clipboard if editor clipboard = device clipboard
-   * Otherwise paste contents of device clipboard
-   */
-  const handlePaste = event => {
-    event.preventDefault()
-    const internalClipboardToString = linesToString(internalClipboard)
-    const deviceClipboardData = event.clipboardData.getData('Text')
-    if (internalClipboardToString !== deviceClipboardData) {
-      Transforms.insertText(editor, deviceClipboardData.toString())
-    }
-
-    const { selection } = editor
-    const enclosingBlock = Editor.above(editor, {
-      at: selection.anchor,
-      match: (n) => Editor.isBlock(editor, n) && SlateElement.isElement(n)
-    })
-    if (!enclosingBlock) return
-    const [block, _] = enclosingBlock
-    const [first, ...rest] = internalClipboard
-    Transforms.insertNodes(editor, first)
-    for (const line of rest) {
-      Transforms.insertNodes(editor, {
-        type: block.type,
-        children: line
-      })
-    }
-  }
 
   const dispatchKeyEvent = (event) => {
     switch (event.key) {
@@ -279,15 +269,15 @@ const TextEditor = React.forwardRef(({ onStampInsert, onStampClick }, ref) => {
             renderLeaf={renderLeaf}
             placeholder={'Press <enter> to insert a stamp.\nPress <shift + enter> to escape stamping.'}
             spellCheck={true}
-            onCopy={handleCopy}
-            onPaste={handlePaste}
+            onCopy={editor.handleCopy}
+            onPaste={editor.handlePaste}
             onKeyDown={dispatchKeyEvent}
           />
         </div>
       </SlateReact.Slate>
     </div>
   )
-})
+}
 
 const handleInsertTab = (event, editor) => {
     event.preventDefault()
@@ -404,9 +394,7 @@ const getLines = (editor, node) => {
     }
     const textChildren = []
     const textNodes = Node.texts(node)
-    for (let [t] = textNodes.next(); t; [t] = textNodes.next()) {
-      textChildren.push(t)
-    }
+    for (const [textNode] of textNodes) textChildren.push(textNode)
     return [textChildren]
   }
   // Recursive step
@@ -651,5 +639,3 @@ const InlineChromiumBugfix = () => (
     {String.fromCodePoint(160) /* Non-breaking space */}
   </span>
 )
-
-export default TextEditor
