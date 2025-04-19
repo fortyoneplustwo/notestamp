@@ -1,4 +1,4 @@
-import { Editor, Transforms } from "slate"
+import { Editor, Node, Transforms } from "slate"
 
 export const useContent = () => {
   const getContent = editor => {
@@ -8,15 +8,24 @@ export const useContent = () => {
   const setContent = (editor, contentString) => {
     try {
       const children = JSON.parse(contentString)
-      Transforms.select(editor, {
-        anchor: Editor.start(editor, []),
-        focus: Editor.end(editor, []),
+
+      if (!Node.isNodeList(children)) {
+        throw Error("Type must be Node[]")
+      }
+
+      Editor.withoutNormalizing(editor, () => {
+        while (editor.children.length > 0) {
+          Transforms.removeNodes(editor, {
+            at: [0],
+          })
+        }
+
+        Transforms.insertNodes(editor, children, {
+          at: [0],
+        })
       })
-      Transforms.unwrapNodes(editor)
-      Transforms.removeNodes(editor)
-      Transforms.insertNodes(editor, children)
     } catch (error) {
-      console.error(`Invalid editor content:\n${error}`)
+      console.error(`Invalid content:\n${error}`)
     }
   }
 
