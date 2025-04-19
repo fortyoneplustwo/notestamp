@@ -1,5 +1,14 @@
-import { pdf, Page, Document, Text, View, Font, StyleSheet } from "@react-pdf/renderer"
+import {
+  pdf,
+  Page,
+  Document,
+  Text,
+  View,
+  Font,
+  StyleSheet,
+} from "@react-pdf/renderer"
 import { Editor, Text as SlateText } from "slate"
+import { toast } from "sonner"
 
 const parseEditor = editor => (
   <View>{editor.children.map(blockChild => parseNode(blockChild))}</View>
@@ -168,14 +177,24 @@ Font.register({
 })
 
 export const downloadPdf = async editor => {
-  const blob = await pdf(<MyDocument content={parseNode(editor)} />).toBlob()
+  try {
+    const parsedEditor = parseNode(editor)
+    const blob = await pdf(<MyDocument content={parsedEditor} />).toBlob()
 
-  const link = document.createElement("a")
-  link.href = URL.createObjectURL(blob)
-  link.download = "sample.pdf"
+    const link = document.createElement("a")
+    link.href = URL.createObjectURL(blob)
+    link.target = "_blank"
 
-  link.click()
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
 
-  URL.revokeObjectURL(link.href)
+    setTimeout(() => {
+      URL.revokeObjectURL(link.href)
+    }, 1000)
+  } catch (error) {
+    toast.error("Failed to convert notes to PDF")
+    console.error(error)
+  }
 }
 

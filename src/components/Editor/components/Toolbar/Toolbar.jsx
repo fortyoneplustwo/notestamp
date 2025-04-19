@@ -51,8 +51,8 @@ export const Toolbar = () => {
       </Menu>
       <Menu className="ml-auto">
         <ActionButton
-          icon="download"
-          title="Download as pdf document"
+          icon="picture_as_pdf"
+          title="Export to PDF"
           onClick={async () => downloadPdf(editor)}
         />
       </Menu>
