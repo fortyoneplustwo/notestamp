@@ -1,7 +1,7 @@
 import { css } from "@emotion/css"
 import React from "react"
 
-export const StampedElement = ({ attributes, element, children }) => {
+export const StampedElement = ({ onClick, attributes, element, children }) => {
   return (
     <span
       {...attributes}
@@ -15,7 +15,7 @@ export const StampedElement = ({ attributes, element, children }) => {
         `}
     >
       <span
-        onClick={() => onStampClick(element.label, element.value)}
+        onClick={() => onClick(element.label, element.value)}
         contentEditable={false}
         className={css`
             display: inline-block;

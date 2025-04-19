@@ -40,7 +40,6 @@ export const TextEditor = ({
     []
   )
 
-
   const { setEditorRef } = useProjectContext()
   const { toggleMark } = useMarkButton()
   const { toggleBlock } = useBlockButton()
@@ -122,7 +121,7 @@ export const TextEditor = ({
     const { children, element, attributes } = props
     switch (element.type) {
       case editor.stampedElementType:
-        return <StampedElement {...props} />
+        return <StampedElement onClick={stableOnStampClick} {...props} />
       case listTypes.numberedList:
         return (
           <ol
