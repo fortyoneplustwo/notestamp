@@ -47,15 +47,13 @@ export const TextEditor = ({
   const { marks } = useMarks()
   const { lists: listTypes, listItem: listItemType } = useLists()
 
-  const markButtonHotkeys = {
-    'mod+b': marks.bold,
-    'mod+i': marks.italic,
-    'mod+u': marks.underline,
-    'mod+`': marks.code,
-  }
-  const blockButtonHotkeys = {
-    'mod+shift+8': listTypes.numberedList,
-    'mod+shift+9': listTypes.bulletedList,
+  const toolbarKeyShortcuts = {
+    "mod+b": () => toggleMark(editor, marks.bold),
+    "mod+i": () => toggleMark(editor, marks.italic),
+    "mod+u": () => toggleMark(editor, marks.underline),
+    "mod+`": () => toggleMark(editor, marks.code),
+    "mod+shift+8": () => toggleBlock(editor, listTypes.numberedList),
+    "mod+shift+9": () => toggleBlock(editor, listTypes.bulletedList),
   }
   const tab = "  " // 2 spaces
 
@@ -187,20 +185,13 @@ export const TextEditor = ({
         Transforms.insertText(editor, tab)
         break
       default:
-        for (let hotkey in markButtonHotkeys) {
-          if (isHotkey(hotkey, event)) {
-            event.preventDefault()
-            toggleMark(editor, markButtonHotkeys[hotkey])
-            return
-          }
+        if (event.ctrlKey || event.metaKey) {
+          const toolbarHotkey = Object
+            .keys(toolbarKeyShortcuts)
+            .find(hk => isHotkey(hk, event))
+          return toolbarKeyShortcuts[toolbarHotkey]?.()
         }
-        for (let hotkey in blockButtonHotkeys) {
-          if (isHotkey(hotkey, event)) {
-            event.preventDefault()
-            toggleBlock(editor, blockButtonHotkeys[hotkey])
-            return
-          }
-        }
+        break
     }
   }
 
