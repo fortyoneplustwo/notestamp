@@ -51,7 +51,7 @@ export const Button = React.forwardRef(
               : "#aaa"
             : active
               ? "orangered"
-              : "#ccc"};
+              : "#aaa"};
         `
       )}
     />
