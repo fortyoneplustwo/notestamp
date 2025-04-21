@@ -28,14 +28,18 @@ export const useJoyride = () => {
       if (leftPane) {
         new MutationObserver((mutations, observer) => {
           for (const m of mutations) {
-            if (m.addedNodes.length > 0) {
-              setTimeout(() => {
-                observer.disconnect()
-                setStepIndex(index + 1)
-              }, 100) // Need to wait for record button to render
+            for (const node of m.addedNodes) {
+              if (node.nodeType === 1) {
+                const recordButton = node
+                  .querySelector('button[data-tour-id="record-btn"]')
+                if (recordButton) {
+                  observer.disconnect()
+                  setStepIndex(index + 1)
+                }
+              }
             }
           }
-        }).observe(leftPane, { childList: true })
+        }).observe(leftPane, { childList: true, subtree: true })
       }
     } else if (index === 3 || index === 5) {
       const stopButton = document.querySelector(
