@@ -1,10 +1,10 @@
 import React, { useEffect, useImperativeHandle, useRef } from 'react'
 import YouTube from 'react-youtube'
 import '../../style/Background.css'
-import { WithToolbar, Toolbar } from '../../components/Toolbar'
+import { Toolbar } from '../../components/Toolbar'
 import { formatTime } from '../../utils/formatTime'
 import { Input } from '@/components/ui/input'
-import { DefaultButton, MediaToolbarButton } from '@/components/Button/Button'
+import { MediaToolbarButton } from '@/components/Button/Button'
 
 const YoutubePlayer = React.forwardRef((props, ref) => {
   const player = useRef(null)
@@ -21,10 +21,6 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
     };
   }, []);
 
-  ////////////////////////////////
-  /// Initialize controller //////
-  ////////////////////////////////
-  
   useImperativeHandle(ref, () => {
     return {
       getState: () => {
@@ -32,7 +28,7 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
           const currentTime = player.current.getCurrentTime()
           return { 
             label: formatTime(currentTime),
-            value: currentTime !== null ? currentTime : null
+            value: currentTime
           }
         } else {
           return null
@@ -48,14 +44,9 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
             mimetype: ''
           }
       },
-      getMedia: () => { return null }
     }
   }, [props])
 
-  ////////////////////////////////
-  /// Methods ////////////////////
-  ////////////////////////////////
-  
   // remove time data from url
   const withoutTimeData = url => {
     if (!url) { return "" }
@@ -75,35 +66,24 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
     player.current?.loadVideoById(extractVideoId(event.target[0].value))
   }
 
-  ////////////////////////////////
-  /// JSX ////////////////////////
-  ////////////////////////////////
-
   return (
-    <WithToolbar>
+    <div className="flex flex-col h-full">
       {!props.src &&
-        <Toolbar style={{ display: 'flex', justifyContent: 'center' }}>
+        <Toolbar className="flex justify-center">
           <form onSubmit={handleSubmitUrl} className="flex w-full max-w-md items-center space-x-2">
             <Input className="h-6" type="url" placeholder="Enter youtube video url" />
             <MediaToolbarButton type="submit">Play</MediaToolbarButton>
           </form>
         </Toolbar>
       }
-      <div 
-        className='diagonal-background' 
-        style={{
-          display: 'flex',
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          flex: '1' 
-        }}>
+      <div className='diagonal-background flex items-center h-full'>
         <YouTube style={{ width: '100%'}} 
           videoId={extractVideoId(props.src)} 
           opts={{ width: '100%'}} 
           onReady={onPlayerReady} 
         />
       </div>
-    </WithToolbar>
+    </div>
   )
 })
 

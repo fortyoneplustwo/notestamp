@@ -120,9 +120,9 @@ const AppToolbar = ({ metadata, onClose }) => {
   // TODO: rewrite this when caching has been reworked
   const handleCheckForUnsavedChanges = async () => {
     const snapshot = takeSnapshot()
-    const cachedNotesFile = await fetchNotesById(metadata.title)
-
-    if (cachedNotesFile) {
+    try {
+      const cachedNotesFile = await fetchNotesById(metadata.title)
+      if (!cachedNotesFile) return onClose()
       const reader = new FileReader()
       reader.onload = (e) => {
         const cachedNotes = e.target.result
@@ -143,6 +143,8 @@ const AppToolbar = ({ metadata, onClose }) => {
         }
       }
       reader.readAsText(cachedNotesFile)
+    } catch (error) {
+      console.error(error)
     }
   }
 
@@ -166,35 +168,40 @@ const AppToolbar = ({ metadata, onClose }) => {
       >
         <Label className="text-sm">{ metadata?.title || metadata?.label }</Label>
       </span>
-      <span className="flex flex-row gap-3 ml-auto">
-        {(user || cwd) && (
-          <>
-            {metadata?.type !== "recorder" && (
-              <AppBarButton
-                onClick={handleSaveProject}
-                disabled={isSaving}
-              >
-                <Save size={16} /> Save 
-              </AppBarButton>
-            )}
-            {metadata?.title && (
-              <AppBarButton 
-                onClick={handleDeleteProject}
-                disabled={isDeleting}
-              >
-                <Trash size={16} /> Delete
-              </AppBarButton>
-            )}
-          </>
-        )}
-        <AppBarButton
-          className="close-btn"
-          variant="destructive"
-          onClick={handleCloseProject}
+      {metadata && (
+        <span 
+          data-tour-id="toolbar"
+          className="flex flex-row gap-3 ml-auto"
         >
-          <CircleX size={16} /> Close
-        </AppBarButton>
-      </span>
+          {(user || cwd) && (
+            <>
+              {metadata?.type !== "recorder" && (
+                <AppBarButton
+                  onClick={handleSaveProject}
+                  disabled={isSaving}
+                >
+                  <Save size={16} /> Save 
+                </AppBarButton>
+              )}
+              {metadata?.title && (
+                <AppBarButton 
+                  onClick={handleDeleteProject}
+                  disabled={isDeleting}
+                >
+                  <Trash size={16} /> Delete
+                </AppBarButton>
+              )}
+            </>
+          )}
+          <AppBarButton
+            className="close-btn"
+            variant="destructive"
+            onClick={handleCloseProject}
+          >
+            <CircleX size={16} /> Close
+          </AppBarButton>
+        </span>
+      )}
       <Separator orientation="vertical" />
     </span>
   )

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import TextEditor from './components/Editor/TextEditor'
+import { TextEditor } from './components/Editor/TextEditor'
 import { EventEmitter } from './utils/EventEmitter'
 import WelcomeMessage from './components/Screens/Welcome/WelcomeMessage'
 import Dashboard from './components/Screens/Dashboard/Dashboard'
@@ -13,31 +13,33 @@ import { ModalProvider } from './context/ModalContext'
 import { useAppContext } from './context/AppContext'
 import { Toaster } from 'sonner'
 import { ThemeProvider } from './context/ThemeProvider'
-import { defaultMediaConfig, tourSteps } from './config'
+import { defaultMediaConfig } from './config'
 import { myMediaComponents } from './components/MediaRenderer/config'
-import Joyride, { ACTIONS, EVENTS, STATUS } from 'react-joyride';
+import { useCreateEditor } from './components/Editor/hooks/useCreateEditor'
+import { useContent } from './components/Editor/hooks/useContent'
+import { useJoyride } from './hooks/useGuidedTour'
 import "./index.css"
+import Joyride from 'react-joyride'
 
 const App = () => {
-
   const mediaRendererRef = useRef(null)
-  const textEditorRef = useRef(null)
   const [isProjectOpen, setIsProjectOpen] = useState(null)
   const [currProjectMetadata, setCurrProjectMetadata] = useState(null)
-  const [run, setRun] = useState(false)
-  const [stepIndex, setStepIndex] = useState(0)
 
-  const { data: userData  } = useGetUserData()
+  const { editor } = useCreateEditor()
+  const { setContent } = useContent()
+  const { data: userData } = useGetUserData()
   const { user, setUser, syncToFileSystem } = useAppContext()
-  const { 
+  const { steps, run, stepIndex, handleOnBeginTour, handleJoyrideCallback } = useJoyride()
+  const {
     data: metadata,
     fetchById: fetchProjectById,
     loading: loadingMetadata,
     error: errorFetchingMetadata,
   } = useGetProjectMetadata()
-  const { 
-    data: fetchedNotes, 
-    fetchById: fetchNotesById, 
+  const {
+    data: fetchedNotes,
+    fetchById: fetchNotesById,
     loading: loadingNotes,
     error: errorFetchingNotes
   } = useGetProjectNotes()
@@ -53,10 +55,10 @@ const App = () => {
     }
   }, [metadata, fetchNotesById])
 
- useEffect(() => {
+  useEffect(() => {
     if (!fetchedNotes) return
     const reader = new FileReader();
-    reader.onload = () => textEditorRef.current?.setContent(reader.result)
+    reader.onload = () => setContent(editor, reader.result)
     reader.onerror = (error) => console.error(`Error reading notes file:\n${error}`)
     reader.readAsText(fetchedNotes)
   }, [fetchedNotes])
@@ -66,7 +68,7 @@ const App = () => {
       // handle error
     }
   }, [loadingNotes, errorFetchingNotes])
-  
+
   useEffect(() => {
     if (!loadingMetadata && errorFetchingMetadata) {
       // handle error
@@ -75,7 +77,7 @@ const App = () => {
 
   const handleOpenNewProject = (label, type) => {
     setIsProjectOpen(() => {
-      setCurrProjectMetadata({ 
+      setCurrProjectMetadata({
         label: label,
         type: type,
         src: "",
@@ -91,15 +93,19 @@ const App = () => {
     setIsProjectOpen(true)
   }
 
-  const handleGetMediaState = dateStampRequested =>
-    mediaRendererRef.current?.getState?.(dateStampRequested) ??
-      { label: null, value: null }
+  const handleGetMediaState = dateStampRequested => {
+    const state = mediaRendererRef.current?.getState?.(dateStampRequested)
+    if (!state) return null
+    if (state.label === null || state.label === undefined) return null
+    if (state.value === null || state.value === undefined) return null
+    return state
+  }
 
   const handleSeekMedia = (_, stampValue) => {
     mediaRendererRef.current?.setState?.(stampValue)
   }
-  
-  EventEmitter.subscribe('open-media-with-src', data => { 
+
+  EventEmitter.subscribe('open-media-with-src', data => {
     setCurrProjectMetadata({
       label: 'Audio Player',
       type: data.type,
@@ -107,19 +113,6 @@ const App = () => {
     })
     setIsProjectOpen(true)
   })
-
-  const handleOnBeginTour = () => setRun(true)
-
-
-  const handleJoyrideCallback = (data) => {
-    const { action, index, status, type } = data
-    if ([EVENTS.STEP_AFTER, EVENTS.TARGET_NOT_FOUND].includes(type)) {
-      setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1))
-    } else if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
-      setRun(false)
-      setStepIndex(0)
-    }
-  }
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -129,7 +122,7 @@ const App = () => {
             <header className="flex row-span-1 bg-transparent pt-2 px-2">
               <AppBar
                 showToolbar={isProjectOpen}
-                onCloseProject={() => { 
+                onCloseProject={() => {
                   setIsProjectOpen(false)
                   setCurrProjectMetadata(null)
                 }}
@@ -141,21 +134,21 @@ const App = () => {
             <main className="row-span-2 grid grid-cols-2">
               <LeftPane>
                 {isProjectOpen ? (
-                  <MediaRenderer 
-                    metadata={currProjectMetadata} 
+                  <MediaRenderer
+                    metadata={currProjectMetadata}
                     loading={loadingMetadata}
                     ref={(node) => mediaRendererRef.current = node} 
                   />
                 ) : (user || syncToFileSystem) ? (
-                    <Dashboard onOpenProject={handleOpenProject} />
-                  ) : (
-                      <WelcomeMessage onClickTourButton={handleOnBeginTour} />
-                    )}
+                  <Dashboard onOpenProject={handleOpenProject} />
+                ) : (
+                  <WelcomeMessage onClickTourButton={handleOnBeginTour} />
+                )}
               </LeftPane>
               <RightPane>
-                <TextEditor 
-                  ref={textEditorRef} 
-                  onStampInsert={handleGetMediaState} 
+                <TextEditor
+                  editor={editor}
+                  onStampInsert={handleGetMediaState}
                   onStampClick={handleSeekMedia}
                 />
               </RightPane>
@@ -164,21 +157,20 @@ const App = () => {
           </ModalProvider>
         </ProjectProvider>
       </div>
-      <Joyride 
+      <Joyride
         locale={{ close: "Next" }}
-        stepIndex={stepIndex} 
-        steps={tourSteps} 
-        run={run} 
-        callback={handleJoyrideCallback} 
+        stepIndex={stepIndex}
+        steps={steps}
+        run={run}
+        callback={handleJoyrideCallback}
         spotlightClicks={true}
         hideCloseButton={true}
         disableOverlayClose={true}
         showProgress={true}
-        continuous={true}
       />
     </ThemeProvider>
   )
 }
 
-export default App 
+export default App
 

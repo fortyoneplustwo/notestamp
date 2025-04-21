@@ -1,3 +1,4 @@
+import { useContent } from "@/components/Editor/hooks/useContent"
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
 
 const ProjectContext = createContext()
@@ -10,6 +11,7 @@ export const ProjectProvider = ({ children }) => {
   const [isEditorMounted, setIsEditorMounted] = useState(false)
   const mediaRef = useRef(null) 
   const editorRef = useRef(null)
+  const { getContent } = useContent()
 
   useEffect(() => {
     if (isMediaMounted && isEditorMounted) {
@@ -22,7 +24,7 @@ export const ProjectProvider = ({ children }) => {
   const takeSnapshot = useCallback(() => {
     return {
       metadata: mediaRef.current?.getMetadata?.(),
-      notes: editorRef.current?.getContent?.(),
+      notes: editorRef.current && getContent(editorRef.current),
       media: mediaRef.current?.getMedia?.(),
     }
   }, [])

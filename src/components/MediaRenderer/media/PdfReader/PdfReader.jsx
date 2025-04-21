@@ -13,7 +13,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 const PdfReader = React.forwardRef((props, ref) => {
   const [source, setSource] = useState(null)
-  const [pageNumber, setPageNumber] = useState(null)
+  const [pageNumber, setPageNumber] = useState(1)
   const [numPages, setNumPages] = useState(0)
   const [pageScale, setPageScale] = useState(1)
   const [containerWidth, setContainerWidth] = useState(0);
@@ -110,7 +110,7 @@ const PdfReader = React.forwardRef((props, ref) => {
             <span className="text-sm w-20 p-0 text-center inline-block">
               <span>
                 <Input 
-                  className="h-6 text-sm p-0 w-10 inline-block text-center" 
+                  className="h-6 text-sm p-0 m-0 w-10 inline-block text-center border-none" 
                   value={pageNumber}
                   onSubmit={(e) => {
                     if (e.target.value > 0 && e.target.value < numPages) {
@@ -122,10 +122,11 @@ const PdfReader = React.forwardRef((props, ref) => {
                       setPageNumber(value === "" ? "" : parseInt(value, 10))
                     }
                   }}
+                  onFocus={e => e.target.select()}
                   type="text"
                 />
               </span>
-              <span className="mx-1">/</span>
+              <span className="mx-2">/</span>
               <span>{numPages}</span>
             </span>
           )}
@@ -138,13 +139,15 @@ const PdfReader = React.forwardRef((props, ref) => {
           </MediaToolbarButton>
         </span>
       </Toolbar>
-      <div className='diagonal-background overflow-auto' ref={containerRef}>
+      <div className='diagonal-background overflow-auto' ref={containerRef}
+      >
         {source && (
           <Document 
             file={source} 
             onLoadSuccess={({ numPages }) => setNumPages(numPages)}
           >
-            <Page pageNumber={pageNumber} 
+            <Page 
+              pageNumber={pageNumber} 
               renderAnnotationLayer={false} 
               renderTextLayer={false} 
               scale={pageScale} 

@@ -9,15 +9,18 @@ import { Toggle } from "@/components/Button/Toggle"
 import { toast } from "react-toastify"
 import { User } from "lucide-react"
 import { ModeToggle } from "@/components/Button/ModeToggle"
+import { useGetDirHandle } from "@/hooks/useFileSystem"
 
 const ProfileSettings = () => {
   const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [isFileSyncChecked, setIsFileSyncChecked] = useState(false)
   const { data: userData, fetch: fetchUser } = useGetUserData()
   const { user, setUser, setSyncToFileSystem, setCwd } = useAppContext()
   const { data: isLoggedIn, loginWithCredentials, loading: loadingLogIn, error: errorLoggingIn } = useLogin()
   const { data: isLoggedOut, logout, loading: loadingLogOut, error: errorLoggingOut } = useLogout()
   const { registerWithCredentials } = useRegister()
+  const { getDirHandle } = useGetDirHandle()
   const { clearCache } = useCustomFetch()
   const { openModal, closeModal } = useModal()
 
@@ -77,18 +80,33 @@ const ProfileSettings = () => {
     logout()
   }
 
-  const handleToggleSyncToFileSystem = () => 
-    setSyncToFileSystem(active => {
-      if (active) {
-        setCwd(null)
+  const handleToggleFileSync = async (checked) => {
+    if (checked) {
+      try {
+        const handle = await getDirHandle()
+        setCwd(handle)
+        setSyncToFileSystem(true)
+      } catch (error) {
+        setIsFileSyncChecked(false)
       }
-      return !active
-    })
+    } else {
+      setCwd(null)
+      setSyncToFileSystem(false)
+    }
+  }
 
   return (
     <span className="flex ml-auto gap-4">
-      <span className="file-sync-switch">
-        <Toggle onToggle={handleToggleSyncToFileSystem}>File Sync</Toggle>
+      <span data-tour-id="file-sync-switch">
+        <Toggle
+          onToggle={(checked) => {
+            setIsFileSyncChecked(checked)
+            handleToggleFileSync(checked)
+          }}
+          isChecked={isFileSyncChecked}
+        >
+          File Sync
+        </Toggle>
       </span>
       <ModeToggle />
       {!user && false && (

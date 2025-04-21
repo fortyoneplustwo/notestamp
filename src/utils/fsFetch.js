@@ -33,7 +33,7 @@ class FsFetchResponse {
  * the directory contains a json file called "metadata",
  * the metadata's keys are all valid keys,
  */
-const isValidProject = async (dir) => {
+const isValidProject = async dir => {
   if (dir.kind !== "directory") {
     return false
   }
@@ -43,7 +43,14 @@ const isValidProject = async (dir) => {
         const metadataFile = await file.getFile()
         const metadataString = await metadataFile.text()
         const metadata = JSON.parse(metadataString)
-        const validKeys = ["title", "label", "type", "mimetype", "src"]
+        const validKeys = [
+          "title",
+          "label",
+          "type",
+          "mimetype",
+          "src",
+          "lastModified",
+        ]
         for (const key in metadata) {
           if (!validKeys.includes(key)) {
             return false
@@ -61,7 +68,7 @@ const isValidProject = async (dir) => {
 }
 
 /**
- * Writes file inside of the directory that dirHandle points to 
+ * Writes file inside of the directory that dirHandle points to
  */
 const writeFile = async (file, dirHandle) => {
   const fileHandle = await dirHandle.getFileHandle(file.name, { create: true })
@@ -70,7 +77,7 @@ const writeFile = async (file, dirHandle) => {
   await writableStream.close()
 }
 
-export const fsFetch = async (endpoint, params=null) => {
+export const fsFetch = async (endpoint, params = null) => {
   console.log("fsFetch: ", endpoint, params)
   try {
     switch (endpoint) {
@@ -78,9 +85,11 @@ export const fsFetch = async (endpoint, params=null) => {
         const validProjects = []
         const promises = []
         for await (const entry of params?.cwd?.values()) {
-          promises.push(isValidProject(entry).then(metadata =>
-            metadata && validProjects.push(metadata)
-          ))
+          promises.push(
+            isValidProject(entry).then(
+              metadata => metadata && validProjects.push(metadata)
+            )
+          )
         }
         await Promise.all(promises) // Check for validity in parallel
         const data = JSON.stringify({ projects: validProjects })
@@ -115,7 +124,7 @@ export const fsFetch = async (endpoint, params=null) => {
           }
         }
         return new FsFetchResponse() // Project not found
-        
+
       case "getProjectNotes":
         for await (const entry of params?.cwd?.values()) {
           if (entry.name === params?.projectId) {
@@ -134,23 +143,24 @@ export const fsFetch = async (endpoint, params=null) => {
         return new FsFetchResponse() // Project not found
 
       case "saveProject":
-        const metadataFile = params?.metadata &&
-          new File(
-            [JSON.stringify(params.metadata)],
-            "metadata",
-            { type: "application/json" },
-          )
-        const notesFile = params?.notes &&
+        const metadataFile =
+          params?.metadata &&
+          new File([JSON.stringify(params.metadata)], "metadata", {
+            type: "application/json",
+          })
+        const notesFile =
+          params?.notes &&
           new File(
             [JSON.stringify(params.notes)],
             `${params.metadata.title}.stmp`,
-            { type: "application/json" },
+            { type: "application/json" }
           )
-        const mediaFile = params?.media &&
+        const mediaFile =
+          params?.media &&
           new File(
             [params.media],
             `${params.metadata.title}.${params.metadata.mimetype.split("/")[1]}`,
-            { type: params.metadata.mimetype },
+            { type: params.metadata.mimetype }
           )
 
         const newProjectDirHandle = await params?.cwd?.getDirectoryHandle(
@@ -159,17 +169,27 @@ export const fsFetch = async (endpoint, params=null) => {
         )
         const filesToSave = [metadataFile, notesFile] // These files must always be saved
         mediaFile && filesToSave.push(mediaFile) // Media is optional depending on metadata.type
-        const writePromises = filesToSave?.map((file) => writeFile(file, newProjectDirHandle))
+        const writePromises = filesToSave?.map(file =>
+          writeFile(file, newProjectDirHandle)
+        )
         await Promise.all(writePromises)
-        return new FsFetchResponse(JSON.stringify({ msg: "save success" }), true)
+        return new FsFetchResponse(
+          JSON.stringify({ msg: "save success" }),
+          true
+        )
 
       case "deleteProject":
         for await (const entry of params?.cwd?.values()) {
           if (entry.name === params?.projectId) {
             const metadata = await isValidProject(entry)
             if (metadata) {
-              await params?.cwd?.removeEntry(params?.projectId, { recursive: true }) 
-              return new FsFetchResponse(JSON.stringify({ msg: "deleted" }), true)
+              await params?.cwd?.removeEntry(params?.projectId, {
+                recursive: true,
+              })
+              return new FsFetchResponse(
+                JSON.stringify({ msg: "deleted" }),
+                true
+              )
             } else {
               return new FsFetchResponse() // Metadata invalid
             }
@@ -179,9 +199,10 @@ export const fsFetch = async (endpoint, params=null) => {
 
       default:
         throw new Error("Invalid endpoint")
-      }
+    }
   } catch (error) {
-    console.error(`Failed to fetch from file system ${endpoint}, ${params}:\n${error}`)
+    console.error(
+      `Failed to fetch from file system ${endpoint}, ${params}:\n${error}`
+    )
   }
 }
-

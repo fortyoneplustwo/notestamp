@@ -7,7 +7,7 @@ const NavItem = (props) => {
     <AppBarButton 
       variant="outline"
       size="xs"
-      className={type === "recorder" ? "sound-recorder-btn" : ""}
+      data-tour-id={type === "recorder" ? "sound-recorder-btn" : ""}
       onClick={() => onClick(children, type)}
     >
       { icon }
