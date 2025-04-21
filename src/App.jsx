@@ -13,24 +13,24 @@ import { ModalProvider } from './context/ModalContext'
 import { useAppContext } from './context/AppContext'
 import { Toaster } from 'sonner'
 import { ThemeProvider } from './context/ThemeProvider'
-import { defaultMediaConfig, tourSteps } from './config'
+import { defaultMediaConfig } from './config'
 import { myMediaComponents } from './components/MediaRenderer/config'
-import Joyride, { ACTIONS, EVENTS, STATUS } from 'react-joyride';
 import { useCreateEditor } from './components/Editor/hooks/useCreateEditor'
 import { useContent } from './components/Editor/hooks/useContent'
+import { useJoyride } from './hooks/useGuidedTour'
 import "./index.css"
+import Joyride from 'react-joyride'
 
 const App = () => {
   const mediaRendererRef = useRef(null)
   const [isProjectOpen, setIsProjectOpen] = useState(null)
   const [currProjectMetadata, setCurrProjectMetadata] = useState(null)
-  const [run, setRun] = useState(false)
-  const [stepIndex, setStepIndex] = useState(0)
 
   const { editor } = useCreateEditor()
   const { setContent } = useContent()
   const { data: userData } = useGetUserData()
   const { user, setUser, syncToFileSystem } = useAppContext()
+  const { steps, run, stepIndex, handleOnBeginTour, handleJoyrideCallback } = useJoyride()
   const {
     data: metadata,
     fetchById: fetchProjectById,
@@ -114,18 +114,6 @@ const App = () => {
     setIsProjectOpen(true)
   })
 
-  const handleOnBeginTour = () => setRun(true)
-
-  const handleJoyrideCallback = (data) => {
-    const { action, index, status, type } = data
-    if ([EVENTS.STEP_AFTER, EVENTS.TARGET_NOT_FOUND].includes(type)) {
-      setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1))
-    } else if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
-      setRun(false)
-      setStepIndex(0)
-    }
-  }
-
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <div className="grid grid-rows-[auto,1fr] h-screen bg-[#f5f5f7] dark:bg-mybgprim">
@@ -172,7 +160,7 @@ const App = () => {
       <Joyride
         locale={{ close: "Next" }}
         stepIndex={stepIndex}
-        steps={tourSteps}
+        steps={steps}
         run={run}
         callback={handleJoyrideCallback}
         spotlightClicks={true}

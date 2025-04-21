@@ -169,7 +169,10 @@ const AppToolbar = ({ metadata, onClose }) => {
         <Label className="text-sm">{ metadata?.title || metadata?.label }</Label>
       </span>
       {metadata && (
-        <span className="flex flex-row gap-3 ml-auto">
+        <span 
+          data-tour-id="toolbar"
+          className="flex flex-row gap-3 ml-auto"
+        >
           {(user || cwd) && (
             <>
               {metadata?.type !== "recorder" && (

@@ -5,16 +5,17 @@ const WelcomeMessage = ({ onClickTourButton }) => (
   <>
     <div className="h-full w-full overflow-auto p-[10%]">
       <p>
-        Welcome to <span className="text-[orangered] font-bold">notestamp</span>, a web application designed to revolutionize note-taking.
+        Welcome to <span className="text-[orangered] font-bold">notestamp</span>, a web application designed to enhance note-taking.
       </p>
       <br />
-      <p>Whether you're studying, attending lectures, or consuming media, notestamp ensures that your notes are contextually linked, enhancing comprehension and retention.</p>
+      <p>When recording or viewing media, your typed notes are contextually linked to enhance comprehension and retention.</p>
       <br></br>
-      <p>Key features:</p>
-      <p>
-        <li><strong>Synchronized note-taking: </strong>By inserting stamps, you can link specific points in your notes to exact moments in the related media.</li>
-        <li><strong>Interactive stamps: </strong>Clicking on a stamp instantly returns the media to the recorded point, streamlining the review process.</li>
-      </p>
+      <p>How it works:</p>
+      <br />
+      <ul className="list-inside list-disc">
+        <li>Each note line is automatically stamped to match moments in the media.</li>
+        <li>Clicking a stamp returns the media to the recorded point.</li>
+      </ul>
       <br />
       <p>Take the guided tour to learn how to use the app.</p>
       <br />

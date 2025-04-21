@@ -196,7 +196,10 @@ export const TextEditor = ({
   }
 
   return (
-    <div className="editor border-none bg-transparent h-full" >
+    <div 
+      data-tour-id="editor"
+      className="border-none bg-transparent h-full" 
+    >
       <Slate editor={editor} initialValue={initialValue}
         onChange={value => {
           const isAstChange = editor.operations.some(op => 'set_selection' !== op.type)

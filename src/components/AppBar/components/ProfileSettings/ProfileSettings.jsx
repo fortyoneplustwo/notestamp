@@ -97,7 +97,7 @@ const ProfileSettings = () => {
 
   return (
     <span className="flex ml-auto gap-4">
-      <span className="file-sync-switch">
+      <span data-tour-id="file-sync-switch">
         <Toggle
           onToggle={(checked) => {
             setIsFileSyncChecked(checked)
