@@ -11,7 +11,8 @@ export const useJoyride = () => {
 
   const handleJoyrideCallback = data => {
     const { action, index, status, type } = data
-    if (index === 0 && type === EVENTS.STEP_BEFORE) {
+
+    if (stepIndex === 0 && type === EVENTS.STEP_BEFORE) {
       const leftPane = document.querySelector('div[data-tour-id="left-pane"]')
       if (leftPane) {
         new MutationObserver((mutations, observer) => {
@@ -23,7 +24,7 @@ export const useJoyride = () => {
           }
         }).observe(leftPane, { childList: true })
       }
-    } else if (index === 2) {
+    } else if (stepIndex === 2) {
       const leftPane = document.querySelector('div[data-tour-id="left-pane"]')
       if (leftPane) {
         new MutationObserver((mutations, observer) => {
@@ -34,16 +35,18 @@ export const useJoyride = () => {
                 const recordButton = node
                   .querySelector('button[data-tour-id="record-btn"]')
                 if (recordButton) {
-                  observer.disconnect()
-                  setStepIndex(index + 1)
-                  setRun(true)
+                  setTimeout(() => {
+                    setStepIndex(index + 1)
+                    setRun(true)
+                    observer.disconnect()
+                  }, 50) // Timeout makes the transition less jarring
                 }
               }
             }
           }
         }).observe(leftPane, { childList: true, subtree: true })
       }
-    } else if (index === 3 || index === 5) {
+    } else if (stepIndex === 3) {
       const stopButton = document.querySelector(
         'button[data-tour-id="stop-btn"]'
       )
@@ -53,10 +56,31 @@ export const useJoyride = () => {
             if (
               m.type === "attributes" &&
               m.attributeName === "disabled" &&
-              (!stopButton.getAttribute("disabled") || index === 5)
+              stopButton.getAttribute("disabled") === null
             ) {
-              observer.disconnect()
               setStepIndex(index + 1)
+              observer.disconnect()
+            }
+          }
+        }).observe(stopButton, {
+          attributes: true,
+          attributeFilter: ["disabled"],
+        })
+      }
+    } else if (stepIndex === 5) {
+      const stopButton = document.querySelector(
+        'button[data-tour-id="stop-btn"]'
+      )
+      if (stopButton) {
+        new MutationObserver((mutations, observer) => {
+          for (const m of mutations) {
+            if (
+              m.type === "attributes" &&
+              m.attributeName === "disabled" &&
+              stopButton.getAttribute("disabled") !== null
+            ) {
+              setStepIndex(index + 1)
+              observer.disconnect()
             }
           }
         }).observe(stopButton, {
