@@ -1,5 +1,5 @@
 import { useState } from "react"
-import Joyride, { ACTIONS, EVENTS, STATUS } from "react-joyride"
+import { ACTIONS, EVENTS, STATUS } from "react-joyride"
 
 export const useJoyride = () => {
   const [run, setRun] = useState(false)
@@ -28,6 +28,7 @@ export const useJoyride = () => {
       if (leftPane) {
         new MutationObserver((mutations, observer) => {
           for (const m of mutations) {
+            if (m.addedNodes.length > 0) run && setRun(false)
             for (const node of m.addedNodes) {
               if (node.nodeType === 1) {
                 const recordButton = node
@@ -35,6 +36,7 @@ export const useJoyride = () => {
                 if (recordButton) {
                   observer.disconnect()
                   setStepIndex(index + 1)
+                  setRun(true)
                 }
               }
             }
