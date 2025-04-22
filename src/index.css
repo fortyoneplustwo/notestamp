@@ -94,3 +94,7 @@ p {
     @apply bg-background text-foreground;
   }
 }
+
+.react-joyride__overlay {
+  position: fixed !important;
+}
