@@ -8,7 +8,7 @@ import { ProjectProvider } from './context/ProjectContext'
 import LeftPane from './components/Containers/LeftPane'
 import RightPane from './components/Containers/RightPane'
 import AppBar from './components/AppBar/AppBar'
-import { useGetProjectMetadata, useGetProjectNotes, useGetUserData } from './hooks/useReadData'
+import { useGetProjectNotes, useGetUserData } from './hooks/useReadData'
 import { ModalProvider } from './context/ModalContext'
 import { useAppContext } from './context/AppContext'
 import { Toaster } from 'sonner'
@@ -17,9 +17,8 @@ import { defaultMediaConfig } from './config'
 import { myMediaComponents } from './components/MediaRenderer/config'
 import { useCreateEditor } from './components/Editor/hooks/useCreateEditor'
 import { useContent } from './components/Editor/hooks/useContent'
-import { useJoyride } from './hooks/useGuidedTour'
+import { Joyride, Tooltip, useJoyride } from './features/guided-tour'
 import "./index.css"
-import Joyride from 'react-joyride'
 
 const App = () => {
   const mediaRendererRef = useRef(null)
@@ -32,12 +31,6 @@ const App = () => {
   const { user, setUser, syncToFileSystem } = useAppContext()
   const { steps, run, stepIndex, handleOnBeginTour, handleJoyrideCallback } = useJoyride()
   const {
-    data: metadata,
-    fetchById: fetchProjectById,
-    loading: loadingMetadata,
-    error: errorFetchingMetadata,
-  } = useGetProjectMetadata()
-  const {
     data: fetchedNotes,
     fetchById: fetchNotesById,
     loading: loadingNotes,
@@ -47,13 +40,6 @@ const App = () => {
   useEffect(() => {
     setUser(userData)
   }, [userData, setUser])
-
-  useEffect(() => {
-    if (metadata) {
-      setCurrProjectMetadata(metadata)
-      fetchNotesById(metadata.title)
-    }
-  }, [metadata, fetchNotesById])
 
   useEffect(() => {
     if (!fetchedNotes) return
@@ -69,12 +55,6 @@ const App = () => {
     }
   }, [loadingNotes, errorFetchingNotes])
 
-  useEffect(() => {
-    if (!loadingMetadata && errorFetchingMetadata) {
-      // handle error
-    }
-  }, [loadingMetadata, errorFetchingMetadata])
-
   const handleOpenNewProject = (label, type) => {
     setIsProjectOpen(() => {
       setCurrProjectMetadata({
@@ -88,8 +68,9 @@ const App = () => {
     })
   }
 
-  const handleOpenProject = (projectId) => {
-    fetchProjectById(projectId)
+  const handleOpenProject = (metadata) => {
+    fetchNotesById(metadata?.title)
+    setCurrProjectMetadata(metadata)
     setIsProjectOpen(true)
   }
 
@@ -116,7 +97,7 @@ const App = () => {
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <div className="grid grid-rows-[auto,1fr] h-screen bg-[#f5f5f7] dark:bg-mybgprim">
+      <div className="grid grid-rows-[auto_1fr] h-screen bg-sidebar-accent dark:bg-mybgprim">
         <ProjectProvider>
           <ModalProvider>
             <header className="flex row-span-1 bg-transparent pt-2 px-2">
@@ -136,8 +117,7 @@ const App = () => {
                 {isProjectOpen ? (
                   <MediaRenderer
                     metadata={currProjectMetadata}
-                    loading={loadingMetadata}
-                    ref={(node) => mediaRendererRef.current = node} 
+                    ref={(node) => mediaRendererRef.current = node}
                   />
                 ) : (user || syncToFileSystem) ? (
                   <Dashboard onOpenProject={handleOpenProject} />
@@ -167,6 +147,8 @@ const App = () => {
         hideCloseButton={true}
         disableOverlayClose={true}
         showProgress={true}
+        tooltipComponent={Tooltip}
+        floaterProps={{ hideArrow: true }}
       />
     </ThemeProvider>
   )

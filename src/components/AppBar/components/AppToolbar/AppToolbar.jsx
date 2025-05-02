@@ -5,11 +5,11 @@ import { useGetProjectNotes } from '@/hooks/useReadData'
 import { useModal } from '@/context/ModalContext'
 import { useProjectContext } from '@/context/ProjectContext'
 import { useAppContext } from '@/context/AppContext'
-import { AppBarButton } from '@/components/Button/Button'
 import { CircleX, Save, Trash } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 
 const AppToolbar = ({ metadata, onClose }) => {
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth)
@@ -73,7 +73,8 @@ const AppToolbar = ({ metadata, onClose }) => {
   const handleSaveProject = () => {
     const snapshot = takeSnapshot()
 
-    if (metadata?.title) { // Case: existing project
+    // Case: Existitng project
+    if (metadata?.title) {
       if (!snapshot.metadata || !snapshot.notes) {
         closeModal()
         toast.error("Invalid project")
@@ -88,7 +89,8 @@ const AppToolbar = ({ metadata, onClose }) => {
       return
     }
 
-    openModal("projectSaver", { // Case: new project
+    // Case: New project
+    openModal("projectSaver", {
       metadata: { ...snapshot.metadata },
       onClose: closeModal,
       onSave: (title) => {
@@ -157,7 +159,7 @@ const AppToolbar = ({ metadata, onClose }) => {
   }
 
   return (
-    <span className="flex flex-row h-full flex-grow gap-4">
+    <span className="flex flex-row h-full grow gap-4">
       <span 
         className="font-bold self-center truncate overflow-hidden whitespace-nowrap"
         style={{ 
@@ -176,30 +178,35 @@ const AppToolbar = ({ metadata, onClose }) => {
           {(user || cwd) && (
             <>
               {metadata?.type !== "recorder" && (
-                <AppBarButton
+                <Button
+                  variant="outline"
+                  size="xs"
                   onClick={handleSaveProject}
                   disabled={isSaving}
                 >
                   <Save size={16} /> Save 
-                </AppBarButton>
+                </Button>
               )}
               {metadata?.title && (
-                <AppBarButton 
+                <Button 
+                  variant="outline"
+                  size="xs"
                   onClick={handleDeleteProject}
                   disabled={isDeleting}
                 >
                   <Trash size={16} /> Delete
-                </AppBarButton>
+                </Button>
               )}
             </>
           )}
-          <AppBarButton
-            className="close-btn"
+          <Button
             variant="destructive"
+            size="xs"
+            className="close-btn"
             onClick={handleCloseProject}
           >
             <CircleX size={16} /> Close
-          </AppBarButton>
+          </Button>
         </span>
       )}
       <Separator orientation="vertical" />

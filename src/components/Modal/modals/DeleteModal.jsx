@@ -1,6 +1,6 @@
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { DefaultButton } from "../../Button/Button"
 import ModalLayout from "../ModalLayout"
+import { Button } from "@/components/ui/button"
 
 const DeleteModal = ({ onDelete, onClose }) => {
   return (
@@ -16,17 +16,17 @@ const DeleteModal = ({ onDelete, onClose }) => {
       <DialogFooter>
         <div>
           <div className="flex justify-center mt-4 gap-2">
-            <DefaultButton
+            <Button
+              variant="secondary"
               onClick={onClose}
             >
               Cancel
-            </DefaultButton>
-            <DefaultButton
-              variant="default"
+            </Button>
+            <Button
               onClick={onDelete}
             >
               Delete
-            </DefaultButton>
+            </Button>
           </div>
         </div>
       </DialogFooter>

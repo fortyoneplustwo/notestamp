@@ -1,9 +1,9 @@
 import {  useState } from "react"
-import { DefaultButton } from "../../Button/Button"
 import ModalLayout from "../ModalLayout"
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 const LoginModal = ({ onLogin, onRegister, onClose }) => {
   const [username, setUsername] = useState("")
@@ -48,6 +48,7 @@ const LoginModal = ({ onLogin, onRegister, onClose }) => {
           </div>
           <br></br>
           <div className="flex justify-center">
+            {/* eslint-disable-next-line react/no-unescaped-entities*/}
             <p>Don't have an account? &nbsp;</p>
             <button 
               onClick={onRegister} 
@@ -60,8 +61,8 @@ const LoginModal = ({ onLogin, onRegister, onClose }) => {
         </div>
       </form>
       <DialogFooter>
-        <DefaultButton onClick={onClose}>Cancel</DefaultButton>
-        <DefaultButton variant="default" form="loginForm" type="submit">Sign in</DefaultButton>
+        <Button onClick={onClose} variant="secondary">Cancel</Button>
+        <Button form="loginForm" type="submit">Sign in</Button>
       </DialogFooter>
     </ModalLayout>
   )

@@ -5,13 +5,18 @@ import '../../style/Background.css'
 import "react-pdf/dist/Page/TextLayer.css"
 import { Toolbar } from '../../components/Toolbar'
 import { useGetProjectMedia } from '../../../../hooks/useReadData'
-import { MediaToolbarButton } from '@/components/Button/Button'
+import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
-const PdfReader = React.forwardRef((props, ref) => {
+const PdfReader = (
+  {
+    ref,
+    ...props
+  }
+) => {
   const [source, setSource] = useState(null)
   const [pageNumber, setPageNumber] = useState(1)
   const [numPages, setNumPages] = useState(0)
@@ -85,27 +90,30 @@ const PdfReader = React.forwardRef((props, ref) => {
             </form>
         )}
         <span className="flex ml-auto gap-2 items-right">
-          <MediaToolbarButton 
+          <Button 
             variant="ghost" 
+            size="xs"
             title="Zoom out" 
             onClick={() => { setPageScale(pageScale - 0.2) }}
           >
             <ZoomOut />
-          </MediaToolbarButton>
-          <MediaToolbarButton 
+          </Button>
+          <Button 
             variant="ghost"  
+            size="xs"
             title="Zoom in" 
             onClick={() => { setPageScale(pageScale + 0.2) }}
           >
             <ZoomIn />
-          </MediaToolbarButton>
-          <MediaToolbarButton 
+          </Button>
+          <Button 
             variant="ghost" 
+            size="xs"
             title="Previous page" 
             onClick={() => { pageNumber > 1 && setPageNumber(pageNumber - 1) }}
           >
             <ChevronLeft />
-          </MediaToolbarButton>
+          </Button>
           {source && (
             <span className="text-sm w-20 p-0 text-center inline-block">
               <span>
@@ -130,13 +138,14 @@ const PdfReader = React.forwardRef((props, ref) => {
               <span>{numPages}</span>
             </span>
           )}
-          <MediaToolbarButton 
+          <Button 
             variant="ghost" 
+            size="xs"
             title="Next page" 
             onClick={() => { pageNumber < numPages && setPageNumber(pageNumber + 1) }}
           >
             <ChevronRight />
-          </MediaToolbarButton>
+          </Button>
         </span>
       </Toolbar>
       <div className='diagonal-background overflow-auto' ref={containerRef}
@@ -158,6 +167,6 @@ const PdfReader = React.forwardRef((props, ref) => {
       </div>
     </div>
   );
-})
+}
 
 export default PdfReader

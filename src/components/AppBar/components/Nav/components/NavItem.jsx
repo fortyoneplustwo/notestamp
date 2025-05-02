@@ -1,10 +1,10 @@
-import { AppBarButton } from "@/components/Button/Button"
+import { Button } from "@/components/ui/button"
 
 const NavItem = (props) => {
   const { type, icon, onClick, children } = props
 
   return (
-    <AppBarButton 
+    <Button
       variant="outline"
       size="xs"
       data-tour-id={type === "recorder" ? "sound-recorder-btn" : ""}
@@ -12,7 +12,7 @@ const NavItem = (props) => {
     >
       { icon }
       { children }
-    </AppBarButton>
+    </Button>
   )
 }
 

@@ -1,5 +1,12 @@
 import { useState } from "react"
-import { Editor, Transforms, Element as SlateElement, Range, Path } from "slate"
+import {
+  Editor,
+  Transforms,
+  Element as SlateElement,
+  Range,
+  Path,
+  Point,
+} from "slate"
 import { getLines, linesToString } from "../utils/lines"
 
 export const useCopyPaste = () => {

@@ -1,3 +1,5 @@
+import { toMarkdown } from "@/components/Editor/utils/toMarkdown"
+
 /** Custom response object that mimics
  * the one received from javascript's fetch()
  */
@@ -11,6 +13,7 @@ class FsFetchResponse {
     try {
       return JSON.parse(this.data)
     } catch (e) {
+      console.error(e)
       throw new Error("Invalid JSON format")
     }
   }
@@ -23,6 +26,7 @@ class FsFetchResponse {
         throw new Error()
       }
     } catch (e) {
+      console.error(e)
       throw new Error("Invalid blob")
     }
   }
@@ -39,7 +43,7 @@ const isValidProject = async dir => {
   }
   try {
     for await (const file of dir.values()) {
-      if (file.name === "metadata" && file.kind === "file") {
+      if (file.name === ".metadata.json" && file.kind === "file") {
         const metadataFile = await file.getFile()
         const metadataString = await metadataFile.text()
         const metadata = JSON.parse(metadataString)
@@ -81,10 +85,10 @@ export const fsFetch = async (endpoint, params = null) => {
   console.log("fsFetch: ", endpoint, params)
   try {
     switch (endpoint) {
-      case "listProjects":
+      case "listProjects": {
         const validProjects = []
         const promises = []
-        for await (const entry of params?.cwd?.values()) {
+        for await (const entry of params?.cwd?.values() || []) {
           promises.push(
             isValidProject(entry).then(
               metadata => metadata && validProjects.push(metadata)
@@ -94,9 +98,10 @@ export const fsFetch = async (endpoint, params = null) => {
         await Promise.all(promises) // Check for validity in parallel
         const data = JSON.stringify({ projects: validProjects })
         return new FsFetchResponse(data, true)
+      }
 
       case "getProjectMetadata":
-        for await (const entry of params?.cwd?.values()) {
+        for await (const entry of params?.cwd?.values() || []) {
           if (entry.name === params?.projectId) {
             const metadata = await isValidProject(entry)
             if (metadata) {
@@ -109,7 +114,7 @@ export const fsFetch = async (endpoint, params = null) => {
         return new FsFetchResponse() // Project not found
 
       case "getProjectMedia":
-        for await (const entry of params?.cwd?.values()) {
+        for await (const entry of params?.cwd?.values() || []) {
           if (entry.name === params?.projectId) {
             const metadata = await isValidProject(entry)
             if (metadata) {
@@ -126,12 +131,12 @@ export const fsFetch = async (endpoint, params = null) => {
         return new FsFetchResponse() // Project not found
 
       case "getProjectNotes":
-        for await (const entry of params?.cwd?.values()) {
+        for await (const entry of params?.cwd?.values() || []) {
           if (entry.name === params?.projectId) {
             const metadata = await isValidProject(entry)
             if (metadata) {
               const notesFileHandle = await entry.getFileHandle(
-                `${metadata.title}.stmp`
+                `.${metadata.title}.json`
               )
               const notesFile = await notesFileHandle.getFile()
               return new FsFetchResponse(notesFile, true)
@@ -142,19 +147,36 @@ export const fsFetch = async (endpoint, params = null) => {
         }
         return new FsFetchResponse() // Project not found
 
-      case "saveProject":
+      case "saveProject": {
         const metadataFile =
           params?.metadata &&
-          new File([JSON.stringify(params.metadata)], "metadata", {
+          new File([JSON.stringify(params.metadata)], ".metadata.json", {
             type: "application/json",
           })
         const notesFile =
           params?.notes &&
           new File(
             [JSON.stringify(params.notes)],
-            `${params.metadata.title}.stmp`,
+            `.${params.metadata.title}.json`,
             { type: "application/json" }
           )
+        let mdFile
+        if (params?.notes) {
+          try {
+            mdFile = new File(
+              [toMarkdown(params.notes)],
+              `${params.metadata.title}.md`,
+              { type: "text/markdown" }
+            )
+          } catch (error) {
+            console.error(error)
+            mdFile = new File(
+              ["Oops! There was an error converting your notes to Markdown."],
+              `${params.metadata.title}`,
+              { type: "text/markdown" }
+            )
+          }
+        }
         const mediaFile =
           params?.media &&
           new File(
@@ -167,7 +189,7 @@ export const fsFetch = async (endpoint, params = null) => {
           params?.metadata.title,
           { create: true }
         )
-        const filesToSave = [metadataFile, notesFile] // These files must always be saved
+        const filesToSave = [metadataFile, notesFile, mdFile] // These files must always be saved
         mediaFile && filesToSave.push(mediaFile) // Media is optional depending on metadata.type
         const writePromises = filesToSave?.map(file =>
           writeFile(file, newProjectDirHandle)
@@ -177,9 +199,10 @@ export const fsFetch = async (endpoint, params = null) => {
           JSON.stringify({ msg: "save success" }),
           true
         )
+      }
 
       case "deleteProject":
-        for await (const entry of params?.cwd?.values()) {
+        for await (const entry of params?.cwd?.values() || []) {
           if (entry.name === params?.projectId) {
             const metadata = await isValidProject(entry)
             if (metadata) {

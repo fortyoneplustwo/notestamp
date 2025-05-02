@@ -1,8 +1,8 @@
 import { useState } from "react"
-import { DefaultButton } from "../../Button/Button"
 import ModalLayout from "../ModalLayout"
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 const RegisterModal = ({ onRegister, onClose }) => {
   const [username, setUsername] = useState("")
@@ -48,8 +48,8 @@ const RegisterModal = ({ onRegister, onClose }) => {
         </div>
       </form>
       <DialogFooter>
-        <DefaultButton onClick={onClose} >Cancel</DefaultButton>
-        <DefaultButton variant="default" form="registerForm" type="submit">Sign up</DefaultButton>
+        <Button onClick={onClose} variant="secondary" >Cancel</Button>
+        <Button form="registerForm" type="submit">Sign up</Button>
       </DialogFooter>
     </ModalLayout>
   )

@@ -27,8 +27,9 @@ const parseParagraph = p => (
 
 const parseBulletedList = l => (
   <View>
-    {l.children.map(listItem => (
+    {l.children.map((listItem, index) => (
       <View
+        key={index}
         style={{
           display: "flex",
           flexDirection: "row",
@@ -45,6 +46,7 @@ const parseNumberedList = l => (
   <View>
     {l.children.map((listItem, index) => (
       <View
+        key={index}
         style={{
           display: "flex",
           flexDirection: "row",
@@ -108,35 +110,31 @@ const parseText = t => {
 }
 
 const parseNode = node => {
-  try {
-    switch (node.type) {
-      case "paragraph":
-        return parseParagraph(node)
-      case "stamped-item":
-        return parseStampedElement(node)
-      case "list-item":
-        return parseListItem(node)
-      case "bulleted-list":
-        return parseBulletedList(node)
-      case "numbered-list":
-        return parseNumberedList(node)
-      default: {
-        // Node must be one of:
-        //  * Editor
-        //  * Leaf
-        //  * Inline
-        //  * Invalid/misplaced (error)
-        if (Editor.isEditor(node)) {
-          return parseEditor(node)
-        } else if (SlateText.isText(node)) {
-          return parseText(node)
-        } else {
-          throw Error(`${node.type} is either an invalid or misplaced node`)
-        }
+  switch (node.type) {
+    case "paragraph":
+      return parseParagraph(node)
+    case "stamped-item":
+      return parseStampedElement(node)
+    case "list-item":
+      return parseListItem(node)
+    case "bulleted-list":
+      return parseBulletedList(node)
+    case "numbered-list":
+      return parseNumberedList(node)
+    default: {
+      // Node must be one of:
+      //  * Editor
+      //  * Leaf
+      //  * Inline
+      //  * Invalid/misplaced (error)
+      if (Editor.isEditor(node)) {
+        return parseEditor(node)
+      } else if (SlateText.isText(node)) {
+        return parseText(node)
+      } else {
+        throw Error(`${node.type} is either an invalid or misplaced node`)
       }
     }
-  } catch (error) {
-    throw error
   }
 }
 

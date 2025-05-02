@@ -61,6 +61,7 @@ export const columns = [
               .filter(media => media.type !== "recorder")
               .map(media => (
                 <DropdownMenuCheckboxItem
+                  key={media.type}
                   checked={filterByMedia === media.type}
                   onCheckedChange={() => {
                     column.setFilterValue(media.type)

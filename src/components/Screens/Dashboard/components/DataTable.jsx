@@ -16,10 +16,17 @@ import {
 } from "@/components/ui/table"
 import { useImperativeHandle, useState } from "react";
 
-export const DataTable = React.forwardRef(({ columns, data, onRowClick }, ref) => {
+export const DataTable = (
+  {
+    ref,
+    columns,
+    data,
+    onRowClick
+  }
+) => {
   const [columnFilters, setColumnFilters] = useState([])
   const [sorting, setSorting] = useState([{ id: "lastModified", desc: "true "}])
-  const [_, setViewportWidth] = useState(window.innerWidth);
+  const [, setViewportWidth] = useState(window.innerWidth);
   const table = useReactTable({
     data,
     columns,
@@ -45,17 +52,21 @@ export const DataTable = React.forwardRef(({ columns, data, onRowClick }, ref) =
       getFilterValue(column) {
         return table.getColumn(column)?.getFilterValue() ?? ""
       },
-      filterProjects(column, value) {
+      async filterProjects(column, value) {
         table.getColumn(column)?.setFilterValue(value)
       },
     }
   })
 
+  // Fix: If the table overflows its scrollable container, 
+  // then the last row may not fully render.
+  // Adding padding bottom pushes the content up a bit
+  // so the last row can be fully rendered.
   return (
-    <Table>
+    <Table className="mb-3">
       <TableHeader>
         {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id}>
+          <TableRow key={headerGroup.id} >
             {headerGroup.headers.map((header) => {
               return (
                 <TableHead key={header.id}>
@@ -96,6 +107,6 @@ export const DataTable = React.forwardRef(({ columns, data, onRowClick }, ref) =
       </TableBody>
     </Table>
   )
-});
+};
 
 export default DataTable

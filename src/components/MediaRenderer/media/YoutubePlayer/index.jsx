@@ -4,9 +4,14 @@ import '../../style/Background.css'
 import { Toolbar } from '../../components/Toolbar'
 import { formatTime } from '../../utils/formatTime'
 import { Input } from '@/components/ui/input'
-import { MediaToolbarButton } from '@/components/Button/Button'
+import { Button } from '@/components/ui/button'
 
-const YoutubePlayer = React.forwardRef((props, ref) => {
+const YoutubePlayer = (
+  {
+    ref,
+    ...props
+  }
+) => {
   const player = useRef(null)
 
   const onPlayerReady = event => {
@@ -72,7 +77,7 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
         <Toolbar className="flex justify-center">
           <form onSubmit={handleSubmitUrl} className="flex w-full max-w-md items-center space-x-2">
             <Input className="h-6" type="url" placeholder="Enter youtube video url" />
-            <MediaToolbarButton type="submit">Play</MediaToolbarButton>
+            <Button size="xs" type="submit">Play</Button>
           </form>
         </Toolbar>
       }
@@ -85,6 +90,6 @@ const YoutubePlayer = React.forwardRef((props, ref) => {
       </div>
     </div>
   )
-})
+}
 
 export default YoutubePlayer

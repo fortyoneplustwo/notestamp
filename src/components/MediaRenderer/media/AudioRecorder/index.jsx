@@ -5,7 +5,7 @@ import { formatTime } from '../../utils/formatTime'
 import { Mic, Square, Pause } from 'lucide-react'
 import { Toolbar } from '../../components/Toolbar'
 import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer"
-import { MediaToolbarButton } from '@/components/Button/Button'
+import { Button } from '@/components/ui/button'
 
 // Variables needed to calculate timestamp.
 // Declared outside of component so they remain unaffected by re-renders.
@@ -14,7 +14,12 @@ let dateWhenRecLastActive
 let dateWhenRecLastInactive
 let recDuration
 
-const AudioRecorder = React.forwardRef((props, ref) => {
+const AudioRecorder = (
+  {
+    ref,
+    ...props
+  }
+) => {
   const recorderControls = useVoiceVisualizer()
   const {
     recordedBlob,
@@ -69,11 +74,11 @@ const AudioRecorder = React.forwardRef((props, ref) => {
         }
       },
       getMetadata: () => { return { ...props } },
-    } 
+    }
   }, [props])
 
 
-  useEffect(() => { 
+  useEffect(() => {
     dateWhenRecLastActive = new Date()
     dateWhenRecLastInactive = dateWhenRecLastActive
     recDuration = 0
@@ -83,48 +88,52 @@ const AudioRecorder = React.forwardRef((props, ref) => {
     <div className='flex flex-col h-full'>
       <Toolbar className="flex justify-end gap-2">
         {!isRecordingInProgress && (
-          <MediaToolbarButton 
-            data-tour-id="record-btn"
+          <Button
             variant="ghost"
-            title="Record" 
+            size="xs"
+            data-tour-id="record-btn"
+            title="Record"
             onClick={startRecording}
           >
             <Mic />
-          </MediaToolbarButton>
+          </Button>
         )}
         {isRecordingInProgress && !isPausedRecording && (
-          <MediaToolbarButton 
+          <Button
             variant="ghost"
-            title="Pause" 
+            size="xs"
+            title="Pause"
             onClick={togglePauseResume}
           >
             <Pause />
-          </MediaToolbarButton>
+          </Button>
         )}
         {isRecordingInProgress && isPausedRecording && (
-          <MediaToolbarButton 
+          <Button
             variant="ghost"
-            title="Resume" 
+            size="xs"
+            title="Resume"
             onClick={togglePauseResume}
           >
             <Mic />
-          </MediaToolbarButton>
+          </Button>
         )}
-        <MediaToolbarButton 
+        <Button
+          variant="ghost"
+          size="xs"
           data-tour-id="stop-btn"
           disabled={!isRecordingInProgress}
-          variant="ghost"
-          title="Stop" 
+          title="Stop"
           onClick={stopRecording}
         >
           <Square />
-        </MediaToolbarButton>
+        </Button>
       </Toolbar>
 
       <div className="diagonal-background flex items-center w-full h-full">
         <div className="w-full bg-white dark:bg-mybgsec border-y border-solid dark:border-[#3f3f46]">
-          <VoiceVisualizer 
-            controls={recorderControls} 
+          <VoiceVisualizer
+            controls={recorderControls}
             isControlPanelShown={false}
             mainBarColor="orangered"
           />
@@ -132,6 +141,6 @@ const AudioRecorder = React.forwardRef((props, ref) => {
       </div>
     </div>
   )
-})
+}
 
 export default AudioRecorder

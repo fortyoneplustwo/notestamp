@@ -1,7 +1,7 @@
 import React from "react"
 import { Button, Icon } from "./ui"
 
-export const ActionButton = ({ action, icon, ...props }) => {
+export const ActionButton = ({ icon, ...props }) => {
   return (
     <Button { ...props }>
       <Icon>{icon}</Icon>

@@ -1,9 +1,9 @@
 import { useContent } from "@/components/Editor/hooks/useContent"
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
+import { createContext, useCallback, use, useEffect, useRef, useState } from "react"
 
 const ProjectContext = createContext()
 
-export const useProjectContext = () => useContext(ProjectContext)
+export const useProjectContext = () => use(ProjectContext)
 
 export const ProjectProvider = ({ children }) => {
   const [isMounted, setIsMounted] = useState(false)
@@ -44,13 +44,13 @@ export const ProjectProvider = ({ children }) => {
   }, [setIsEditorMounted])
 
   return (
-    <ProjectContext.Provider value={{ 
+    (<ProjectContext value={{ 
       setMediaRef,
       setEditorRef,
       isMounted,
       takeSnapshot,
     }}>
       { children }
-    </ProjectContext.Provider>
-  )
+    </ProjectContext>)
+  );
 }

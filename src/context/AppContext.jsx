@@ -1,8 +1,8 @@
-import { createContext, useContext, useRef, useState } from "react"
+import { createContext, use, useRef, useState } from "react"
 
 const AppContext = createContext()
 
-export const useAppContext = () => useContext(AppContext)
+export const useAppContext = () => use(AppContext)
 
 export const AppContextProvider = ({ children }) => {
   const [user, setUser] = useState(null)
@@ -12,7 +12,7 @@ export const AppContextProvider = ({ children }) => {
   const cache = useRef(new Map())
 
   return (
-    <AppContext.Provider value={{ 
+    (<AppContext value={{ 
       user,
       setUser, 
       syncToFileSystem,
@@ -24,6 +24,6 @@ export const AppContextProvider = ({ children }) => {
       setCwd
     }}>
       { children }
-    </AppContext.Provider>
-  )
+    </AppContext>)
+  );
 }

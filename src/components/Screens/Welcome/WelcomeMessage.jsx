@@ -1,8 +1,9 @@
 import { Button } from '@/components/ui/button'
+import { Github } from 'lucide-react'
 import React from 'react'
 
 const WelcomeMessage = ({ onClickTourButton }) => (
-  <>
+  <div className="h-full w-full flex flex-col">
     <div className="h-full w-full overflow-auto p-[10%]">
       <p>
         Welcome to <span className="text-[orangered] font-bold">notestamp</span>, a web application designed to enhance note-taking.
@@ -17,24 +18,26 @@ const WelcomeMessage = ({ onClickTourButton }) => (
         <li>Clicking a stamp returns the media to the recorded point.</li>
       </ul>
       <br />
-      <p>Take the guided tour to learn how to use the app.</p>
-      <br />
-      <div>
-        <Button onClick={onClickTourButton}>
-          Begin Tour
+      <div className="flex justify-center py-7 px-40">
+        <Button className="grow" onClick={onClickTourButton}>
+          Take the guided tour
         </Button>
       </div>
-      <br />
+      <br></br>
       <p>
-        <strong className="text-red-500">
-          Warning: </strong>This app works best on Chrome desktop.
+        💡
+        <em>
+          For the best experience, we recommend using Chrome Desktop.
+        </em>
       </p>
       <br></br>
-      <p>This project is open source. Report issues on&nbsp; 
-        <a href='https://github.com/fortyoneplustwo/notestamp' className='text-blue-600'>github</a>.
-      </p>
     </div>
-  </>
+    <div className="self-start mt-auto p-2">
+      <a href='https://github.com/fortyoneplustwo/notestamp'>
+        <Github size={20} color="grey" />
+      </a>
+    </div>
+  </div>
 )
 
 export default WelcomeMessage

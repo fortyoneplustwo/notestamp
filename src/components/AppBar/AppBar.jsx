@@ -13,7 +13,7 @@ const AppBar = ({
   return (
     <div className="flex w-full gap-4">
       <Logo />
-      <span className="flex items-center flex-grow" >
+      <span className="flex items-center grow" >
         {showToolbar ? (
           <AppToolbar
             onClose={onCloseProject}

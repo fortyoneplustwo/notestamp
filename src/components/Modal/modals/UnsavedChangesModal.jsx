@@ -1,6 +1,6 @@
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import ModalLayout from "../ModalLayout"
-import { DefaultButton } from "@/components/Button/Button"
+import { Button } from "@/components/ui/button"
 
 const UnsavedChangesModal = ({ onSave, onDiscard, onClose }) => {
 
@@ -15,8 +15,8 @@ const UnsavedChangesModal = ({ onSave, onDiscard, onClose }) => {
         </DialogDescription>
       </DialogHeader>
       <DialogFooter>
-        <DefaultButton onClick={onDiscard}>No</DefaultButton>
-        <DefaultButton variant="default" onClick={onSave}>Yes</DefaultButton>
+        <Button variant="secondary" onClick={onDiscard}>No</Button>
+        <Button onClick={onSave}>Yes</Button>
       </DialogFooter>
     </ModalLayout>
   )

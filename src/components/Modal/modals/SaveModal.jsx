@@ -1,7 +1,7 @@
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { DefaultButton } from "../../Button/Button"
 import ModalLayout from "../ModalLayout"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 const SaveModal = ({ metadata=null, onSave, onClose }) => {
 
@@ -30,13 +30,13 @@ const SaveModal = ({ metadata=null, onSave, onClose }) => {
         )}
       </form>
       <DialogFooter>
-        <DefaultButton
+        <Button
           form="saveForm"
           type="submit"
           className="float-right"
         >
           Save 
-        </DefaultButton>
+        </Button>
       </DialogFooter>
     </ModalLayout>
   )

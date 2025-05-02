@@ -1,4 +1,4 @@
-import { DefaultButton } from '@/components/Button/Button'
+import { Button } from '@/components/ui/button'
 import { Trash } from 'lucide-react'
 
 const DashboardItem = props => {
@@ -11,7 +11,7 @@ const DashboardItem = props => {
         className="p-2 bg-transparent"
       >
         {id}
-        <DefaultButton
+        <Button
           size="xs"
           variant="ghost"
           title="delete"
@@ -21,7 +21,7 @@ const DashboardItem = props => {
             onDelete(id)
           }}>
           <Trash size={16} />
-        </DefaultButton>
+        </Button>
       </div>
     </li>
   )
