@@ -28,6 +28,7 @@ const MediaRenderer = ({ ref, metadata }) => {
             setMediaRef(node)
 
             return () => {
+              ref(null)
               setMediaRef(null)
             }
           }}
