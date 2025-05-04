@@ -7,10 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ArrowUpDown, ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { defaultMediaConfig } from "@/config";
-import { myMediaComponents } from "@/components/MediaRenderer/config";
-
-const mediaComponents = [...defaultMediaConfig, ...myMediaComponents]
+import { defaultMediaConfig as mediaComponents } from "@/config";
 
 export const columns = [
   {
