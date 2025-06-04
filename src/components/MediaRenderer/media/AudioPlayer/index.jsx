@@ -5,7 +5,12 @@ import '../../style/Background.css'
 import { formatTime } from '../../utils/formatTime'
 import { Input } from '@/components/ui/input'
 
-const AudioPlayer = React.forwardRef((props, ref) => {
+const AudioPlayer = (
+  {
+    ref,
+    ...props
+  }
+) => {
   const [audio, setAudio] = useState(null)
   const playerRef = useRef(null)
   const { data: savedAudio, fetchById: fetchAudioById } = useGetProjectMedia()
@@ -90,6 +95,6 @@ const AudioPlayer = React.forwardRef((props, ref) => {
       </div>
     </div>
   )
-})
+}
 
 export default AudioPlayer

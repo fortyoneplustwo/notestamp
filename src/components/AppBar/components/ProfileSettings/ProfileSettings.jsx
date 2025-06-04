@@ -1,24 +1,34 @@
 import { useEffect, useState } from "react"
 import { useLogin, useLogout, useRegister } from "@/hooks/useAuth"
 import { useGetUserData } from "@/hooks/useReadData"
-import { AppBarButton, DefaultButton } from "@/components/Button/Button"
 import { useCustomFetch } from "@/hooks/useCustomFetch"
 import { useAppContext } from "@/context/AppContext"
 import { useModal } from "@/context/ModalContext"
-import { Toggle } from "@/components/Button/Toggle"
-import { toast } from "react-toastify"
+import { Toggle } from "./components/Toggle.jsx"
 import { User } from "lucide-react"
-import { ModeToggle } from "@/components/Button/ModeToggle"
+import { ModeToggle } from "./components/ModeToggle"
 import { useGetDirHandle } from "@/hooks/useFileSystem"
+import { Button } from "@/components/ui/button"
 
 const ProfileSettings = () => {
-  const [isLoggingIn, setIsLoggingIn] = useState(false)
+  // eslint-disable-next-line no-unused-vars
+  const [isLogginIn, setIsLoggingIn] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [isFileSyncChecked, setIsFileSyncChecked] = useState(false)
   const { data: userData, fetch: fetchUser } = useGetUserData()
   const { user, setUser, setSyncToFileSystem, setCwd } = useAppContext()
-  const { data: isLoggedIn, loginWithCredentials, loading: loadingLogIn, error: errorLoggingIn } = useLogin()
-  const { data: isLoggedOut, logout, loading: loadingLogOut, error: errorLoggingOut } = useLogout()
+  const {
+    data: isLoggedIn,
+    loginWithCredentials,
+    loading: loadingLogIn,
+    error: errorLoggingIn,
+  } = useLogin()
+  const {
+    data: isLoggedOut,
+    logout,
+    loading: loadingLogOut,
+    error: errorLoggingOut,
+  } = useLogout()
   const { registerWithCredentials } = useRegister()
   const { getDirHandle } = useGetDirHandle()
   const { clearCache } = useCustomFetch()
@@ -36,13 +46,13 @@ const ProfileSettings = () => {
       setUser(null)
       clearCache()
     }
-  },[isLoggedIn, isLoggedOut, fetchUser, setUser, clearCache])
+  }, [isLoggedIn, isLoggedOut, fetchUser, setUser, clearCache])
 
   useEffect(() => {
     if (!loadingLogIn) {
       setIsLoggingIn(false)
       if (errorLoggingIn) {
-        toast.error("Error logging in")
+        // toast.error("Error logging in")
         return
       }
     }
@@ -58,10 +68,10 @@ const ProfileSettings = () => {
   }, [loadingLogOut, errorLoggingOut])
 
   const handleRegister = (email, password) => {
-   registerWithCredentials({
+    registerWithCredentials({
       email: email,
       password: password,
-    }) 
+    })
     closeModal()
   }
 
@@ -80,13 +90,14 @@ const ProfileSettings = () => {
     logout()
   }
 
-  const handleToggleFileSync = async (checked) => {
+  const handleToggleFileSync = async checked => {
     if (checked) {
       try {
         const handle = await getDirHandle()
         setCwd(handle)
         setSyncToFileSystem(true)
       } catch (error) {
+        console.error(error)
         setIsFileSyncChecked(false)
       }
     } else {
@@ -97,9 +108,9 @@ const ProfileSettings = () => {
 
   return (
     <span className="flex ml-auto gap-4">
-      <span data-tour-id="file-sync-switch">
+      <span className="flex items-center" data-tour-id="file-sync-switch">
         <Toggle
-          onToggle={(checked) => {
+          onToggle={checked => {
             setIsFileSyncChecked(checked)
             handleToggleFileSync(checked)
           }}
@@ -109,31 +120,36 @@ const ProfileSettings = () => {
         </Toggle>
       </span>
       <ModeToggle />
-      {!user && false && (
-        <AppBarButton 
-          variant="default"
-          onClick={() => openModal("loginModal", { 
-            onClose: closeModal,
-            onLogin: handleLogIn,
-            onRegister: () => {
-              openModal("registerModal", {
+      {!user &&
+        false && ( // eslint-disable-line no-constant-binary-expression
+          <Button
+            variant="default"
+            size="xs"
+            onClick={() =>
+              openModal("loginModal", {
                 onClose: closeModal,
-                onRegister: handleRegister,
+                onLogin: handleLogIn,
+                onRegister: () => {
+                  openModal("registerModal", {
+                    onClose: closeModal,
+                    onRegister: handleRegister,
+                  })
+                },
               })
             }
-          })}
-        >
-          <User size={16} />
-          Sign in
-        </AppBarButton>
-      )}
+          >
+            <User size={16} />
+            Sign in
+          </Button>
+        )}
       {user && (
-        <DefaultButton 
+        <Button
+          variant="secondary"
           disabled={isLoggingOut}
           onClick={handleLogOut}
         >
-          Sign out 
-        </DefaultButton>
+          Sign out
+        </Button>
       )}
     </span>
   )

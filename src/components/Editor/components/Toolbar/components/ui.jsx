@@ -1,7 +1,7 @@
 import { css, cx } from "@emotion/css"
 import React from "react"
 
-export const Menu = React.forwardRef(({ className, ...props }, ref) => (
+export const Menu = ({ ref, className, ...props }) => (
   <div
     {...props}
     data-test-id="menu"
@@ -19,9 +19,9 @@ export const Menu = React.forwardRef(({ className, ...props }, ref) => (
       `
     )}
   />
-))
+)
 
-export const Icon = React.forwardRef(({ className, ...props }, ref) => (
+export const Icon = ({ ref, className, ...props }) => (
   <span
     {...props}
     ref={ref}
@@ -34,26 +34,24 @@ export const Icon = React.forwardRef(({ className, ...props }, ref) => (
       `
     )}
   />
-))
+)
 
-export const Button = React.forwardRef(
-  ({ className, active, reversed, ...props }, ref) => (
-    <span
-      {...props}
-      ref={ref}
-      className={cx(
-        className,
-        css`
-          cursor: pointer;
-          color: ${reversed
-            ? active
-              ? "orangered"
-              : "#aaa"
-            : active
-              ? "orangered"
-              : "#aaa"};
-        `
-      )}
-    />
-  )
+export const Button = ({ ref, className, active, reversed, ...props }) => (
+  <span
+    {...props}
+    ref={ref}
+    className={cx(
+      className,
+      css`
+        cursor: pointer;
+        color: ${reversed
+          ? active
+            ? "orangered"
+            : "#aaa"
+          : active
+            ? "orangered"
+            : "#aaa"};
+      `
+    )}
+  />
 )

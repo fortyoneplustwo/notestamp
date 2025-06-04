@@ -5,17 +5,17 @@ export const useGetDirHandle = () => {
   const [error, setError] = useState(false)
 
   const verifyPermission = useCallback(async (fileHandle, permissions) => {
-    const options = {};
+    const options = {}
     if (permissions.includes("readwrite")) {
-      options.mode = 'readwrite';
+      options.mode = "readwrite"
     }
-    if ((await fileHandle.queryPermission(options)) === 'granted') {
-      return true;
+    if ((await fileHandle.queryPermission(options)) === "granted") {
+      return true
     }
-    if ((await fileHandle.requestPermission(options)) === 'granted') {
-      return true;
+    if ((await fileHandle.requestPermission(options)) === "granted") {
+      return true
     }
-    return false;
+    return false
   }, [])
 
   const getDirHandle = useCallback(async () => {

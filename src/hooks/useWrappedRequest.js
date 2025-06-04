@@ -7,7 +7,7 @@ export const useWrappedRequest = () => {
   const [error, setError] = useState(false)
 
   // This wrapper returns a response object of type Promise<Data | null>
-  const wrappedRequest = useCallback(async (request) => {
+  const wrappedRequest = useCallback(async request => {
     try {
       setLoading(true)
       setError(false)
@@ -17,6 +17,7 @@ export const useWrappedRequest = () => {
       }
       return response
     } catch (error) {
+      console.log(error)
       setError(true)
       return null
     } finally {

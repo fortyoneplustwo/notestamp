@@ -1,9 +1,14 @@
-import {  useState } from "react"
-import { DefaultButton } from "../../Button/Button"
+import { useState } from "react"
 import ModalLayout from "../ModalLayout"
-import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 const LoginModal = ({ onLogin, onRegister, onClose }) => {
   const [username, setUsername] = useState("")
@@ -12,20 +17,17 @@ const LoginModal = ({ onLogin, onRegister, onClose }) => {
   return (
     <ModalLayout onClose={onClose}>
       <DialogHeader>
-        <DialogTitle>
-          Sign in
-        </DialogTitle>
-        <DialogDescription>
-          Sign in to your account
-        </DialogDescription>
+        <DialogTitle>Sign in</DialogTitle>
+        <DialogDescription>Sign in to your account</DialogDescription>
       </DialogHeader>
-      <form 
+      <form
         id="loginForm"
-        onSubmit={(e) => { 
+        onSubmit={e => {
           e.preventDefault()
-          onLogin(username, password) 
-        }} 
-        className="flex justify-center" >
+          onLogin(username, password)
+        }}
+        className="flex justify-center"
+      >
         <div>
           <div>
             <Label> E-mail </Label>
@@ -34,7 +36,7 @@ const LoginModal = ({ onLogin, onRegister, onClose }) => {
               value={username}
               autoFocus
               required
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={e => setUsername(e.target.value)}
             />
           </div>
           <div className="mt-2">
@@ -43,16 +45,17 @@ const LoginModal = ({ onLogin, onRegister, onClose }) => {
               type="password"
               value={password}
               required
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
             />
           </div>
           <br></br>
           <div className="flex justify-center">
+            {/* eslint-disable-next-line react/no-unescaped-entities*/}
             <p>Don't have an account? &nbsp;</p>
-            <button 
-              onClick={onRegister} 
+            <button
+              onClick={onRegister}
               className="border-none bg-transparent"
-              style={{ color: 'orangered' }}
+              style={{ color: "orangered" }}
             >
               Sign up
             </button>
@@ -60,8 +63,12 @@ const LoginModal = ({ onLogin, onRegister, onClose }) => {
         </div>
       </form>
       <DialogFooter>
-        <DefaultButton onClick={onClose}>Cancel</DefaultButton>
-        <DefaultButton variant="default" form="loginForm" type="submit">Sign in</DefaultButton>
+        <Button onClick={onClose} variant="secondary">
+          Cancel
+        </Button>
+        <Button form="loginForm" type="submit">
+          Sign in
+        </Button>
       </DialogFooter>
     </ModalLayout>
   )

@@ -70,6 +70,10 @@ export const TextEditor = ({
    */
   const { deleteBackward } = editor
 
+  // If the selection is at the start of a stamped line,
+  // and the line above is an empty paragraph,
+  // then we delete the empty paragraph,
+  // essentially moving the content at and below the selection up by one line
   editor.deleteBackward = (...args) => {
     const { selection } = editor
     let match = Editor.above(editor, {
@@ -110,6 +114,11 @@ export const TextEditor = ({
       }
     }
     deleteBackward(...args)
+  }
+
+  // Disable soft breaks (Shift + Enter)
+  editor.insertSoftBreak = () => {
+    editor.insertBreak()
   }
 
   /**
@@ -212,7 +221,7 @@ export const TextEditor = ({
         <div className="flex flex-col h-full">
           <Toolbar />
           <Editable
-            className="overflow-x-hidden outline-none p-1 w-full h-full color-black bg-white dark:bg-mybgsec"
+            className="overflow-x-hidden outline-hidden p-1 w-full h-full color-black bg-white dark:bg-mybgsec"
             style={{ tabSize: "2" }}
             renderElement={renderElement}
             renderLeaf={renderLeaf}

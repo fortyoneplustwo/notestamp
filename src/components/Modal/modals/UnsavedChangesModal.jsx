@@ -1,22 +1,26 @@
-import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import ModalLayout from "../ModalLayout"
-import { DefaultButton } from "@/components/Button/Button"
+import { Button } from "@/components/ui/button"
 
 const UnsavedChangesModal = ({ onSave, onDiscard, onClose }) => {
-
   return (
-    <ModalLayout onClose={onClose} >
+    <ModalLayout onClose={onClose}>
       <DialogHeader>
-        <DialogTitle>
-          Save changes
-        </DialogTitle>
+        <DialogTitle>Save changes</DialogTitle>
         <DialogDescription>
           Save changes made to this project?
         </DialogDescription>
       </DialogHeader>
       <DialogFooter>
-        <DefaultButton onClick={onDiscard}>No</DefaultButton>
-        <DefaultButton variant="default" onClick={onSave}>Yes</DefaultButton>
+        <Button variant="secondary" onClick={onDiscard}>
+          No
+        </Button>
+        <Button onClick={onSave}>Yes</Button>
       </DialogFooter>
     </ModalLayout>
   )

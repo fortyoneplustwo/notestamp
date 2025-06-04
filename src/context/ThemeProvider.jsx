@@ -1,5 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react"
-
+import { createContext, use, useEffect, useState } from "react"
 
 const initialState = {
   theme: "system",
@@ -15,7 +14,7 @@ export function ThemeProvider({
   ...props
 }) {
   const [theme, setTheme] = useState(
-    () => (localStorage.getItem(storageKey)) || defaultTheme
+    () => localStorage.getItem(storageKey) || defaultTheme
   )
 
   useEffect(() => {
@@ -38,25 +37,24 @@ export function ThemeProvider({
 
   const value = {
     theme,
-    setTheme: (theme) => {
+    setTheme: theme => {
       localStorage.setItem(storageKey, theme)
       setTheme(theme)
     },
   }
 
   return (
-    <ThemeProviderContext.Provider {...props} value={value}>
+    <ThemeProviderContext {...props} value={value}>
       {children}
-    </ThemeProviderContext.Provider>
+    </ThemeProviderContext>
   )
 }
 
 export const useTheme = () => {
-  const context = useContext(ThemeProviderContext)
+  const context = use(ThemeProviderContext)
 
   if (context === undefined)
     throw new Error("useTheme must be used within a ThemeProvider")
 
   return context
 }
-

@@ -1,4 +1,5 @@
 import React from "react"
+import { Toolbar as Container } from "@/components/MediaRenderer/components/Toolbar"
 import { Menu } from "./components/ui"
 import { MarkButton } from "./components/MarkButton"
 import { BlockButton } from "./components/BlockButton"
@@ -14,14 +15,12 @@ export const Toolbar = () => {
   const { lists } = useLists()
 
   return (
-    <div
-      className="flex p-[10px] dark:border-[#3f3f46] dark:bg-mybgter bg-[#f98fa] border-b border-b-[lightgray]"
-    >
+    <Container>
       <Menu>
         <MarkButton
           format={marks.bold}
           icon="format_bold"
-          title='Bold (Ctrl+B)'
+          title="Bold (Ctrl+B)"
         />
         <MarkButton
           format={marks.italic}
@@ -56,6 +55,6 @@ export const Toolbar = () => {
           onClick={async () => downloadPdf(editor)}
         />
       </Menu>
-    </div>
+    </Container>
   )
 }

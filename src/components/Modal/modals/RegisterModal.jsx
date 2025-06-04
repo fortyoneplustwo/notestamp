@@ -1,8 +1,13 @@
 import { useState } from "react"
-import { DefaultButton } from "../../Button/Button"
 import ModalLayout from "../ModalLayout"
-import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 const RegisterModal = ({ onRegister, onClose }) => {
   const [username, setUsername] = useState("")
@@ -11,20 +16,17 @@ const RegisterModal = ({ onRegister, onClose }) => {
   return (
     <ModalLayout onClose={onClose}>
       <DialogHeader>
-        <DialogTitle>
-          Sign up
-        </DialogTitle>
-        <DialogDescription>
-          Create a new account
-        </DialogDescription>
+        <DialogTitle>Sign up</DialogTitle>
+        <DialogDescription>Create a new account</DialogDescription>
       </DialogHeader>
-      <form 
+      <form
         id="registerForm"
-        onSubmit={(e) => { 
+        onSubmit={e => {
           e.preventDefault()
-          onRegister(username, password) 
-        }} 
-        className="flex justify-center" >
+          onRegister(username, password)
+        }}
+        className="flex justify-center"
+      >
         <div>
           <div>
             <label> E-mail </label>
@@ -33,7 +35,7 @@ const RegisterModal = ({ onRegister, onClose }) => {
               value={username}
               required
               autoFocus
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={e => setUsername(e.target.value)}
             />
           </div>
           <div className="mt-2">
@@ -42,14 +44,18 @@ const RegisterModal = ({ onRegister, onClose }) => {
               type="password"
               value={password}
               required
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
             />
           </div>
         </div>
       </form>
       <DialogFooter>
-        <DefaultButton onClick={onClose} >Cancel</DefaultButton>
-        <DefaultButton variant="default" form="registerForm" type="submit">Sign up</DefaultButton>
+        <Button onClick={onClose} variant="secondary">
+          Cancel
+        </Button>
+        <Button form="registerForm" type="submit">
+          Sign up
+        </Button>
       </DialogFooter>
     </ModalLayout>
   )

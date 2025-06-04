@@ -1,9 +1,9 @@
-import React, { useContext, useState, createContext, useCallback } from "react"
+import React, { use, useState, createContext, useCallback } from "react"
 import ModalRenderer from "./../components/Modal/ModalRenderer"
 
 const ModalContext = createContext()
 
-export const useModal = () => useContext(ModalContext)
+export const useModal = () => use(ModalContext)
 
 export const ModalProvider = ({ children }) => {
   const [modal, setModal] = useState(null)
@@ -19,14 +19,9 @@ export const ModalProvider = ({ children }) => {
   }, [])
 
   return (
-    <ModalContext.Provider value={{ openModal, closeModal }}>
-      { children }
-      { modal && (
-        <ModalRenderer  
-          modal={modal} 
-          props={modalProps} 
-        /> 
-      )}
-    </ModalContext.Provider>
+    <ModalContext value={{ openModal, closeModal }}>
+      {children}
+      {modal && <ModalRenderer modal={modal} props={modalProps} />}
+    </ModalContext>
   )
 }

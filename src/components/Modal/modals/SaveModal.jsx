@@ -1,42 +1,41 @@
-import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { DefaultButton } from "../../Button/Button"
+import {
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import ModalLayout from "../ModalLayout"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
-const SaveModal = ({ metadata=null, onSave, onClose }) => {
-
+const SaveModal = ({ metadata = null, onSave, onClose }) => {
   return (
-    <ModalLayout onClose={onClose} >
+    <ModalLayout onClose={onClose}>
       <DialogHeader>
-        <DialogTitle>
-          Save project
-        </DialogTitle>
-        <DialogDescription>
-          Pick a title for your project
-        </DialogDescription>
+        <DialogTitle>Save project</DialogTitle>
+        <DialogDescription>Pick a title for your project</DialogDescription>
       </DialogHeader>
-      <form id="saveForm" onSubmit={e => {
-        e.preventDefault()
-        onSave(metadata?.title || e.target.filename.value)
-      }}>
+      <form
+        id="saveForm"
+        onSubmit={e => {
+          e.preventDefault()
+          onSave(metadata?.title || e.target.filename.value)
+        }}
+      >
         {!metadata?.title && (
           <Input
-            type='text' 
-            name='filename' 
-            defaultValue={ metadata ? metadata.title : '' }
+            type="text"
+            name="filename"
+            defaultValue={metadata ? metadata.title : ""}
             autoFocus
             required
           />
         )}
       </form>
       <DialogFooter>
-        <DefaultButton
-          form="saveForm"
-          type="submit"
-          className="float-right"
-        >
-          Save 
-        </DefaultButton>
+        <Button form="saveForm" type="submit" className="float-right">
+          Save
+        </Button>
       </DialogFooter>
     </ModalLayout>
   )
