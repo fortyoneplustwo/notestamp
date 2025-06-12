@@ -23,7 +23,7 @@ const WelcomeMessage = ({ onClickTourButton }) => {
               notestamp
             </span>
             &nbsp;
-            <Typewriter text="Write notes in sync with your media" delay={30} />
+            <Typewriter text="Write notes in sync with media" delay={30} />
           </p>
           <div className="pt-10 px-5">
             <ul className="list-inside flex flex-col gap-3">
