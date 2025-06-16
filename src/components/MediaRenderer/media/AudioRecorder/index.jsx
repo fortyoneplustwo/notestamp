@@ -59,10 +59,13 @@ const AudioRecorder = ({ ref, ...props }) => {
       })
 
       recorder.on("record-end", blob => {
+        console.log(blob)
         setStopped(true)
+        const url = window.URL.createObjectURL(blob)
         EventEmitter.dispatch("open-media-with-src", {
           type: "audio",
-          src: blob,
+          src: url,
+          mimetype: "audio/webm",
         })
       })
     }
