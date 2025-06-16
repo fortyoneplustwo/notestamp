@@ -1,5 +1,6 @@
-import { useCallback, useState } from 'react'
-import { useCustomFetch } from './useCustomFetch';
+import { useCallback, useState } from "react"
+import { useCustomFetch } from "./useCustomFetch"
+import { useWrappedRequest } from "./useWrappedRequest"
 
 export const useGetUserData = () => {
   const { fetchWithoutCache, loading, error } = useCustomFetch()
@@ -26,20 +27,23 @@ export const useGetProjectMetadata = () => {
   const [metadata, setMetadata] = useState(null)
   const [isError, setIsError] = useState(false)
 
-  const fetchById = useCallback(async (projectId) => {
-    const response = await fetchWithoutCache("getProjectMetadata", {
-      projectId
-    })
-    try {
-      const data = await response.json()
-      setMetadata(data)
-    } catch (error) {
-      console.error(`Failed to extract metadata from response: ${error}`)
-      setIsError(true)
-    }
-  }, [fetchWithoutCache])
+  const fetchById = useCallback(
+    async projectId => {
+      const response = await fetchWithoutCache("getProjectMetadata", {
+        projectId,
+      })
+      try {
+        const data = await response.json()
+        setMetadata(data)
+      } catch (error) {
+        console.error(`Failed to extract metadata from response: ${error}`)
+        setIsError(true)
+      }
+    },
+    [fetchWithoutCache]
+  )
 
-  return { data: metadata, fetchById, loading, error: error || isError };
+  return { data: metadata, fetchById, loading, error: error || isError }
 }
 
 export const useGetProjects = () => {
@@ -67,20 +71,23 @@ export const useGetProjectNotes = () => {
   const [notes, setNotes] = useState(null)
   const [isError, setIsError] = useState(false)
 
-  const fetchById = useCallback(async (projectId) => {
-    const response = await fetchWithoutCache("getProjectNotes", {
-      projectId: projectId,
-    })
-    try {
-      const notesFile = await response.blob()
-      setNotes(notesFile)
-      setIsError(false)
-      return notesFile
-    } catch (error) {
-      console.error(`Failed to extract notes file from response:\n\n${error}`)
-      setIsError(true)
-    }
-  }, [fetchWithoutCache])
+  const fetchById = useCallback(
+    async projectId => {
+      const response = await fetchWithoutCache("getProjectNotes", {
+        projectId: projectId,
+      })
+      try {
+        const notesFile = await response.blob()
+        setNotes(notesFile)
+        setIsError(false)
+        return notesFile
+      } catch (error) {
+        console.error(`Failed to extract notes file from response:\n\n${error}`)
+        setIsError(true)
+      }
+    },
+    [fetchWithoutCache]
+  )
 
   return { data: notes, fetchById, loading, error: error || isError }
 }
@@ -90,19 +97,48 @@ export const useGetProjectMedia = () => {
   const [media, setMedia] = useState(null)
   const [isError, setIsError] = useState(false)
 
-  const fetchById = useCallback(async (projectId) => {
-    const response = await fetchWithoutCache("getProjectMedia", {
-      projectId: projectId,
-    })
+  const fetchById = useCallback(
+    async projectId => {
+      const response = await fetchWithoutCache("getProjectMedia", {
+        projectId: projectId,
+      })
+      try {
+        const mediaFile = await response.blob()
+        setMedia(mediaFile)
+        setIsError(false)
+      } catch (error) {
+        console.error(`Failed to extract media file from response:\n ${error}`)
+        setIsError(true)
+      }
+    },
+    [fetchWithoutCache]
+  )
+  return {
+    data: media,
+    fetchById,
+    loading: loading,
+    error: error || isError,
+  }
+}
+
+export const useGetProjectMediaByUrl = () => {
+  const { wrappedRequest, loading, error } = useWrappedRequest()
+  const [media, setMedia] = useState(null)
+  const [isError, setIsError] = useState(false)
+
+  const fetchByUrl = useCallback(async url => {
     try {
-      const mediaFile = await response.blob()
-      setMedia(mediaFile)
       setIsError(false)
+      const response = await wrappedRequest(async () => await fetch(url))
+      if (!response.ok) throw new Error("HTTP Error: Not ok")
+      const data = await response.blob()
+      setMedia(data)
+      return data
     } catch (error) {
-      console.error(`Failed to extract media file from response:\n ${error}`)
+      console.error("Failed to fetch media by url:", error)
       setIsError(true)
     }
-  }, [fetchWithoutCache])
+  }, [])
 
-  return { data: media, fetchById, loading, error: error || isError }
+  return { data: media, fetchByUrl, loading: loading, error: error || isError }
 }
