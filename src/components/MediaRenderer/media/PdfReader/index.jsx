@@ -1,29 +1,27 @@
-import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { Document, Page } from 'react-pdf'
-import { pdfjs } from 'react-pdf'
-import '../../style/Background.css'
+import React, { useEffect, useImperativeHandle, useRef, useState } from "react"
+import { Document, Page } from "react-pdf"
+import { pdfjs } from "react-pdf"
+import "../../style/Background.css"
 import "react-pdf/dist/Page/TextLayer.css"
-import { Toolbar } from '../../components/Toolbar'
-import { useGetProjectMedia } from '../../../../hooks/useReadData'
-import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { Toolbar } from "../../components/Toolbar"
+import { useGetProjectMedia } from "../../../../hooks/useReadData"
+import { Button } from "@/components/ui/button"
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react"
+import { Input } from "@/components/ui/input"
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
 
-const PdfReader = (
-  {
-    ref,
-    ...props
-  }
-) => {
+const PdfReader = ({ ref, ...props }) => {
   const [source, setSource] = useState(null)
   const [pageNumber, setPageNumber] = useState(1)
+  const [renderedPageNumber, setRenderedPageNumber] = useState(null)
   const [numPages, setNumPages] = useState(0)
   const [pageScale, setPageScale] = useState(1)
-  const [containerWidth, setContainerWidth] = useState(0);
-  const containerRef = useRef(null);
+  const [containerWidth, setContainerWidth] = useState(0)
+  const containerRef = useRef(null)
   const { data: pdf, fetchById: fetchPdfById } = useGetProjectMedia()
+
+  const isLoading = renderedPageNumber !== pageNumber
 
   useEffect(() => {
     if (props.title) {
@@ -44,12 +42,14 @@ const PdfReader = (
       }
     }
     updateWidth()
-    window.addEventListener('resize', updateWidth)
+    window.addEventListener("resize", updateWidth)
 
-    return () => window.removeEventListener('resize', updateWidth)
+    return () => window.removeEventListener("resize", updateWidth)
   }, [])
 
-  useEffect(() => { source ? setPageNumber(1) : setPageNumber(null) }, [source])
+  useEffect(() => {
+    source ? setPageNumber(1) : setPageNumber(null)
+  }, [source])
 
   useImperativeHandle(ref, () => {
     return {
@@ -57,74 +57,84 @@ const PdfReader = (
         if (source) {
           return {
             label: pageNumber ? `p. ${pageNumber}` : null,
-            value: pageNumber
-          } 
+            value: pageNumber,
+          }
         }
       },
       setState: newState => {
         setPageNumber(newState)
       },
-      getMetadata: () => { 
+      getMetadata: () => {
         return {
           ...props,
-          src: '',
-          mimetype: 'application/pdf'
-        } 
+          src: "",
+          mimetype: "application/pdf",
+        }
       },
-      getMedia: () => { 
-        return props.title ? null : source 
-      }
-    } 
+      getMedia: () => {
+        return props.title ? null : source
+      },
+    }
   }, [source, props, pageNumber])
-
 
   return (
     <div className="flex flex-col h-full overflow-hidden diagonal-background">
       <Toolbar className="dark:bg-[#1d2021]">
         {!props.src && !props.title && (
-            <form 
-              onChange={e => setSource(e.target.files[0])} 
-              className="flex w-full max-w-sm items-center gap-1.5"
-            >
-              <Input className="h-6 p-0 text-xs" type="file" accept="application/pdf" />
-            </form>
+          <form
+            onChange={e => setSource(e.target.files[0])}
+            className="flex w-full max-w-sm items-center gap-1.5"
+          >
+            <Input
+              className="h-6 p-0 text-xs"
+              type="file"
+              accept="application/pdf"
+            />
+          </form>
         )}
         <span className="flex ml-auto gap-2 items-right">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="xs"
-            title="Zoom out" 
-            onClick={() => { setPageScale(pageScale - 0.2) }}
+            title="Zoom out"
+            onClick={() => {
+              setPageScale(pageScale - 0.2)
+            }}
           >
             <ZoomOut />
           </Button>
-          <Button 
-            variant="ghost"  
+          <Button
+            variant="ghost"
             size="xs"
-            title="Zoom in" 
-            onClick={() => { setPageScale(pageScale + 0.2) }}
+            title="Zoom in"
+            onClick={() => {
+              setPageScale(pageScale + 0.2)
+            }}
           >
             <ZoomIn />
           </Button>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="xs"
-            title="Previous page" 
-            onClick={() => { pageNumber > 1 && setPageNumber(pageNumber - 1) }}
+            title="Previous page"
+            onClick={() => {
+              pageNumber > 1 && setPageNumber(pageNumber - 1)
+            }}
           >
             <ChevronLeft />
           </Button>
           {source && (
             <span className="text-sm w-20 p-0 text-center inline-block">
               <span>
-                <Input 
-                  className="h-6 text-sm p-0 m-0 w-10 inline-block text-center border-none" 
+                <Input
+                  className="h-6 text-sm p-0 m-0 w-10 inline-block text-center border-none"
                   value={pageNumber}
-                  onSubmit={(e) => {
+                  onSubmit={e => {
                     if (e.target.value > 0 && e.target.value < numPages) {
                       setPageNumber(e.target.value)
-                  }}}
-                  onChange={(e) => {
+                    }
+                  }}
+                  onChange={e => {
                     const value = e.target.value
                     if (/^\d*$/.test(value)) {
                       setPageNumber(value === "" ? "" : parseInt(value, 10))
@@ -138,35 +148,46 @@ const PdfReader = (
               <span>{numPages}</span>
             </span>
           )}
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="xs"
-            title="Next page" 
-            onClick={() => { pageNumber < numPages && setPageNumber(pageNumber + 1) }}
+            title="Next page"
+            onClick={() => {
+              pageNumber < numPages && setPageNumber(pageNumber + 1)
+            }}
           >
             <ChevronRight />
           </Button>
         </span>
       </Toolbar>
-      <div className='diagonal-background overflow-auto' ref={containerRef}
-      >
+      <div className="diagonal-background overflow-auto" ref={containerRef}>
         {source && (
-          <Document 
-            file={source} 
+          <Document
+            file={source}
             onLoadSuccess={({ numPages }) => setNumPages(numPages)}
           >
-            <Page 
-              pageNumber={pageNumber} 
-              renderAnnotationLayer={false} 
-              renderTextLayer={false} 
-              scale={pageScale} 
+            {isLoading && renderedPageNumber ? (
+              <Page
+                key={renderedPageNumber}
+                pageNumber={renderedPageNumber}
+                renderAnnotationLayer={false}
+                scale={pageScale}
+                width={containerWidth}
+              />
+            ) : null}
+            <Page
+              key={pageNumber}
+              pageNumber={pageNumber}
+              onRenderSuccess={() => setRenderedPageNumber(pageNumber)}
+              renderAnnotationLayer={false}
+              scale={pageScale}
               width={containerWidth}
             />
           </Document>
         )}
       </div>
     </div>
-  );
+  )
 }
 
 export default PdfReader
