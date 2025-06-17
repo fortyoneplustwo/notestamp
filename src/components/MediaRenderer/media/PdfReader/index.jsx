@@ -8,6 +8,9 @@ import { useGetProjectMedia } from "../../../../hooks/useReadData"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { Dropzone } from "../../components/Dropzone"
+import { FileUp } from "lucide-react"
+import { FileInput } from "../../components/FileInput"
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
 
@@ -77,90 +80,101 @@ const PdfReader = ({ ref, ...props }) => {
     }
   }, [source, props, pageNumber])
 
+  const handleOnChangeUpload = file => {
+    setSource(file)
+  }
+
   return (
     <div className="flex flex-col h-full overflow-hidden diagonal-background">
-      <Toolbar className="dark:bg-[#1d2021]">
-        {!props.src && !props.title && (
-          <form
-            onChange={e => setSource(e.target.files[0])}
-            className="flex w-full max-w-sm items-center gap-1.5"
-          >
-            <Input
-              className="h-6 p-0 text-xs"
-              type="file"
+      {(props.title || source) && (
+        <Toolbar className="dark:bg-[#1d2021]">
+          {!props.title && source && (
+            <FileInput
               accept="application/pdf"
+              filename={source?.name}
+              onChange={handleOnChangeUpload}
             />
-          </form>
-        )}
-        <span className="flex ml-auto gap-2 items-right">
-          <Button
-            variant="ghost"
-            size="xs"
-            title="Zoom out"
-            onClick={() => {
-              setPageScale(pageScale - 0.2)
-            }}
-          >
-            <ZoomOut />
-          </Button>
-          <Button
-            variant="ghost"
-            size="xs"
-            title="Zoom in"
-            onClick={() => {
-              setPageScale(pageScale + 0.2)
-            }}
-          >
-            <ZoomIn />
-          </Button>
-          <Button
-            variant="ghost"
-            size="xs"
-            title="Previous page"
-            onClick={() => {
-              pageNumber > 1 && setPageNumber(pageNumber - 1)
-            }}
-          >
-            <ChevronLeft />
-          </Button>
-          {source && (
-            <span className="text-sm w-20 p-0 text-center inline-block">
-              <span>
-                <Input
-                  className="h-6 text-sm p-0 m-0 w-10 inline-block text-center border-none"
-                  value={pageNumber}
-                  onSubmit={e => {
-                    if (e.target.value > 0 && e.target.value < numPages) {
-                      setPageNumber(e.target.value)
-                    }
-                  }}
-                  onChange={e => {
-                    const value = e.target.value
-                    if (/^\d*$/.test(value)) {
-                      setPageNumber(value === "" ? "" : parseInt(value, 10))
-                    }
-                  }}
-                  onFocus={e => e.target.select()}
-                  type="text"
-                />
-              </span>
-              <span className="mx-2">/</span>
-              <span>{numPages}</span>
-            </span>
           )}
-          <Button
-            variant="ghost"
-            size="xs"
-            title="Next page"
-            onClick={() => {
-              pageNumber < numPages && setPageNumber(pageNumber + 1)
-            }}
-          >
-            <ChevronRight />
-          </Button>
-        </span>
-      </Toolbar>
-      <div className="diagonal-background overflow-auto" ref={containerRef}>
+          <span className="flex ml-auto gap-2 items-right">
+            <Button
+              variant="ghost"
+              size="xs"
+              title="Zoom out"
+              onClick={() => {
+                setPageScale(pageScale - 0.2)
+              }}
+            >
+              <ZoomOut />
+            </Button>
+            <Button
+              variant="ghost"
+              size="xs"
+              title="Zoom in"
+              onClick={() => {
+                setPageScale(pageScale + 0.2)
+              }}
+            >
+              <ZoomIn />
+            </Button>
+            <Button
+              variant="ghost"
+              size="xs"
+              title="Previous page"
+              onClick={() => {
+                pageNumber > 1 && setPageNumber(pageNumber - 1)
+              }}
+            >
+              <ChevronLeft />
+            </Button>
+            {source && (
+              <span className="text-sm w-20 p-0 text-center inline-block">
+                <span>
+                  <Input
+                    className="h-6 text-sm p-0 m-0 w-10 inline-block text-center border-none"
+                    value={pageNumber}
+                    onSubmit={e => {
+                      if (e.target.value > 0 && e.target.value < numPages) {
+                        setPageNumber(e.target.value)
+                      }
+                    }}
+                    onChange={e => {
+                      const value = e.target.value
+                      if (/^\d*$/.test(value)) {
+                        setPageNumber(value === "" ? "" : parseInt(value, 10))
+                      }
+                    }}
+                    onFocus={e => e.target.select()}
+                    type="text"
+                  />
+                </span>
+                <span className="mx-2">/</span>
+                <span>{numPages}</span>
+              </span>
+            )}
+            <Button
+              variant="ghost"
+              size="xs"
+              title="Next page"
+              onClick={() => {
+                pageNumber < numPages && setPageNumber(pageNumber + 1)
+              }}
+            >
+              <ChevronRight />
+            </Button>
+          </span>
+        </Toolbar>
+      )}
+      {!props.title && !source && (
+        <div className="flex items-center justify-center h-full">
+          <Dropzone
+            icon={FileUp}
+            message="Drop your PDF document here"
+            accept={{ "application/pdf": [] }}
+            onAccept={handleOnChangeUpload}
+          />
+        </div>
+      )}
+      <div className="overflow-auto" ref={containerRef}>
         {source && (
           <Document
             file={source}

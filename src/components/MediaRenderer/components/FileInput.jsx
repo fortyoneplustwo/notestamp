@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { useRef } from "react"
 
-export const FileInput = ({ filename, onOpen }) => {
+export const FileInput = ({ accept, filename, onChange }) => {
   const hiddenInputRef = useRef(null)
   return (
     <span
@@ -12,8 +12,8 @@ export const FileInput = ({ filename, onOpen }) => {
         ref={hiddenInputRef}
         className="hidden"
         type="file"
-        accept="audio/*, video/webm"
-        onChange={e => onOpen(e.target.files[0])}
+        accept={accept}
+        onChange={e => onChange(e.target.files[0])}
       />
       <Button
         variant="primary"
