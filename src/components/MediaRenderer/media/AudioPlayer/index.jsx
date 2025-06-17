@@ -12,25 +12,35 @@ import {
 import { Toolbar } from "../../components/Toolbar"
 import "../../style/Background.css"
 import { formatTime } from "../../utils/formatTime"
-import { Input } from "@/components/ui/input"
 import { useWavesurfer } from "@wavesurfer/react"
 import Hover from "wavesurfer.js/dist/plugins/hover.esm.js"
 import { Button } from "@/components/ui/button"
-import { Play, Pause, LucideRepeat2, RotateCw, RotateCcw } from "lucide-react"
+import {
+  Play,
+  Pause,
+  LucideRepeat2,
+  RotateCw,
+  RotateCcw,
+  VolumeX,
+  Volume2,
+  FileAudio,
+} from "lucide-react"
 import { toast } from "sonner"
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js"
 import { Toggle } from "@/components/ui/toggle"
-import { Volume2 } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
-import { VolumeX } from "lucide-react"
+import { Dropzone } from "../../components/Dropzone"
+import { FileInput } from "../../components/FileInput"
 
 const AudioPlayer = ({ ref, ...props }) => {
   const [uploadedBlob, setUploadedBlob] = useState(null)
   const [audioUrl, setAudioUrl] = useState("")
   const [mimeType, setMimeType] = useState("")
   const [duration, setDuration] = useState(0)
-  const [volume, setVolume] = useState(50)
+  const [volume, setVolume] = useState(100)
   const [isMuted, setIsMuted] = useState(false)
+  const [mediaAvailable, setMediaAvailable] = useState(false)
+
   const containerRef = useRef(null)
   const regionsRef = useRef(null)
   const activeRegionRef = useRef(null)
@@ -61,9 +71,8 @@ const AudioPlayer = ({ ref, ...props }) => {
   }, [])
 
   const { wavesurfer, isPlaying, isReady, currentTime } = useWavesurfer({
-    container: containerRef,
-    waveColor: props.src ? "orangered" : "#3f3f46",
-    url: props.src,
+    container: mediaAvailable ? containerRef : null,
+    waveColor: "orangered",
     cursorColor: "violet",
     dragToSeek: true,
     normalize: true,
@@ -72,7 +81,28 @@ const AudioPlayer = ({ ref, ...props }) => {
 
   useEffect(() => {
     if (!wavesurfer) return
-    if (props.src?.startsWith("blob")) fetchByUrl(props.src)
+
+    // On init, media can come from only 3 possible sources
+    if (props.src?.startsWith("blob")) {
+      // Passed from sound recorder
+      wavesurfer.load(props.src)
+      fetchByUrl(props.src)
+      setAudioUrl(props.src)
+      setMimeType(props?.mimetype)
+    } else if (uploadedBlob) {
+      // Uploaded through dropzone
+      wavesurfer.loadBlob(uploadedBlob)
+      setUploadedBlob(uploadedBlob)
+      const url = window.URL.createObjectURL(uploadedBlob)
+      setAudioUrl(url)
+      setMimeType(uploadedBlob?.type)
+    } else if (blobFromId) {
+      // Fetched from a previously saved project
+      wavesurfer.loadBlob(blobFromId)
+      const url = window.URL.createObjectURL(blobFromId)
+      setAudioUrl(url)
+      setMimeType(blobFromId?.type)
+    }
 
     wavesurfer.on("ready", duration => {
       setDuration(duration)
@@ -89,8 +119,10 @@ const AudioPlayer = ({ ref, ...props }) => {
   useEffect(() => {
     if (props.title) {
       fetchById(props.title)
+    } else if (props.src) {
+      setMediaAvailable(true)
     }
-  }, [props.title, fetchById])
+  }, [])
 
   useEffect(() => {
     if (loadingFetchById) return
@@ -99,11 +131,7 @@ const AudioPlayer = ({ ref, ...props }) => {
       console.error("Error fetching project audio")
       return
     }
-    if (wavesurfer && blobFromId) {
-      const url = window.URL.createObjectURL(blobFromId)
-      wavesurfer.load(url)
-      setStateOnLoad(url, blobFromId?.type)
-    }
+    if (blobFromId) setMediaAvailable(true)
   }, [blobFromId])
 
   useEffect(() => {
@@ -113,19 +141,8 @@ const AudioPlayer = ({ ref, ...props }) => {
       console.error("Error fetching project audio")
       return
     }
-    if (wavesurfer && blobFromUrl) {
-      wavesurfer.load(props.src)
-      setStateOnLoad(props.src, props?.mimetype)
-    }
+    if (blobFromUrl) setMediaAvailable(true)
   }, [blobFromUrl])
-
-  useEffect(() => {
-    if (audioUrl && regionsRef.current) {
-      regionsRef.current.enableDragSelection({
-        color: "rgba(255, 0, 0, 0.1)",
-      })
-    }
-  }, [audioUrl])
 
   useImperativeHandle(ref, () => {
     return {
@@ -160,18 +177,20 @@ const AudioPlayer = ({ ref, ...props }) => {
     }
   }, [props, audioUrl])
 
-  const setStateOnLoad = (url, mimeType) => {
-    window.URL.revokeObjectURL(url)
-    url && setAudioUrl(url)
-    mimeType && setMimeType(mimeType)
+  const handleDropzoneAccept = file => {
+    setMediaAvailable(() => {
+      setUploadedBlob(file)
+      return true
+    })
   }
 
-  const handleOnChangeUploadedAudio = blob => {
-    if (!blob || !wavesurfer) return
-    wavesurfer.loadBlob(blob)
-    setUploadedBlob(blob)
-    const url = window.URL.createObjectURL(blob)
-    setStateOnLoad(url, blob?.type)
+  const handleOnChangeUpload = file => {
+    wavesurfer && wavesurfer.loadBlob(file)
+    window.URL.revokeObjectURL(audioUrl)
+    const url = window.URL.createObjectURL(file)
+    setUploadedBlob(file)
+    setAudioUrl(url)
+    setMimeType(file?.type)
   }
 
   const handlePlayPause = () => {
@@ -214,6 +233,7 @@ const AudioPlayer = ({ ref, ...props }) => {
 
   const handleVolumeChange = value => {
     setVolume(value)
+    wavesurfer && wavesurfer.setVolume(value / 100)
   }
 
   const handleToggleMute = () => {
@@ -227,73 +247,86 @@ const AudioPlayer = ({ ref, ...props }) => {
 
   return (
     <div className="flex flex-col h-full">
-      <Toolbar className="flex gap-6">
-        {!props.src && !props.title && (
-          <form
-            className="flex w-full max-w-sm items-center gap-1.5"
-            onChange={e => handleOnChangeUploadedAudio(e.target.files[0])}
-          >
-            <Input className="h-6 p-0 text-xs" type="file" accept="audio/*" />
-          </form>
-        )}
-        <span className="flex ml-auto items-center">
-          <Button
-            variant="ghost"
-            size="xs"
-            disabled={!isReady}
-            onClick={handleToggleMute}
-          >
-            {isMuted || volume[0] === 0 ? <VolumeX /> : <Volume2 />}
-          </Button>
-          <Slider
-            defaultValue={[volume]}
-            max={100}
-            step={1}
-            className="min-w-20"
-            onValueChange={handleVolumeChange}
-          />
-        </span>
-        <span className="flex gap-2 items-center">
-          <Button
-            variant="ghost"
-            size="xs"
-            disabled={!isReady}
-            onClick={handleRewind}
-          >
-            <RotateCcw />
-          </Button>
-          <Button
-            variant="default"
-            size="xs"
-            disabled={!isReady}
-            onClick={handlePlayPause}
-          >
-            {isPlaying ? <Pause /> : <Play />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="xs"
-            disabled={!isReady}
-            onClick={handleForward}
-          >
-            <RotateCw />
-          </Button>
-        </span>
-        <span className="flex items-center">
-          <Toggle
-            size="xs"
-            disabled={!isReady}
-            onPressedChange={handleToggleLoop}
-          >
-            <LucideRepeat2 />
-          </Toggle>
-        </span>
-      </Toolbar>
+      {(props.src || props.title || mediaAvailable) && (
+        <Toolbar className="gap-3">
+          {mediaAvailable && !props.title && !props.src && (
+            <FileInput
+              filename={uploadedBlob?.name}
+              onOpen={handleOnChangeUpload}
+            />
+          )}
+          <span className="inline-flex grow-1">
+            <span className="flex gap-2 items-center">
+              <Button
+                variant="default"
+                size="xs"
+                disabled={!isReady}
+                onClick={handlePlayPause}
+              >
+                {isPlaying ? <Pause /> : <Play />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="xs"
+                disabled={!isReady}
+                onClick={handleRewind}
+              >
+                <RotateCcw />
+              </Button>
+              <Button
+                variant="ghost"
+                size="xs"
+                disabled={!isReady}
+                onClick={handleForward}
+              >
+                <RotateCw />
+              </Button>
+              <Toggle
+                size="xs"
+                disabled={!isReady}
+                onPressedChange={handleToggleLoop}
+              >
+                <LucideRepeat2 />
+              </Toggle>
+            </span>
+            <span className="flex ml-auto items-center">
+              <Button
+                variant="ghost"
+                size="xs"
+                disabled={!isReady}
+                onClick={handleToggleMute}
+              >
+                {isMuted || volume[0] === 0 ? <VolumeX /> : <Volume2 />}
+              </Button>
+              <Slider
+                defaultValue={[volume]}
+                max={100}
+                step={1}
+                className="min-w-30"
+                onValueChange={handleVolumeChange}
+              />
+            </span>
+          </span>
+        </Toolbar>
+      )}
       <div className="diagonal-background flex flex-col h-full justify-center items-center">
-        <div
-          ref={containerRef}
-          className="w-full bg-white dark:bg-mybgsec border-y border-solid dark:border-[#3f3f46]"
-        />
+        {!mediaAvailable && !props.title && !props.src && (
+          <Dropzone
+            icon={FileAudio}
+            message="Drop your audio file here"
+            accept={{
+              "audio/*": [],
+              "video/webm": [],
+            }}
+            onAccept={handleDropzoneAccept}
+          />
+        )}
+        {(mediaAvailable || props.src) && (
+          <div
+            ref={containerRef}
+            className="w-full bg-white dark:bg-mybgsec border-y border-solid dark:border-[#3f3f46]"
+          />
+        )}
       </div>
     </div>
   )
