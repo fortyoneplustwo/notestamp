@@ -22,7 +22,6 @@ const AppToolbar = ({ metadata, onClose }) => {
   const { deleteById, error: deleteError } = useDeleteProject()
   const { fetchById: fetchNotesById } = useGetProjectNotes()
   const { takeSnapshot } = useProjectContext()
-  const [toastId] = useState(null)
 
   useEffect(() => {
     const handleResize = () => setViewportWidth(window.innerWidth)
@@ -35,20 +34,21 @@ const AppToolbar = ({ metadata, onClose }) => {
     openModal("deleteModal", {
       onClose: closeModal,
       onDelete: async () => {
+        setIsDeleting(true)
+        closeModal()
+        const id = toast.loading("Deleting project")
+        onClose()
         try {
-          setIsDeleting(true)
-          closeModal()
-          onClose()
           await deleteById(snapshot.metadata?.title)
           setIsDeleting(false)
           if (deleteError) throw new Error()
-          toast.success("Project deleted", {
-            id: toastId,
-          })
+          toast.success("Project deleted", { id })
+          refetchAllProjects()
         } catch (error) {
           console.error(error)
           toast.error("Failed to delete project")
         }
+        return
       },
     })
   }
