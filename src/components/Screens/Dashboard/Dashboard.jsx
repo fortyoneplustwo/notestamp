@@ -8,6 +8,7 @@ import { useAppContext } from "../../../context/AppContext"
 import { FolderOpen } from "lucide-react"
 import { DataTable } from "./components/DataTable"
 import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
 
 const Dashboard = ({ onOpenProject }) => {
   const [inputValue, setInputValue] = useState("")
@@ -18,21 +19,21 @@ const Dashboard = ({ onOpenProject }) => {
     error: errorFetchingProjects,
   } = useGetProjects()
   const { dirHandle, getDirHandle } = useGetDirHandle()
-  const { user, syncToFileSystem, cwd, setCwd } = useAppContext()
+  const { user, syncToFileSystem, cwd, setCwd, triggerRefetchAllProjects } =
+    useAppContext()
   const tableRef = useRef(null)
 
   useEffect(() => {
     if (user || cwd) {
       fetchAllProjects()
     }
-  }, [fetchAllProjects])
+  }, [fetchAllProjects, triggerRefetchAllProjects])
 
   useEffect(() => {
     if (!loadingProjects) {
       if (errorFetchingProjects) {
-        // handle error
+        toast.error("Failed to fetch list of projects")
       }
-      console.log(projects)
     }
   }, [errorFetchingProjects, loadingProjects])
 

@@ -1,24 +1,40 @@
-import { useCallback, useState } from 'react'
-import { useCustomFetch } from './useCustomFetch';
+import { useCallback, useState } from "react"
+import { getCacheKey, useCustomFetch } from "./useCustomFetch"
 
 export const useSaveProject = () => {
-  const { fetchWithoutCache, loading, error } = useCustomFetch()
-  const [hasError, setHasError] = useState(false)
+  const { fetchWithoutCache, loading, errorNotOk } = useCustomFetch()
+  const [extractionFailed, setExtractionFailed] = useState(false)
 
-  const saveWithData = useCallback(async (projectData) => {
-    const response = await fetchWithoutCache("saveProject", {
-      metadata: projectData.metadata,
-      media: projectData.media,
-      notes: projectData.notes,
-    })
-    try {
-      setHasError(false)
-      await response.json()
-    } catch (error) {
-      console.error(`Failed to extract projects list from response: ${error}`)
-      setHasError(true)
-    }
-  }, [fetchWithoutCache])
+  const saveWithData = useCallback(
+    async projectData => {
+      try {
+        console.log("saveWithData")
+        const response = await fetchWithoutCache("saveProject", {
+          metadata: projectData.metadata,
+          media: projectData.media,
+          notes: projectData.notes,
+        })
+        if (errorNotOk) return undefined
 
-  return { saveWithData, loading, error: error || hasError }
+        setExtractionFailed(false)
+        const data = await response.json()
+
+        sessionStorage.removeItem(getCacheKey("listProjects"))
+        sessionStorage.setItem(
+          getCacheKey("getProjectNotes", {
+            projectId: projectData.metadata.title,
+          }),
+          JSON.stringify(projectData.notes)
+        )
+
+        return data
+      } catch (error) {
+        console.error(`Failed to extract projects list from response: ${error}`)
+        setExtractionFailed(true)
+      }
+    },
+    [fetchWithoutCache]
+  )
+
+  return { saveWithData, loading, error: errorNotOk || extractionFailed }
 }
