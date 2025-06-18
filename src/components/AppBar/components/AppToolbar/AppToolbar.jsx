@@ -99,18 +99,22 @@ const AppToolbar = ({ metadata, onClose }) => {
         setIsSaving(true)
         closeModal()
         const id = toast.loading("Saving project")
-        await saveWithData({
-          metadata: { ...snapshot.metadata, title },
-          media: snapshot.media,
-          notes: snapshot.notes,
-        })
-        setIsSaving(false)
-        if (saveError) {
+        try {
+          await saveWithData({
+            metadata: { ...snapshot.metadata, title },
+            media: snapshot.media,
+            notes: snapshot.notes,
+          })
+          setIsSaving(false)
+          if (saveError) throw new Error()
+          toast.success("Project saved", { id })
+          refetchAllProjects()
+        } catch (error) {
           toast.error("Save failed", { id })
-          return
+          console.error("Erro saving project:", error)
         }
-        toast.success("Project saved", { id })
-        refetchAllProjects()
+
+        return
       },
     })
   }
