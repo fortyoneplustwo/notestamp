@@ -43,6 +43,7 @@ const AppToolbar = ({ metadata, onClose }) => {
           setIsDeleting(false)
           if (deleteError) throw new Error()
           toast.success("Project deleted", { id })
+          refetchAllProjects()
         } catch (error) {
           console.error(error)
           toast.error("Failed to delete project")
