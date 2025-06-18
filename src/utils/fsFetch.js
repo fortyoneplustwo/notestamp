@@ -1,4 +1,5 @@
 import { toMarkdown } from "@/components/Editor/utils/toMarkdown"
+import { meta } from "@eslint/js"
 
 /**
  * A project is valid if:
@@ -99,7 +100,7 @@ export const fsFetch = async (endpoint, params = null) => {
             }
           }
         }
-        return new new Response(null, status404)
+        return new Response(null, status404)
 
       case "getProjectMedia":
         for await (const entry of params?.cwd?.values() || []) {
@@ -109,8 +110,12 @@ export const fsFetch = async (endpoint, params = null) => {
               const mediaFileHandle = await entry.getFileHandle(
                 `${metadata.title}.${metadata.mimetype.split("/")[1]}`
               )
+
               const mediaFile = await mediaFileHandle.getFile()
-              return new Response(mediaFile, status200)
+              return new Response(mediaFile, {
+                ...status200,
+                headers: { "Content-Type": metadata.mimetype },
+              })
             } else {
               return new Response(null, status500)
             }
