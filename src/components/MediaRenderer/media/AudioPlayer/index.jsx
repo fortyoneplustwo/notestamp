@@ -102,7 +102,7 @@ const AudioPlayer = ({ ref, ...props }) => {
       wavesurfer.loadBlob(blobFromId)
       const url = window.URL.createObjectURL(blobFromId)
       setAudioUrl(url)
-      setMimeType(blobFromId?.type)
+      setMimeType(props?.mimetype)
     }
 
     wavesurfer.on("ready", duration => {
@@ -169,7 +169,7 @@ const AudioPlayer = ({ ref, ...props }) => {
         return wavesurfer
           ? {
               ...props,
-              mimetype: mimeType || props.mimetype,
+              mimetype: props.mimetype || mimeType,
               src: "",
             }
           : null
