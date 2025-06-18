@@ -27,13 +27,13 @@ export const Dropzone = ({ icon: Icon, message, accept, onAccept }) => {
       className={`flex items-center justify-center p-15 ${isDragEnter && "border-[orangered]"}`}
     >
       <input {...getInputProps()} />
-      <CardContent className={`flex flex-col items-center gap-5 text-sm `}>
+      <CardContent className={`flex flex-col items-center gap-5 text-xs `}>
         <Icon size={36} strokeWidth={1} />
         <p className="flex flex-col items-center text-[grey]">
           <span>{message}</span>
           <span>or</span>
         </p>
-        <Button size="sm" onClick={open}>
+        <Button size="xs" onClick={open}>
           Browse file
         </Button>
       </CardContent>
