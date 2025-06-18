@@ -19,6 +19,7 @@ import { useCreateEditor } from "./components/Editor/hooks/useCreateEditor"
 import { useContent } from "./components/Editor/hooks/useContent"
 import { Joyride, Tooltip, useJoyride } from "./features/guided-tour"
 import "./index.css"
+import { toast } from "sonner"
 
 const App = () => {
   const mediaRendererRef = useRef(null)
@@ -31,31 +32,12 @@ const App = () => {
   const { user, setUser, syncToFileSystem } = useAppContext()
   const { steps, run, stepIndex, handleOnBeginTour, handleJoyrideCallback } =
     useJoyride()
-  const {
-    data: fetchedNotes,
-    fetchById: fetchNotesById,
-    loading: loadingNotes,
-    error: errorFetchingNotes,
-  } = useGetProjectNotes()
+  const { fetchById: fetchNotesById, error: errorFetchingNotes } =
+    useGetProjectNotes()
 
   useEffect(() => {
     setUser(userData)
   }, [userData, setUser])
-
-  useEffect(() => {
-    if (!fetchedNotes) return
-    const reader = new FileReader()
-    reader.onload = () => setContent(editor, reader.result)
-    reader.onerror = error =>
-      console.error(`Error reading notes file:\n${error}`)
-    reader.readAsText(fetchedNotes)
-  }, [fetchedNotes])
-
-  useEffect(() => {
-    if (!loadingNotes && errorFetchingNotes) {
-      // handle error
-    }
-  }, [loadingNotes, errorFetchingNotes])
 
   const handleOpenNewProject = (label, type) => {
     setIsProjectOpen(() => {
@@ -70,10 +52,14 @@ const App = () => {
     })
   }
 
-  const handleOpenProject = metadata => {
-    fetchNotesById(metadata?.title)
+  const handleOpenProject = async metadata => {
     setCurrProjectMetadata(metadata)
     setIsProjectOpen(true)
+    const notes = await fetchNotesById(metadata?.title)
+    if (errorFetchingNotes || !notes) {
+      toast.error("Failed to fetch notes")
+    }
+    setContent(editor, notes)
   }
 
   const handleGetMediaState = dateStampRequested => {

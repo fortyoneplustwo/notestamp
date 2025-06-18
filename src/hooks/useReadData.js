@@ -47,12 +47,12 @@ export const useGetProjectMetadata = () => {
 }
 
 export const useGetProjects = () => {
-  const { fetchWithoutCache, loading, error } = useCustomFetch()
+  const { fetchWithCache, loading, error } = useCustomFetch()
   const [projects, setProjects] = useState(null)
   const [isError, setIsError] = useState(false)
 
   const fetchAll = useCallback(async () => {
-    const response = await fetchWithoutCache("listProjects")
+    const response = await fetchWithCache("listProjects")
     try {
       const data = await response.json()
       setProjects(data.projects)
@@ -61,32 +61,44 @@ export const useGetProjects = () => {
       console.error(`Failed to extract projects list from response: ${error}`)
       setIsError(true)
     }
-  }, [fetchWithoutCache])
+  }, [fetchWithCache])
 
   return { data: projects, fetchAll, loading, error: error || isError }
 }
 
 export const useGetProjectNotes = () => {
-  const { fetchWithoutCache, loading, error } = useCustomFetch()
-  const [notes, setNotes] = useState(null)
+  const { fetchWithCache, loading, error } = useCustomFetch()
+  const [notes, setNotes] = useState("")
   const [isError, setIsError] = useState(false)
 
   const fetchById = useCallback(
     async projectId => {
-      const response = await fetchWithoutCache("getProjectNotes", {
-        projectId: projectId,
-      })
       try {
+        const response = await fetchWithCache("getProjectNotes", {
+          projectId: projectId,
+        })
+        if (error) return undefined
+
         const notesFile = await response.blob()
-        setNotes(notesFile)
+        const readFile = file =>
+          new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result)
+            reader.onerror = error =>
+              reject(new Error("Error reading notes file:", error))
+            reader.readAsText(file)
+          })
+        const notes = await readFile(notesFile)
+
         setIsError(false)
-        return notesFile
+        setNotes(notes)
+        return notes
       } catch (error) {
-        console.error(`Failed to extract notes file from response:\n\n${error}`)
+        console.error("Failed to extract notes file from response:", error)
         setIsError(true)
       }
     },
-    [fetchWithoutCache]
+    [fetchWithCache]
   )
 
   return { data: notes, fetchById, loading, error: error || isError }
