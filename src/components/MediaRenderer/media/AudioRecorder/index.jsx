@@ -26,6 +26,7 @@ const AudioRecorder = ({ ref, ...props }) => {
     cursorColor: "transparent",
     fillParent: true,
     minPxPerSec: 1,
+    blobMimeType: "audio/webm",
   })
 
   // display a fake waveform as placeholder on init
@@ -59,13 +60,12 @@ const AudioRecorder = ({ ref, ...props }) => {
       })
 
       recorder.on("record-end", blob => {
-        console.log(blob)
         setStopped(true)
         const url = window.URL.createObjectURL(blob)
         EventEmitter.dispatch("open-media-with-src", {
           type: "audio",
           src: url,
-          mimetype: "audio/webm",
+          mimetype: blob && blob.type?.split(";")[0],
         })
       })
     }
@@ -97,10 +97,10 @@ const AudioRecorder = ({ ref, ...props }) => {
     try {
       wavesurfer.empty() // clear placeholder
       if (!recorderRef.current) return
+      await recorderRef.current.startRecording()
       wavesurfer.setOptions({
         waveColor: "orangered",
       })
-      await recorderRef.current.startRecording()
       setStarted(true)
     } catch (error) {
       toast.error("Failed to start recording")
