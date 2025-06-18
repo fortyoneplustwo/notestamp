@@ -76,6 +76,7 @@ const App = () => {
 
   EventEmitter.subscribe("open-media-with-src", data => {
     setCurrProjectMetadata({
+      ...data,
       label: "Audio Player",
       type: data.type,
       src: data.src,

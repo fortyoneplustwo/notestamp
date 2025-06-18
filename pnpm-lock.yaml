@@ -110,6 +110,9 @@ importers:
       '@testing-library/user-event':
         specifier: ^13.2.1
         version: 13.5.0(@testing-library/dom@8.20.1)
+      '@wavesurfer/react':
+        specifier: ^1.0.11
+        version: 1.0.11(react@19.1.0)(wavesurfer.js@7.9.5)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -167,6 +170,9 @@ importers:
       react-dom:
         specifier: ^19.1.0
         version: 19.1.0(react@19.1.0)
+      react-dropzone:
+        specifier: ^14.3.8
+        version: 14.3.8(react@19.1.0)
       react-hook-form:
         specifier: ^7.56.1
         version: 7.56.1(react@19.1.0)
@@ -182,9 +188,6 @@ importers:
       react-router-dom:
         specifier: ^6.14.2
         version: 6.30.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      react-voice-visualizer:
-        specifier: ^2.0.5
-        version: 2.0.8(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-youtube:
         specifier: ^10.1.0
         version: 10.1.0(react@19.1.0)
@@ -215,6 +218,9 @@ importers:
       vaul:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@18.3.6(@types/react@18.3.20))(@types/react@18.3.20)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      wavesurfer.js:
+        specifier: ^7.9.5
+        version: 7.9.5
       web-vitals:
         specifier: ^2.1.0
         version: 2.1.4
@@ -1978,6 +1984,12 @@ packages:
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0
 
+  '@wavesurfer/react@1.0.11':
+    resolution: {integrity: sha512-DRpaA3MRTKy4Jby12xvoHASa+w31FZtxaqanXcJjfqNqfamkKi8VJfRnz+Uub9LkpdgoAc3g5SuZF75lEcGgzQ==}
+    peerDependencies:
+      react: ^18.2.0 || ^19.0.0
+      wavesurfer.js: '>=7.7.14'
+
   abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
 
@@ -2070,6 +2082,10 @@ packages:
   async-function@1.0.0:
     resolution: {integrity: sha512-hsU18Ae8CDTR6Kgu9DYf0EbCr/a5iGL0rytQDobUcdpYOKokk8LEjVphnXkDkgpi0wYVsqrXuP0bZxJaTqdgoA==}
     engines: {node: '>= 0.4'}
+
+  attr-accept@2.2.5:
+    resolution: {integrity: sha512-0bDNnY/u6pPwHDMoF0FieU354oBi0a8rD9FcsLwzcGWbc8KS8KPIi7y+s13OlVY+gMWc/9xEMUgNE6Qm8ZllYQ==}
+    engines: {node: '>=4'}
 
   available-typed-arrays@1.0.7:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
@@ -2563,6 +2579,10 @@ packages:
   file-entry-cache@8.0.0:
     resolution: {integrity: sha512-XXTUwCvisa5oacNGRP9SfNtYBNAMi+RPwBFmblZEF7N7swHYQS6/Zfk7SRwx4D5j3CH211YNRco1DEMNVfZCnQ==}
     engines: {node: '>=16.0.0'}
+
+  file-selector@2.1.2:
+    resolution: {integrity: sha512-QgXo+mXTe8ljeqUFaX3QVHc5osSItJ/Km+xpocx0aSqWGMSCf6qYs/VnzZgS864Pjn5iceMRFigeAV7AfTlaig==}
+    engines: {node: '>= 12'}
 
   fill-range@7.1.1:
     resolution: {integrity: sha512-YsGpe3WHLK8ZYi4tWDg2Jy3ebRz2rXowDxnld4bkQB00cc/1Zw9AWnC0i9ztDJitivtQvaI9KaLyKrc+hBW0yg==}
@@ -3460,6 +3480,12 @@ packages:
     peerDependencies:
       react: ^19.1.0
 
+  react-dropzone@14.3.8:
+    resolution: {integrity: sha512-sBgODnq+lcA4P296DY4wacOZz3JFpD99fp+hb//iBO2HHnyeZU3FwWyXJ6salNpqQdsZrgMrotuko/BdJMV8Ug==}
+    engines: {node: '>= 10.13'}
+    peerDependencies:
+      react: '>= 16.8 || 18.0.0'
+
   react-floater@0.7.9:
     resolution: {integrity: sha512-NXqyp9o8FAXOATOEo0ZpyaQ2KPb4cmPMXGWkx377QtJkIXHlHRAGer7ai0r0C1kG5gf+KJ6Gy+gdNIiosvSicg==}
     peerDependencies:
@@ -3567,12 +3593,6 @@ packages:
     peerDependencies:
       react: '>=16.6.0'
       react-dom: '>=16.6.0'
-
-  react-voice-visualizer@2.0.8:
-    resolution: {integrity: sha512-oA/IyNeh15+mERgm2n33IAqQaMGBEFN1n3gs2V/0LbLyscqsbhNo8JOFXh2I9neIqYJ4q27TEzXzbO00Xq/aXg==}
-    peerDependencies:
-      react: ^18.2.0
-      react-dom: ^18.2.0
 
   react-youtube@10.1.0:
     resolution: {integrity: sha512-ZfGtcVpk0SSZtWCSTYOQKhfx5/1cfyEW1JN/mugGNfAxT3rmVJeMbGpA9+e78yG21ls5nc/5uZJETE3cm3knBg==}
@@ -4072,6 +4092,9 @@ packages:
 
   warning@4.0.3:
     resolution: {integrity: sha512-rpJyN222KWIvHJ/F53XSZv0Zl/accqHR8et1kpaMTD/fLCRxtV8iX8czMzY7sVZupTI3zcUTg8eycS2kNF9l6w==}
+
+  wavesurfer.js@7.9.5:
+    resolution: {integrity: sha512-ioOG9chuAn0bF2NYYKkZtaxjcQK/hFskLg8ViLYbJHhWPk1N5wWtuqVhqeh2ZWT2SK3t0E8UkD7lLDLuZQQaSA==}
 
   web-vitals@2.1.4:
     resolution: {integrity: sha512-sVWcwhU5mX6crfI5Vd2dC4qchyTqxV8URinzt25XqVh+bHEPGH4C3NPrNionCP7Obx59wrYEbNlw4Z8sjALzZg==}
@@ -6061,6 +6084,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@wavesurfer/react@1.0.11(react@19.1.0)(wavesurfer.js@7.9.5)':
+    dependencies:
+      react: 19.1.0
+      wavesurfer.js: 7.9.5
+
   abbrev@1.1.1:
     optional: true
 
@@ -6178,6 +6206,8 @@ snapshots:
       is-array-buffer: 3.0.5
 
   async-function@1.0.0: {}
+
+  attr-accept@2.2.5: {}
 
   available-typed-arrays@1.0.7:
     dependencies:
@@ -6820,6 +6850,10 @@ snapshots:
   file-entry-cache@8.0.0:
     dependencies:
       flat-cache: 4.0.1
+
+  file-selector@2.1.2:
+    dependencies:
+      tslib: 2.8.1
 
   fill-range@7.1.1:
     dependencies:
@@ -7744,6 +7778,13 @@ snapshots:
       react: 19.1.0
       scheduler: 0.26.0
 
+  react-dropzone@14.3.8(react@19.1.0):
+    dependencies:
+      attr-accept: 2.2.5
+      file-selector: 2.1.2
+      prop-types: 15.8.1
+      react: 19.1.0
+
   react-floater@0.7.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       deepmerge: 4.3.1
@@ -7866,11 +7907,6 @@ snapshots:
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
       prop-types: 15.8.1
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
-
-  react-voice-visualizer@2.0.8(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
-    dependencies:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
@@ -8465,6 +8501,8 @@ snapshots:
   warning@4.0.3:
     dependencies:
       loose-envify: 1.4.0
+
+  wavesurfer.js@7.9.5: {}
 
   web-vitals@2.1.4: {}
 

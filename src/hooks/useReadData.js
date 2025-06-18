@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react"
 import { useCustomFetch } from "./useCustomFetch"
+import { useWrappedRequest } from "./useWrappedRequest"
 
 export const useGetUserData = () => {
   const { fetchWithoutCache, loading, error } = useCustomFetch()
@@ -124,6 +125,32 @@ export const useGetProjectMedia = () => {
     },
     [fetchWithoutCache]
   )
+  return {
+    data: media,
+    fetchById,
+    loading: loading,
+    error: error || isError,
+  }
+}
 
-  return { data: media, fetchById, loading, error: error || isError }
+export const useGetProjectMediaByUrl = () => {
+  const { wrappedRequest, loading, error } = useWrappedRequest()
+  const [media, setMedia] = useState(null)
+  const [isError, setIsError] = useState(false)
+
+  const fetchByUrl = useCallback(async url => {
+    try {
+      setIsError(false)
+      const response = await wrappedRequest(async () => await fetch(url))
+      if (!response.ok) throw new Error("HTTP Error: Not ok")
+      const data = await response.blob()
+      setMedia(data)
+      return data
+    } catch (error) {
+      console.error("Failed to fetch media by url:", error)
+      setIsError(true)
+    }
+  }, [])
+
+  return { data: media, fetchByUrl, loading: loading, error: error || isError }
 }
