@@ -125,7 +125,7 @@ const AppToolbar = ({ metadata, onClose }) => {
     try {
       const snapshot = takeSnapshot()
       const cachedNotes = await fetchNotesById(metadata.title)
-      if (cachedNotes || cachedNotes === JSON.stringify(snapshot?.notes)) {
+      if (cachedNotes === JSON.stringify(snapshot?.notes)) {
         return onClose()
       }
 
