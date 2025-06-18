@@ -1,38 +1,7 @@
 import { toMarkdown } from "@/components/Editor/utils/toMarkdown"
 
-/** Custom response object that mimics
- * the one received from javascript's fetch()
- */
-class FsFetchResponse {
-  constructor(data = undefined, ok = false) {
-    this.data = data
-    this.ok = ok
-  }
-
-  async json() {
-    try {
-      return JSON.parse(this.data)
-    } catch (e) {
-      console.error(e)
-      throw new Error("Invalid JSON format")
-    }
-  }
-
-  async blob() {
-    try {
-      if (this.data instanceof Blob) {
-        return this.data
-      } else {
-        throw new Error()
-      }
-    } catch (e) {
-      console.error(e)
-      throw new Error("Invalid blob")
-    }
-  }
-}
-
-/** A project is valid if:
+/**
+ * A project is valid if:
  * it is a directory,
  * the directory contains a json file called "metadata",
  * the metadata's keys are all valid keys,
@@ -81,6 +50,25 @@ const writeFile = async (file, dirHandle) => {
   await writableStream.close()
 }
 
+/**
+ * Response options
+ */
+const status200 = {
+  headers: {
+    "Content-Type": "application/json",
+  },
+}
+
+const status500 = {
+  status: 500,
+  statusText: "Internal Server Error",
+}
+
+const status404 = {
+  status: 404,
+  statusText: "Not found",
+}
+
 export const fsFetch = async (endpoint, params = null) => {
   console.log("fsFetch: ", endpoint, params)
   try {
@@ -97,7 +85,7 @@ export const fsFetch = async (endpoint, params = null) => {
         }
         await Promise.all(promises) // Check for validity in parallel
         const data = JSON.stringify({ projects: validProjects })
-        return new FsFetchResponse(data, true)
+        return new Response(data, status200)
       }
 
       case "getProjectMetadata":
@@ -105,13 +93,13 @@ export const fsFetch = async (endpoint, params = null) => {
           if (entry.name === params?.projectId) {
             const metadata = await isValidProject(entry)
             if (metadata) {
-              return new FsFetchResponse(JSON.stringify(metadata), true)
+              return new Response(JSON.stringify(metadata), status200)
             } else {
-              return new FsFetchResponse() // Metadata invalid
+              return new Response(null, status500)
             }
           }
         }
-        return new FsFetchResponse() // Project not found
+        return new new Response(null, status404)
 
       case "getProjectMedia":
         for await (const entry of params?.cwd?.values() || []) {
@@ -122,13 +110,13 @@ export const fsFetch = async (endpoint, params = null) => {
                 `${metadata.title}.${metadata.mimetype.split("/")[1]}`
               )
               const mediaFile = await mediaFileHandle.getFile()
-              return new FsFetchResponse(mediaFile, true)
+              return new Response(mediaFile, status200)
             } else {
-              return new FsFetchResponse() // Metadata invalid
+              return new Response(null, status500)
             }
           }
         }
-        return new FsFetchResponse() // Project not found
+        return new Response(null, status404)
 
       case "getProjectNotes":
         for await (const entry of params?.cwd?.values() || []) {
@@ -139,13 +127,13 @@ export const fsFetch = async (endpoint, params = null) => {
                 `.${metadata.title}.json`
               )
               const notesFile = await notesFileHandle.getFile()
-              return new FsFetchResponse(notesFile, true)
+              return new Response(notesFile, status200)
             } else {
-              return new FsFetchResponse() // Metadata invalid
+              return new Response(null, status500)
             }
           }
         }
-        return new FsFetchResponse() // Project not found
+        return new Response(null, status404)
 
       case "saveProject": {
         const metadataFile =
@@ -195,10 +183,7 @@ export const fsFetch = async (endpoint, params = null) => {
           writeFile(file, newProjectDirHandle)
         )
         await Promise.all(writePromises)
-        return new FsFetchResponse(
-          JSON.stringify({ msg: "save success" }),
-          true
-        )
+        return new Response(JSON.stringify({ msg: "save success" }), status200)
       }
 
       case "deleteProject":
@@ -209,16 +194,13 @@ export const fsFetch = async (endpoint, params = null) => {
               await params?.cwd?.removeEntry(params?.projectId, {
                 recursive: true,
               })
-              return new FsFetchResponse(
-                JSON.stringify({ msg: "deleted" }),
-                true
-              )
+              return new Response(JSON.stringify({ msg: "deleted" }), status200)
             } else {
-              return new FsFetchResponse() // Metadata invalid
+              return new Response(null, status500)
             }
           }
         }
-        return new FsFetchResponse() // Project not found
+        return new Response(null, status404)
 
       default:
         throw new Error("Invalid endpoint")
