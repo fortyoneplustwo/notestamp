@@ -2,15 +2,14 @@ import { useCallback, useState } from "react"
 import { useCustomFetch, getCacheKey } from "./useCustomFetch"
 
 export const useUpdateProject = () => {
-  const { fetchWithoutCache, loading, errorNotOk } = useCustomFetch()
+  const { fetchWithCache, loading, errorNotOk } = useCustomFetch()
   const [extractionFailed, setExtractionFailed] = useState(false)
 
   const updateWithData = useCallback(
     async projectData => {
       try {
-        const response = await fetchWithoutCache("saveProject", {
+        const response = await fetchWithCache("saveProject", {
           metadata: projectData.metadata,
-          media: projectData.media,
           notes: projectData.notes,
         })
         if (errorNotOk) return undefined
@@ -28,11 +27,11 @@ export const useUpdateProject = () => {
 
         return data
       } catch (error) {
-        console.error(`Failed to extract projects list from response: ${error}`)
+        console.error(`Failed to extract message from response: ${error}`)
         setExtractionFailed(true)
       }
     },
-    [fetchWithoutCache]
+    [fetchWithCache]
   )
 
   return { updateWithData, loading, error: errorNotOk || extractionFailed }

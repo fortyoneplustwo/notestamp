@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { useSaveProject } from "@/hooks/useWriteData"
-import { useDeleteProject } from "@/hooks/useUpdateData"
+import { useDeleteProject, useUpdateProject } from "@/hooks/useUpdateData"
 import { useGetProjectNotes } from "@/hooks/useReadData"
 import { useModal } from "@/context/ModalContext"
 import { useProjectContext } from "@/context/ProjectContext"
@@ -18,10 +18,11 @@ const AppToolbar = ({ metadata, onClose }) => {
   const { openModal, closeModal } = useModal()
   const { user, cwd, refetchAllProjects } = useAppContext()
   const { saveWithData, error: saveError } = useSaveProject()
+  const { updateWithData, error: updateError } = useUpdateProject()
   const { deleteById, error: deleteError } = useDeleteProject()
   const { fetchById: fetchNotesById } = useGetProjectNotes()
   const { takeSnapshot } = useProjectContext()
-  const [toastId, setToastId] = useState(null)
+  const [toastId] = useState(null)
 
   useEffect(() => {
     const handleResize = () => setViewportWidth(window.innerWidth)
@@ -52,22 +53,30 @@ const AppToolbar = ({ metadata, onClose }) => {
     })
   }
 
-  const handleSaveProject = () => {
+  const handleSaveProject = async () => {
     const snapshot = takeSnapshot()
 
     // Case: Existitng project
     if (metadata?.title) {
       if (!snapshot.metadata || !snapshot.notes) {
-        closeModal()
         toast.error("Invalid project")
         return
       }
-      saveWithData({
-        metadata: { ...snapshot.metadata },
-        notes: snapshot.notes,
-      })
+      setIsSaving(true)
       const id = toast.loading("Saving project")
-      setToastId(id)
+      try {
+        await updateWithData({
+          metadata: { ...snapshot.metadata },
+          notes: snapshot.notes,
+        })
+        setIsSaving(false)
+        if (updateError) throw new Error()
+        toast.success("Project saved", { id })
+        refetchAllProjects()
+      } catch (error) {
+        toast.error("Update failed", { id })
+        console.error("Error updating project:", error)
+      }
       return
     }
 
