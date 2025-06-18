@@ -40,6 +40,7 @@ const AudioPlayer = ({ ref, ...props }) => {
   const [volume, setVolume] = useState(100)
   const [isMuted, setIsMuted] = useState(false)
   const [mediaAvailable, setMediaAvailable] = useState(false)
+  const [loopActive, setLoopActive] = useState(false)
 
   const containerRef = useRef(null)
   const regionsRef = useRef(null)
@@ -110,6 +111,8 @@ const AudioPlayer = ({ ref, ...props }) => {
       setVolume(wavesurfer.getVolume())
     })
 
+    wavesurfer.on("error", error => toast.error(error.message))
+
     return () => {
       audioUrl && window.URL.revokeObjectURL(audioUrl)
       wavesurfer && wavesurfer.destroy()
@@ -159,7 +162,7 @@ const AudioPlayer = ({ ref, ...props }) => {
       setState: newState => {
         if (wavesurfer) {
           wavesurfer.setTime(newState)
-          wavesurfer.playPause()
+          wavesurfer.play()
         }
       },
       getMetadata: () => {
@@ -208,10 +211,14 @@ const AudioPlayer = ({ ref, ...props }) => {
   const handleToggleLoop = pressed => {
     if (pressed && wavesurfer) {
       regionsRef.current = wavesurfer.registerPlugin(RegionsPlugin.create())
-      regionsRef.current &&
-        regionsRef.current.enableDragSelection({
-          color: "rgba(255, 0, 0, 0.1)",
-        })
+      if (!regionsRef.current) {
+        setLoopActive(false)
+        return
+      }
+      setLoopActive(true)
+      regionsRef.current.enableDragSelection({
+        color: "rgba(255, 0, 0, 0.1)",
+      })
       regionsRef.current.on(
         "region-in",
         region => (activeRegionRef.current = region)
@@ -225,6 +232,7 @@ const AudioPlayer = ({ ref, ...props }) => {
         region.play()
       })
     } else {
+      setLoopActive(false)
       activeRegionRef.current = null
       regionsRef.current.clearRegions()
       regionsRef.current && regionsRef.current.destroy()
@@ -260,6 +268,9 @@ const AudioPlayer = ({ ref, ...props }) => {
               <Button
                 variant="default"
                 size="xs"
+                aria-label="Toggle play/pause"
+                aria-pressed={isPlaying}
+                title="Play/pause"
                 disabled={!isReady}
                 onClick={handlePlayPause}
               >
@@ -268,6 +279,7 @@ const AudioPlayer = ({ ref, ...props }) => {
               <Button
                 variant="ghost"
                 size="xs"
+                title="Skip backward"
                 disabled={!isReady}
                 onClick={handleRewind}
               >
@@ -276,14 +288,20 @@ const AudioPlayer = ({ ref, ...props }) => {
               <Button
                 variant="ghost"
                 size="xs"
+                title="Skip forward"
                 disabled={!isReady}
                 onClick={handleForward}
               >
                 <RotateCw />
               </Button>
               <Toggle
+                aria-label="Toggle loop"
+                aria-pressed={loopActive}
+                variant="toolbar"
                 size="xs"
+                title="Loop region"
                 disabled={!isReady}
+                pressed={loopActive}
                 onPressedChange={handleToggleLoop}
               >
                 <LucideRepeat2 />
@@ -291,14 +309,18 @@ const AudioPlayer = ({ ref, ...props }) => {
             </span>
             <span className="flex ml-auto items-center">
               <Button
+                aria-label="Toggle mute/unmute"
+                aria-pressed={isMuted || volume === 0}
                 variant="ghost"
                 size="xs"
+                title="Mute/unmute"
                 disabled={!isReady}
                 onClick={handleToggleMute}
               >
                 {isMuted || volume[0] === 0 ? <VolumeX /> : <Volume2 />}
               </Button>
               <Slider
+                title="Volume slider"
                 defaultValue={[volume]}
                 max={100}
                 step={1}
