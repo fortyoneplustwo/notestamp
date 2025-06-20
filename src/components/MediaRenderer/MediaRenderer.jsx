@@ -19,6 +19,14 @@ const MediaRenderer = ({ ref, metadata }) => {
     ? lazyLoadedMediaComponents.get(metadata.type)
     : null
 
+  if (!MediaComponent) {
+    return (
+      <div className="h-full items-center justify-center">
+        <p>Oops! This media component does not exist.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="h-full overflow-hidden">
       <Suspense fallback={<Loading />}>
