@@ -5,6 +5,7 @@ export const FileInput = ({ accept, filename, onChange }) => {
   const hiddenInputRef = useRef(null)
   return (
     <span
+      data-testid="file-input"
       className="bg-background px-3 py-0 rounded-md min-w-20 w-xs shadow-xs text-foreground truncate whitespace-nowrap overflow-hidden text-xs"
       onClick={() => hiddenInputRef.current?.click()}
     >

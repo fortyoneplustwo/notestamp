@@ -254,11 +254,12 @@ const AudioPlayer = ({ ref, ...props }) => {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div data-testid="audio-player" className="flex flex-col h-full">
       {(props.src || props.title || mediaAvailable) && (
         <Toolbar className="gap-3">
           {mediaAvailable && !props.title && !props.src && (
             <FileInput
+              data-testid="change-file-input"
               filename={uploadedBlob?.name}
               onOpen={handleOnChangeUpload}
             />
@@ -345,6 +346,7 @@ const AudioPlayer = ({ ref, ...props }) => {
         )}
         {(mediaAvailable || props.src) && (
           <div
+            data-testid="wavesurfer-container"
             ref={containerRef}
             className="w-full bg-white dark:bg-mybgsec border-y border-solid dark:border-[#3f3f46]"
           />

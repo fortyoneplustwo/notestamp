@@ -70,7 +70,7 @@ const YoutubePlayer = ({ ref, ...props }) => {
 
   return (
     <div data-testid="youtube" className="flex flex-col h-full">
-      {!props.src && (
+      {!props.src && !props.title && (
         <Toolbar className="flex justify-center">
           <form
             onSubmit={handleSubmitUrl}

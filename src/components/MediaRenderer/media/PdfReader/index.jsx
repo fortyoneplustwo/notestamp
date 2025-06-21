@@ -85,7 +85,10 @@ const PdfReader = ({ ref, ...props }) => {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden diagonal-background">
+    <div
+      data-testid="pdf-reader"
+      className="flex flex-col h-full overflow-hidden diagonal-background"
+    >
       {(props.title || source) && (
         <Toolbar className="dark:bg-[#1d2021]">
           {!props.title && source && (
