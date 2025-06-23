@@ -14,5 +14,10 @@ export default defineConfig(() => {
         "@": path.resolve(__dirname, "./src"), // eslint-disable-line
       },
     },
+    test: {
+      environment: "jsdom",
+      globals: true,
+      setupFiles: "./vitest.setup.js",
+    },
   };
 });

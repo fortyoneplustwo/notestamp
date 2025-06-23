@@ -157,7 +157,7 @@ const AudioRecorder = ({ ref, ...props }) => {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div data-testid="recorder" className="flex flex-col h-full">
       <Toolbar className="flex justify-center">
         <ToggleGroup
           type="single"
@@ -192,10 +192,10 @@ const AudioRecorder = ({ ref, ...props }) => {
       </Toolbar>
       <div className="diagonal-background flex flex-col justify-center items-center w-full h-full">
         <div
+          data-testid="wavesurfer-container"
           ref={containerRef}
           className="w-full bg-white dark:bg-mybgsec border-y border-solid dark:border-[#3f3f46]"
         />
-        <div></div>
       </div>
     </div>
   )

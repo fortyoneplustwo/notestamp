@@ -23,6 +23,7 @@ export const Dropzone = ({ icon: Icon, message, accept, onAccept }) => {
 
   return (
     <Card
+      data-testid="dropzone"
       {...getRootProps()}
       className={`flex items-center justify-center p-15 ${isDragEnter && "border-[orangered]"}`}
     >
