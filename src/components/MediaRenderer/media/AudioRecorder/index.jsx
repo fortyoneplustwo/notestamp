@@ -170,6 +170,7 @@ const AudioRecorder = ({ ref, ...props }) => {
           <ToggleGroupItem
             value="record"
             aria-label="Toggle record"
+            data-tour-id="record-btn"
             disabled={(started && !paused) || stopped}
           >
             <Circle size={16} fill="red" strokeWidth={0} />
@@ -184,6 +185,7 @@ const AudioRecorder = ({ ref, ...props }) => {
           <ToggleGroupItem
             value="stop"
             aria-label="Toggle stop"
+            data-tour-id="stop-btn"
             disabled={!started || stopped}
           >
             <Square size={16} />
