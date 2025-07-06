@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Dropzone } from "../../components/Dropzone"
 import { FileUp } from "lucide-react"
 import { FileInput } from "../../components/FileInput"
+import isHotkey from "is-hotkey"
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
 
@@ -23,6 +24,13 @@ const PdfReader = ({ ref, ...props }) => {
   const [containerWidth, setContainerWidth] = useState(0)
   const containerRef = useRef(null)
   const { data: pdf, fetchById: fetchPdfById } = useGetProjectMedia()
+
+  const hotkeyActions = new Map([
+    ["mod+[", () => handleZoomOut()],
+    ["mod+]", () => handleZoomIn()],
+    ["mod+9", () => handlePagePrev()],
+    ["mod+0", () => handlePageNext()],
+  ])
 
   const isLoading = renderedPageNumber !== pageNumber
 
@@ -77,11 +85,35 @@ const PdfReader = ({ ref, ...props }) => {
       getMedia: () => {
         return props.title ? null : source
       },
+      handleHotkey: event => {
+        for (const [hotkey, action] of hotkeyActions.entries()) {
+          if (isHotkey(hotkey, event)) {
+            event.preventDefault()
+            return action()
+          }
+        }
+      },
     }
   }, [source, props, pageNumber])
 
   const handleOnChangeUpload = file => {
     setSource(file)
+  }
+
+  const handlePageNext = () => {
+    pageNumber < numPages && setPageNumber(pageNumber + 1)
+  }
+
+  const handlePagePrev = () => {
+    pageNumber > 1 && setPageNumber(pageNumber - 1)
+  }
+
+  const handleZoomIn = () => {
+    setPageScale(pageScale + 0.2)
+  }
+
+  const handleZoomOut = () => {
+    setPageScale(pageScale - 0.2)
   }
 
   return (
@@ -103,9 +135,7 @@ const PdfReader = ({ ref, ...props }) => {
               variant="ghost"
               size="xs"
               title="Zoom out"
-              onClick={() => {
-                setPageScale(pageScale - 0.2)
-              }}
+              onClick={handleZoomOut}
             >
               <ZoomOut />
             </Button>
@@ -113,9 +143,7 @@ const PdfReader = ({ ref, ...props }) => {
               variant="ghost"
               size="xs"
               title="Zoom in"
-              onClick={() => {
-                setPageScale(pageScale + 0.2)
-              }}
+              onClick={handleZoomIn}
             >
               <ZoomIn />
             </Button>
@@ -123,14 +151,12 @@ const PdfReader = ({ ref, ...props }) => {
               variant="ghost"
               size="xs"
               title="Previous page"
-              onClick={() => {
-                pageNumber > 1 && setPageNumber(pageNumber - 1)
-              }}
+              onClick={handlePagePrev}
             >
               <ChevronLeft />
             </Button>
             {source && (
-              <span className="text-sm w-20 p-0 text-center inline-block">
+              <span className="text-sm min-w-25 p-0 text-center inline-block">
                 <span>
                   <Input
                     className="h-6 text-sm p-0 m-0 w-10 inline-block text-center border-none"
@@ -158,9 +184,7 @@ const PdfReader = ({ ref, ...props }) => {
               variant="ghost"
               size="xs"
               title="Next page"
-              onClick={() => {
-                pageNumber < numPages && setPageNumber(pageNumber + 1)
-              }}
+              onClick={handlePageNext}
             >
               <ChevronRight />
             </Button>

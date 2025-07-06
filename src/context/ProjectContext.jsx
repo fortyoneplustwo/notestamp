@@ -12,7 +12,7 @@ const ProjectContext = createContext()
 
 export const useProjectContext = () => use(ProjectContext)
 
-export const ProjectProvider = ({ children }) => {
+export const ProjectProvider = ({ currProjectConfig, children }) => {
   const [isMounted, setIsMounted] = useState(false)
   const [isMediaMounted, setIsMediaMounted] = useState(false)
   const [isEditorMounted, setIsEditorMounted] = useState(false)
@@ -34,6 +34,10 @@ export const ProjectProvider = ({ children }) => {
       notes: editorRef.current && getContent(editorRef.current),
       media: mediaRef.current?.getMedia?.(),
     }
+  }, [])
+
+  const handleMediaHotkey = useCallback(event => {
+    return mediaRef?.current?.handleHotkey?.(event)
   }, [])
 
   const setMediaRef = useCallback(
@@ -63,6 +67,8 @@ export const ProjectProvider = ({ children }) => {
         setEditorRef,
         isMounted,
         takeSnapshot,
+        handleMediaHotkey,
+        currProjectConfig,
       }}
     >
       {children}

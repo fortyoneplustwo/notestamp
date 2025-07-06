@@ -1,18 +1,14 @@
-import { css, cx } from "@emotion/css"
+import { cn } from "@/lib/utils"
 import React from "react"
 
 export const Toggle = ({ ref, className, active, ...props }) => (
   <span
     {...props}
     ref={ref}
-    className={cx(
+    className={cn(
       className,
-      css`
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: ${active ? "orangered" : "#aaa"};
-      `
+      active ? "text-[orangered]" : "text-[#aaa]",
+      "inline-flex items-center justify-center h-6"
     )}
   />
 )

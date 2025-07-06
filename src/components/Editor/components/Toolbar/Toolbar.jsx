@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Toolbar as Container } from "@/components/MediaRenderer/components/Toolbar"
 import { MarkButton } from "./components/MarkButton"
 import { BlockButton } from "./components/BlockButton"
@@ -16,11 +16,26 @@ import { List } from "lucide-react"
 import { FileDown } from "lucide-react"
 import { Command } from "lucide-react"
 import { ArrowBigUp } from "lucide-react"
+import { useProjectContext } from "@/context/ProjectContext"
+import { MediaControlsMenu } from "./components/MediaControlsMenu"
 
 export const Toolbar = () => {
   const editor = useSlate()
   const { marks } = useMarks()
   const { lists } = useLists()
+
+  const { currProjectConfig } = useProjectContext()
+  const [mediaHotkeys, setMediaHotkeys] = useState(null)
+
+  useEffect(() => {
+    if (currProjectConfig) {
+      setMediaHotkeys(currProjectConfig?.hotkeys)
+    }
+
+    return () => {
+      setMediaHotkeys(null)
+    }
+  }, [currProjectConfig])
 
   const Key = ({ children }) => (
     <kbd
@@ -126,13 +141,14 @@ export const Toolbar = () => {
           }
         />
       </div>
-      <div className="ml-auto">
+      <div className="flex gap-5 ml-auto">
         <ActionButton
           icon={FileDown}
           aria-label="Download PDF"
           title="Export notes as PDF"
           onClick={async () => downloadPdf(editor)}
         />
+        {mediaHotkeys && <MediaControlsMenu data={mediaHotkeys} />}
       </div>
     </Container>
   )

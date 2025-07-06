@@ -39,21 +39,24 @@ const App = () => {
     setUser(userData)
   }, [userData, setUser])
 
-  const handleOpenNewProject = (label, type) => {
+  const handleOpenNewProject = metadata => {
     setIsProjectOpen(() => {
       setCurrProjectMetadata({
-        label: label,
-        type: type,
+        ...metadata,
         src: "",
         title: "",
         mimetype: "",
+        hotkeys: metadata?.hotkeys?.length > 0 ? [...metadata.hotkeys] : null,
       })
       return true
     })
   }
 
   const handleOpenProject = async metadata => {
-    setCurrProjectMetadata(metadata)
+    const config = defaultMediaConfig.find(
+      config => config.type === metadata.type
+    )
+    setCurrProjectMetadata({ ...config, ...metadata })
     setIsProjectOpen(true)
     const notes = await fetchNotesById(metadata?.title)
     if (errorFetchingNotes || !notes) {
@@ -87,7 +90,7 @@ const App = () => {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <div className="grid grid-rows-[auto_1fr] h-screen bg-sidebar-accent dark:bg-mybgprim">
-        <ProjectProvider>
+        <ProjectProvider currProjectConfig={currProjectMetadata}>
           <ModalProvider>
             <header className="flex row-span-1 bg-transparent pt-2 px-2">
               <AppBar

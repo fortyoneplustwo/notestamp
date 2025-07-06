@@ -5,9 +5,31 @@ import { Toolbar } from "../../components/Toolbar"
 import { formatTime } from "../../utils/formatTime"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import isHotkey from "is-hotkey"
 
 const YoutubePlayer = ({ ref, ...props }) => {
   const player = useRef(null)
+
+  const hotkeyActions = new Map([
+    ["mod+k", () => handlePlayPause()],
+    ["mod+9", () => handleSeek(-1)],
+    ["mod+0", () => handleSeek(1)],
+  ])
+
+  const handlePlayPause = () => {
+    if (player.current) {
+      player.current.getPlayerState() >= 2
+        ? player.current.playVideo()
+        : player.current.pauseVideo()
+    }
+  }
+
+  const handleSeek = dir => {
+    if (player.current) {
+      const currentTime = player.current.getCurrentTime()
+      player.current.seekTo(dir > 0 ? currentTime + 10 : currentTime - 10, true)
+    }
+  }
 
   const onPlayerReady = event => {
     player.current = event.target
@@ -42,6 +64,14 @@ const YoutubePlayer = ({ ref, ...props }) => {
           ...props,
           src: withoutTimeData(player.current?.getVideoUrl()),
           mimetype: "",
+        }
+      },
+      handleHotkey: event => {
+        for (const [hotkey, action] of hotkeyActions.entries()) {
+          if (isHotkey(hotkey, event)) {
+            event.preventDefault()
+            return action()
+          }
         }
       },
     }

@@ -1,14 +1,12 @@
 import { Button } from "@/components/ui/button"
 
-const NavItem = props => {
-  const { type, icon, onClick, children } = props
-
+const NavItem = ({ icon, children, onClick, ...props }) => {
   return (
     <Button
       variant="outline"
       size="xs"
-      data-tour-id={type === "recorder" ? "sound-recorder-btn" : ""}
-      onClick={() => onClick(children, type)}
+      data-tour-id={props.type === "recorder" ? "sound-recorder-btn" : ""}
+      onClick={() => onClick({ ...props })}
     >
       {icon}
       {children}

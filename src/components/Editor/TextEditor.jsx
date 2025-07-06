@@ -1,60 +1,57 @@
-import React, { useMemo, useCallback, useState, useEffect } from 'react'
-import { Slate, Editable } from 'slate-react'
-import { Editor, Transforms, Element as SlateElement, Point } from 'slate'
-import isHotkey from 'is-hotkey'
-import { Toolbar } from './components/Toolbar/Toolbar'
-import { useProjectContext } from '../../context/ProjectContext'
-import { useMarkButton } from './components/Toolbar/components/MarkButton'
-import { useBlockButton } from './components/Toolbar/components/BlockButton'
-import { useMarks, withMarks } from './plugins/withMarks'
-import { useLists, withLists } from './plugins/withLists'
-import { useStableFn, withStamps } from 'slate-stamps'
-import { StampedElement } from './components/StampedElement'
-import { useCopyPaste } from './hooks/useCopyPaste'
+import React, { useMemo, useCallback, useState, useEffect } from "react"
+import { Slate, Editable } from "slate-react"
+import { Editor, Transforms, Element as SlateElement, Point } from "slate"
+import isHotkey from "is-hotkey"
+import { Toolbar } from "./components/Toolbar/Toolbar"
+import { useProjectContext } from "../../context/ProjectContext"
+import { useMarkButton } from "./components/Toolbar/components/MarkButton"
+import { useBlockButton } from "./components/Toolbar/components/BlockButton"
+import { useMarks, withMarks } from "./plugins/withMarks"
+import { useLists, withLists } from "./plugins/withLists"
+import { useStableFn, withStamps } from "slate-stamps"
+import { StampedElement } from "./components/StampedElement"
+import { useCopyPaste } from "./hooks/useCopyPaste"
 
 export const TextEditor = ({
   onStampInsert,
   onStampClick,
-  editor: baseEditor
+  editor: baseEditor,
 }) => {
   const stableOnStampInsert = useStableFn(onStampInsert, [])
   const stableOnStampClick = useStableFn(onStampClick, [])
 
   const [editor] = useState(() =>
     withMarks(
-      withLists(
-        withStamps(
-          baseEditor,
-          stableOnStampInsert,
-          stableOnStampClick
-        ))))
+      withLists(withStamps(baseEditor, stableOnStampInsert, stableOnStampClick))
+    )
+  )
 
   const initialValue = useMemo(
     () =>
-      JSON.parse(localStorage.getItem('content')) || [
+      JSON.parse(localStorage.getItem("content")) || [
         {
-          type: 'paragraph',
-          children: [{ text: '' }],
+          type: "paragraph",
+          children: [{ text: "" }],
         },
       ],
     []
   )
 
-  const { setEditorRef } = useProjectContext()
+  const { setEditorRef, handleMediaHotkey, isMounted } = useProjectContext()
   const { toggleMark } = useMarkButton()
   const { toggleBlock } = useBlockButton()
   const { handleCopy, handlePaste } = useCopyPaste()
   const { marks } = useMarks()
   const { lists: listTypes, listItem: listItemType } = useLists()
 
-  const toolbarKeyShortcuts = {
-    "mod+b": () => toggleMark(editor, marks.bold),
-    "mod+i": () => toggleMark(editor, marks.italic),
-    "mod+u": () => toggleMark(editor, marks.underline),
-    "mod+`": () => toggleMark(editor, marks.code),
-    "mod+shift+8": () => toggleBlock(editor, listTypes.numberedList),
-    "mod+shift+9": () => toggleBlock(editor, listTypes.bulletedList),
-  }
+  const toolbarKeyShortcuts = new Map([
+    ["mod+b", () => toggleMark(editor, marks.bold)],
+    ["mod+i", () => toggleMark(editor, marks.italic)],
+    ["mod+u", () => toggleMark(editor, marks.underline)],
+    ["mod+`", () => toggleMark(editor, marks.code)],
+    ["mod+shift+8", () => toggleBlock(editor, listTypes.numberedList)],
+    ["mod+shift+9", () => toggleBlock(editor, listTypes.bulletedList)],
+  ])
   const tab = "  " // 2 spaces
 
   useEffect(() => {
@@ -131,29 +128,21 @@ export const TextEditor = ({
         return <StampedElement onClick={stableOnStampClick} {...props} />
       case listTypes.numberedList:
         return (
-          <ol
-            {...attributes}
-            className="list-decimal list-inside"
-          >
+          <ol {...attributes} className="list-decimal list-inside">
             {children}
           </ol>
         )
       case listTypes.bulletedList:
         return (
-          <ul
-            {...attributes}
-            className="list-disc list-inside"
-          >
+          <ul {...attributes} className="list-disc list-inside">
             {children}
           </ul>
         )
       case listItemType:
-        return (
-          <li {...attributes}>{children}</li>
-        )
+        return <li {...attributes}>{children}</li>
       default:
         return (
-          <p {...attributes} style={{ margin: '0', padding: '0' }}>
+          <p {...attributes} style={{ margin: "0", padding: "0" }}>
             {children}
           </p>
         )
@@ -163,7 +152,7 @@ export const TextEditor = ({
   const Leaf = props => {
     let { attributes, children, leaf } = props
     if (leaf.bold) children = <strong>{children}</strong>
-    if (leaf.code) children = <code style={{ color: 'grey' }}>{children}</code>
+    if (leaf.code) children = <code style={{ color: "grey" }}>{children}</code>
     if (leaf.italic) children = <em>{children}</em>
     if (leaf.underline) children = <u>{children}</u>
     return (
@@ -173,7 +162,7 @@ export const TextEditor = ({
         // clicking the end of a block puts the cursor inside the inline
         // instead of inside the final {text: ''} node
         // https://github.com/ianstormtaylor/slate/issues/4704#issuecomment-1006696364
-        style={{ paddingLeft: leaf.text === '' ? '0.1px' : 'null' }}
+        style={{ paddingLeft: leaf.text === "" ? "0.1px" : "null" }}
         {...attributes}
       >
         {children}
@@ -187,7 +176,7 @@ export const TextEditor = ({
   /**
    * Key handlers
    */
-  const handleKeyDown = (event) => {
+  const handleKeyDown = event => {
     switch (event.key) {
       case "Tab":
         event.preventDefault()
@@ -195,26 +184,37 @@ export const TextEditor = ({
         break
       default:
         if (event.ctrlKey || event.metaKey) {
-          const toolbarHotkey = Object
-            .keys(toolbarKeyShortcuts)
-            .find(hk => isHotkey(hk, event))
-          return toolbarKeyShortcuts[toolbarHotkey]?.()
+          for (const [hotkey, action] of toolbarKeyShortcuts.entries()) {
+            if (isHotkey(hotkey, event)) {
+              return action()
+            }
+          }
+          // const toolbarHotkey = Object.keys(toolbarKeyShortcuts).find(hk =>
+          //   isHotkey(hk, event)
+          // )
+          // if (toolbarHotkey) {
+          //   return toolbarKeyShortcuts[toolbarHotkey]?.()
+          // }
+          if (isMounted) {
+            return handleMediaHotkey(event)
+          }
         }
         break
     }
   }
 
   return (
-    <div 
-      data-tour-id="editor"
-      className="border-none bg-transparent h-full" 
-    >
-      <Slate editor={editor} initialValue={initialValue}
+    <div data-tour-id="editor" className="border-none bg-transparent h-full">
+      <Slate
+        editor={editor}
+        initialValue={initialValue}
         onChange={value => {
-          const isAstChange = editor.operations.some(op => 'set_selection' !== op.type)
+          const isAstChange = editor.operations.some(
+            op => "set_selection" !== op.type
+          )
           if (isAstChange) {
             const content = JSON.stringify(value)
-            localStorage.setItem('content', content)
+            localStorage.setItem("content", content)
           }
         }}
       >
@@ -225,7 +225,7 @@ export const TextEditor = ({
             style={{ tabSize: "2" }}
             renderElement={renderElement}
             renderLeaf={renderLeaf}
-            placeholder={'Write here...'}
+            placeholder={"Write here..."}
             spellCheck={true}
             onCopy={handleCopy(editor)}
             onPaste={handlePaste(editor)}

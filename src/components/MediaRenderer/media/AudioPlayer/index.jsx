@@ -31,6 +31,7 @@ import { Toggle } from "@/components/ui/toggle"
 import { Slider } from "@/components/ui/slider"
 import { Dropzone } from "../../components/Dropzone"
 import { FileInput } from "../../components/FileInput"
+import isHotkey from "is-hotkey"
 
 const AudioPlayer = ({ ref, ...props }) => {
   const [uploadedBlob, setUploadedBlob] = useState(null)
@@ -41,6 +42,13 @@ const AudioPlayer = ({ ref, ...props }) => {
   const [isMuted, setIsMuted] = useState(false)
   const [mediaAvailable, setMediaAvailable] = useState(false)
   const [loopActive, setLoopActive] = useState(false)
+
+  const hotkeyActions = new Map([
+    ["mod+k", () => handlePlayPause()],
+    ["mod+9", () => handleRewind()],
+    ["mod+0", () => handleForward()],
+    ["mod+m", () => handleToggleMute()],
+  ])
 
   const containerRef = useRef(null)
   const regionsRef = useRef(null)
@@ -70,6 +78,8 @@ const AudioPlayer = ({ ref, ...props }) => {
       }),
     ]
   }, [])
+
+  const wavesurferRef = useRef(null)
 
   const { wavesurfer, isPlaying, isReady, currentTime } = useWavesurfer({
     container: mediaAvailable ? containerRef : null,
@@ -106,6 +116,7 @@ const AudioPlayer = ({ ref, ...props }) => {
     }
 
     wavesurfer.on("ready", duration => {
+      wavesurferRef.current = wavesurfer
       setDuration(duration)
       wavesurfer.setOptions({ waveColor: "orangered" })
       setVolume(wavesurfer.getVolume())
@@ -176,6 +187,14 @@ const AudioPlayer = ({ ref, ...props }) => {
       },
       getMedia: () => {
         return uploadedBlob || blobFromUrl || blobFromId
+      },
+      handleHotkey: event => {
+        for (const [hotkey, action] of hotkeyActions.entries()) {
+          if (isHotkey(hotkey, event)) {
+            event.preventDefault()
+            return action()
+          }
+        }
       },
     }
   }, [props, audioUrl])
@@ -314,14 +333,14 @@ const AudioPlayer = ({ ref, ...props }) => {
                 aria-pressed={isMuted || volume === 0}
                 variant="ghost"
                 size="xs"
-                title="Mute/unmute"
+                title="Mute"
                 disabled={!isReady}
                 onClick={handleToggleMute}
               >
                 {isMuted || volume[0] === 0 ? <VolumeX /> : <Volume2 />}
               </Button>
               <Slider
-                title="Volume slider"
+                title="Volume"
                 defaultValue={[volume]}
                 max={100}
                 step={1}
