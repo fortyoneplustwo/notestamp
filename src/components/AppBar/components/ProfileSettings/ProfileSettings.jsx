@@ -120,8 +120,8 @@ const ProfileSettings = () => {
         </Toggle>
       </span>
       <ModeToggle />
-      {!user &&
-        false && ( // eslint-disable-line no-constant-binary-expression
+      {!user && // eslint-disable-line no-constant-binary-expression
+        false && (
           <Button
             variant="default"
             size="xs"

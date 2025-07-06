@@ -1,5 +1,4 @@
 import { toMarkdown } from "@/components/Editor/utils/toMarkdown"
-import { meta } from "@eslint/js"
 
 /**
  * A project is valid if:

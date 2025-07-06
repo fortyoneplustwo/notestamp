@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-key */
+
 import React, { useEffect, useState } from "react"
 import { Toolbar as Container } from "@/components/MediaRenderer/components/Toolbar"
 import { MarkButton } from "./components/MarkButton"
