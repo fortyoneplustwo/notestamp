@@ -51,7 +51,7 @@ export const useDeleteProject = () => {
 
         setExtractionFailed(false)
         const data = await response.json()
-        
+
         sessionStorage.removeItem(getCacheKey("listProjects"))
         sessionStorage.removeItem(getCacheKey("getProjectNotes", { projectId }))
 

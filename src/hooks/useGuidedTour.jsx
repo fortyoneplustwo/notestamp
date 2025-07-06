@@ -34,8 +34,9 @@ export const useJoyride = () => {
             if (m.addedNodes.length > 0) run && setRun(false)
             for (const node of m.addedNodes) {
               if (node.nodeType === 1) {
-                const recordButton = node
-                  .querySelector('button[data-tour-id="record-btn"]')
+                const recordButton = node.querySelector(
+                  'button[data-tour-id="record-btn"]'
+                )
                 if (recordButton) {
                   setTimeout(() => {
                     setStepIndex(index + 1)
@@ -98,80 +99,77 @@ export const useJoyride = () => {
     }
   }
 
-const steps = [
-  {
-    target: 'span[data-tour-id="file-sync-switch"]',
-    title: <strong>Toggle File Sync</strong>,
-    content: (
-      "Link a folder on your device to load existing projects and save new ones."
-    ),
-    disableBeacon: true,
-    hideFooter: true,
-  },
-  {
-    target: 'div[data-tour-id="dashboard"]',
-    title: <strong>Dashboard</strong>,
-    content: (
-      "Your projects will show up here. It's empty for now, so let's create one!"
-    ),
-    placement: "right-start",
-    disableBeacon: true,
-  },
-  {
-    target: 'button[data-tour-id="sound-recorder-btn"]',
-    title: <strong>Start a New Project</strong>,
-    content: (
-      "Let's try the Sound Recorder. Allow microphone access if asked."
-    ),
-    disableBeacon: true,
-    hideFooter: true,
-  },
-  {
-    target: 'button[data-tour-id="record-btn"]',
-    content: "Press Record to start capturing audio.",
-    disableBeacon: true,
-    hideFooter: true,
-  },
-  {
-    target: 'div[data-tour-id="editor"]',
-    title: <strong>Take Notes</strong>,
-    content: (
-      "Type a few notes. Notice how a timestamp appears at the start of each line."
-    ),
-    placement: "left-start",
-    disableBeacon: true,
-  },
-  {
-    target: 'button[data-tour-id="stop-btn"]',
-    content: "Press Stop to finish recording.",
-    disableBeacon: true,
-    hideFooter: true,
-  },
-  {
-    target: 'div[data-tour-id="editor"]',
-    title: <strong>Your Notes Are Synced!</strong>,
-    content: (
-      "Click a timestamp to jump to that moment in the recording."
-    ),
-    placement: "left-start",
-    disableBeacon: true,
-  },
-  {
-    target: 'span[data-tour-id="toolbar"]',
-    title: <strong>Toolbar</strong>,
-    content: (
-      "Save or close your project when you're done."
-    ),
-    disableBeacon: true,
-    locale: { close: "Exit Tour" },
-  },
-];
+  const steps = [
+    {
+      target: 'span[data-tour-id="file-sync-switch"]',
+      title: <strong>Toggle File Sync</strong>,
+      content:
+        "Link a folder on your device to load existing projects and save new ones.",
+      disableBeacon: true,
+      hideFooter: true,
+    },
+    {
+      target: 'div[data-tour-id="dashboard"]',
+      title: <strong>Dashboard</strong>,
+      content:
+        "Your projects will show up here. It's empty for now, so let's create one!",
+      placement: "right-start",
+      disableBeacon: true,
+    },
+    {
+      target: 'button[data-tour-id="sound-recorder-btn"]',
+      title: <strong>Start a New Project</strong>,
+      content:
+        "Let's try the Sound Recorder. Allow microphone access if asked.",
+      disableBeacon: true,
+      hideFooter: true,
+    },
+    {
+      target: 'button[data-tour-id="record-btn"]',
+      content: "Press Record to start capturing audio.",
+      disableBeacon: true,
+      hideFooter: true,
+    },
+    {
+      target: 'div[data-tour-id="editor"]',
+      title: <strong>Take Notes</strong>,
+      content:
+        "Type a few notes. Notice how a timestamp appears at the start of each line.",
+      placement: "left-start",
+      disableBeacon: true,
+    },
+    {
+      target: 'button[data-tour-id="stop-btn"]',
+      content: "Press Stop to finish recording.",
+      disableBeacon: true,
+      hideFooter: true,
+    },
+    {
+      target: 'div[data-tour-id="editor"]',
+      title: <strong>Your Notes Are Synced!</strong>,
+      content: "Click a timestamp to jump to that moment in the recording.",
+      placement: "left-start",
+      disableBeacon: true,
+    },
+    {
+      target: 'span[data-tour-id="toolbar"]',
+      title: <strong>Toolbar</strong>,
+      content: "Save or close your project when you're done.",
+      disableBeacon: true,
+      locale: { close: "Exit Tour" },
+    },
+  ]
 
   return { run, stepIndex, steps, handleOnBeginTour, handleJoyrideCallback }
 }
 
-
-export function Tooltip({ children, position = "top", arrow = true, className, ...props }) {
+export function Tooltip({
+  children,
+  position = "top",
+  arrow = true,
+  className,
+  ...props
+}) {
   const positionClasses = {
     top: "mb-2",
     right: "ml-2",
@@ -194,9 +192,10 @@ export function Tooltip({ children, position = "top", arrow = true, className, .
         className={cn(
           "bg-primary text-primary-foreground text-xs rounded-md px-2.5 py-1.5 max-w-xs z-50 shadow-sm",
           positionClasses[position],
-          arrow && "after:absolute after:content-[''] after:border-4 after:border-solid after:text-primary",
+          arrow &&
+            "after:absolute after:content-[''] after:border-4 after:border-solid after:text-primary",
           arrow && arrowClasses[position],
-          className,
+          className
         )}
         role="tooltip"
         {...props}
@@ -207,28 +206,22 @@ export function Tooltip({ children, position = "top", arrow = true, className, .
   )
 }
 
-export const TourTooltip = (props) => {
+export const TourTooltip = props => {
   const { primaryProps, closeProps, tooltipProps, step, isLastStep } = props
 
   return (
     <Tooltip {...tooltipProps} arrow={false}>
-      <div className="flex flex-col gap-2" >
+      <div className="flex flex-col gap-2">
         {step.title && <h2 className="w-full text-center">{step.title}</h2>}
         {step.content}
         {!step.hideFooter && (
           <div className="flex justify-end">
             {!isLastStep ? (
-              <Button {...primaryProps}
-                variant="secondary"
-                size="xs"
-              >
+              <Button {...primaryProps} variant="secondary" size="xs">
                 Continue
               </Button>
             ) : (
-              <Button {...closeProps}
-                variant="destructive"
-                size="xs"
-              >
+              <Button {...closeProps} variant="destructive" size="xs">
                 End tour
               </Button>
             )}
