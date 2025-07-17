@@ -78,3 +78,12 @@ export const defaultMediaConfig = [
   },
   ...customMediaConfig,
 ]
+
+export const validKeys = [
+  "type",
+  "title",
+  "src",
+  "label",
+  "mimetype",
+  "lastModified",
+]
