@@ -46,7 +46,6 @@ const App = () => {
         src: "",
         title: "",
         mimetype: "",
-        hotkeys: metadata?.hotkeys?.length > 0 ? [...metadata.hotkeys] : null,
       })
       return true
     })

@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react"
 import { getCacheKey, useCustomFetch } from "./useCustomFetch"
+import { makeMetadataForSave } from "@/utils/makeMetadataForSave"
 
 export const useSaveProject = () => {
   const { fetchWithoutCache, loading, errorNotOk } = useCustomFetch()
@@ -8,9 +9,9 @@ export const useSaveProject = () => {
   const saveWithData = useCallback(
     async projectData => {
       try {
-        console.log("saveWithData")
+        const filteredMetadata = makeMetadataForSave(projectData.metadata)
         const response = await fetchWithoutCache("saveProject", {
-          metadata: projectData.metadata,
+          metadata: filteredMetadata,
           media: projectData.media,
           notes: projectData.notes,
         })
