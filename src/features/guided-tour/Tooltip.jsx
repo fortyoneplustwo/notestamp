@@ -1,7 +1,13 @@
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-function TooltipUI({ children, position = "top", arrow = true, className, ...props }) {
+function TooltipUI({
+  children,
+  position = "top",
+  arrow = true,
+  className,
+  ...props
+}) {
   const positionClasses = {
     top: "mb-2",
     right: "ml-2",
@@ -24,9 +30,10 @@ function TooltipUI({ children, position = "top", arrow = true, className, ...pro
         className={cn(
           "bg-primary text-primary-foreground text-xs rounded-md px-2.5 py-1.5 max-w-xs z-50 shadow-sm",
           positionClasses[position],
-          arrow && "after:absolute after:content-[''] after:border-4 after:border-solid after:text-primary",
+          arrow &&
+            "after:absolute after:content-[''] after:border-4 after:border-solid after:text-primary",
           arrow && arrowClasses[position],
-          className,
+          className
         )}
         role="tooltip"
         {...props}
@@ -37,28 +44,22 @@ function TooltipUI({ children, position = "top", arrow = true, className, ...pro
   )
 }
 
-export const Tooltip = (props) => {
+export const Tooltip = props => {
   const { primaryProps, closeProps, tooltipProps, step, isLastStep } = props
 
   return (
     <TooltipUI {...tooltipProps} arrow={false}>
-      <div className="flex flex-col gap-2" >
+      <div className="flex flex-col gap-2">
         {step.title && <h2 className="w-full text-center">{step.title}</h2>}
         {step.content}
         {!step.hideFooter && (
           <div className="flex justify-end">
             {!isLastStep ? (
-              <Button {...primaryProps}
-                variant="secondary"
-                size="xs"
-              >
+              <Button {...primaryProps} variant="secondary" size="xs">
                 Continue
               </Button>
             ) : (
-              <Button {...closeProps}
-                variant="destructive"
-                size="xs"
-              >
+              <Button {...closeProps} variant="destructive" size="xs">
                 End tour
               </Button>
             )}

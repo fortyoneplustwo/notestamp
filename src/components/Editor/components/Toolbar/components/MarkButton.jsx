@@ -1,6 +1,11 @@
 import { Editor } from "slate"
 import { useSlate } from "slate-react"
-import { Button, Icon } from "./ui"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Toggle } from "./Toggle"
 
 export const useMarkButton = () => {
   const isMarkActive = (editor, format) => {
@@ -16,19 +21,27 @@ export const useMarkButton = () => {
   return { isMarkActive, toggleMark }
 }
 
-export const MarkButton = ({ format, icon, ...props }) => {
+export const MarkButton = ({ format, icon: Icon, title, ...props }) => {
   const editor = useSlate()
   const { isMarkActive, toggleMark } = useMarkButton()
   return (
-    <Button
-      {...props}
-      active={isMarkActive(editor, format)}
-      onMouseDown={event => {
-        event.preventDefault()
-        toggleMark(editor, format)
-      }}
-    >
-      <Icon>{icon}</Icon>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Toggle
+          {...props}
+          tabIndex={0}
+          className="px-1"
+          active={isMarkActive(editor, format)}
+          aria-pressed={isMarkActive(editor, format)}
+          onMouseDown={event => {
+            event.preventDefault()
+            toggleMark(editor, format)
+          }}
+        >
+          <Icon size={16} />
+        </Toggle>
+      </TooltipTrigger>
+      <TooltipContent>{title}</TooltipContent>
+    </Tooltip>
   )
 }

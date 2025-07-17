@@ -1,10 +1,15 @@
 import { Editor, Element } from "slate"
 import { useSlate } from "slate-react"
-import { Button, Icon } from "./ui"
 import { useLists } from "../../../plugins/withLists"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Toggle } from "./Toggle"
 
 export const useBlockButton = () => {
-  const isBlockActive = (editor, format, blockType = 'type') => {
+  const isBlockActive = (editor, format, blockType = "type") => {
     const { selection } = editor
     if (!selection) return false
 
@@ -32,20 +37,30 @@ export const useBlockButton = () => {
   return { isBlockActive, toggleBlock }
 }
 
-export const BlockButton = ({ format, icon, ...props }) => {
+export const BlockButton = ({ format, icon: Icon, title, ...props }) => {
   const editor = useSlate()
   const { isBlockActive, toggleBlock } = useBlockButton()
 
   return (
-    <Button
-      {...props}
-      active={isBlockActive(editor, format)}
-      onMouseDown={event => {
-        event.preventDefault()
-        toggleBlock(editor, format)
-      }}
-    >
-      <Icon>{icon}</Icon>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Toggle
+          {...props}
+          tabIndex={0}
+          className="px-1"
+          active={isBlockActive(editor, format)}
+          aria-pressed={isBlockActive(editor, format)}
+          onMouseDown={event => {
+            event.preventDefault()
+            toggleBlock(editor, format)
+          }}
+        >
+          <Icon size={16} />
+        </Toggle>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>{title}</p>
+      </TooltipContent>
+    </Tooltip>
   )
 }

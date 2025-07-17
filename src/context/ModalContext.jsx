@@ -19,14 +19,9 @@ export const ModalProvider = ({ children }) => {
   }, [])
 
   return (
-    (<ModalContext value={{ openModal, closeModal }}>
-      { children }
-      { modal && (
-        <ModalRenderer  
-          modal={modal} 
-          props={modalProps} 
-        /> 
-      )}
-    </ModalContext>)
-  );
+    <ModalContext value={{ openModal, closeModal }}>
+      {children}
+      {modal && <ModalRenderer modal={modal} props={modalProps} />}
+    </ModalContext>
+  )
 }

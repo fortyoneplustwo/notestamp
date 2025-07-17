@@ -1,7 +1,7 @@
-import React, { Suspense } from 'react'
-import { defaultMediaConfig as mediaConfig } from '@/config'
-import { useProjectContext } from '../../context/ProjectContext'
-import Loading from '../Screens/Loading/Loading'
+import React, { Suspense } from "react"
+import { defaultMediaConfig as mediaConfig } from "@/config"
+import { useProjectContext } from "../../context/ProjectContext"
+import Loading from "../Screens/Loading/Loading"
 
 const mediaImports = import.meta.glob(`./media/*/index.jsx`)
 const lazyLoadedMediaComponents = new Map()
@@ -19,11 +19,19 @@ const MediaRenderer = ({ ref, metadata }) => {
     ? lazyLoadedMediaComponents.get(metadata.type)
     : null
 
+  if (!MediaComponent) {
+    return (
+      <div className="h-full items-center justify-center">
+        <p>Oops! This media component does not exist.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="h-full overflow-hidden">
       <Suspense fallback={<Loading />}>
         <MediaComponent
-          ref={(node) => {
+          ref={node => {
             ref(node)
             setMediaRef(node)
 

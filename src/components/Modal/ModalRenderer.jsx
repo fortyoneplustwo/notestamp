@@ -16,7 +16,7 @@ const ModalRenderer = ({ modal, props }) => {
 
   const ModalComponent = modals[modal]
 
-  return ModalComponent ? <ModalComponent {...props} /> : null 
+  return ModalComponent ? <ModalComponent {...props} /> : null
 }
 
 export default ModalRenderer

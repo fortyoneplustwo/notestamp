@@ -38,6 +38,7 @@
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",
+    "@wavesurfer/react": "^1.0.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -51,19 +52,18 @@
     "input-otp": "^1.4.2",
     "is-hotkey": "^0.2.0",
     "lucide-react": "^0.503.0",
-    "material-icons": "^1.13.11",
     "next-themes": "^0.4.6",
     "pdfjs-dist": "^4.0.189",
     "postcss-cli": "^10.1.0",
     "react": "^19.1.0",
     "react-day-picker": "8.10.1",
     "react-dom": "^19.1.0",
+    "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.56.1",
     "react-joyride": "^2.9.3",
     "react-pdf": "^7.7.3",
     "react-resizable-panels": "^2.1.8",
     "react-router-dom": "^6.14.2",
-    "react-voice-visualizer": "^2.0.5",
     "react-youtube": "^10.1.0",
     "recharts": "^2.15.3",
     "slate": "^0.112.0",
@@ -74,15 +74,16 @@
     "tailwind-merge": "^3.2.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
+    "wavesurfer.js": "^7.9.5",
     "web-vitals": "^2.1.0"
   },
   "scripts": {
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+    "test": "vitest",
+    "lint": "eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "format": "prettier --check ./src"
   },
   "eslintConfig": {
     "extends": [
@@ -111,9 +112,12 @@
     "eslint": "^9.25.1",
     "eslint-plugin-react": "^7.37.5",
     "globals": "^16.0.0",
+    "jsdom": "^26.1.0",
     "postcss": "^8.4.47",
     "prettier": "^3.5.3",
+    "rollup-plugin-visualizer": "^6.0.3",
     "tailwindcss": "^4.1.4",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "vitest": "^3.2.4"
   }
 }

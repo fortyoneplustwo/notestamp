@@ -1,6 +1,5 @@
 import { createContext, use, useEffect, useState } from "react"
 
-
 const initialState = {
   theme: "system",
   setTheme: () => null,
@@ -15,7 +14,7 @@ export function ThemeProvider({
   ...props
 }) {
   const [theme, setTheme] = useState(
-    () => (localStorage.getItem(storageKey)) || defaultTheme
+    () => localStorage.getItem(storageKey) || defaultTheme
   )
 
   useEffect(() => {
@@ -38,17 +37,17 @@ export function ThemeProvider({
 
   const value = {
     theme,
-    setTheme: (theme) => {
+    setTheme: theme => {
       localStorage.setItem(storageKey, theme)
       setTheme(theme)
     },
   }
 
   return (
-    (<ThemeProviderContext {...props} value={value}>
+    <ThemeProviderContext {...props} value={value}>
       {children}
-    </ThemeProviderContext>)
-  );
+    </ThemeProviderContext>
+  )
 }
 
 export const useTheme = () => {
@@ -59,4 +58,3 @@ export const useTheme = () => {
 
   return context
 }
-

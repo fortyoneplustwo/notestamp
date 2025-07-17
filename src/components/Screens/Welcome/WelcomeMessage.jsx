@@ -1,9 +1,15 @@
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { GitHubLogoIcon } from '@radix-ui/react-icons'
-import { CircleAlert, NotebookPen, Stamp, History, FolderSync } from 'lucide-react'
-import { Compass } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { GitHubLogoIcon } from "@radix-ui/react-icons"
+import {
+  CircleAlert,
+  NotebookPen,
+  Stamp,
+  History,
+  FolderSync,
+} from "lucide-react"
+import { Compass } from "lucide-react"
+import React, { useEffect, useState } from "react"
 
 const WelcomeMessage = ({ onClickTourButton }) => {
   const [isHover, setIsHover] = useState(false)
@@ -17,7 +23,7 @@ const WelcomeMessage = ({ onClickTourButton }) => {
               notestamp
             </span>
             &nbsp;
-            <Typewriter text="Write notes in sync with your media" delay={30} />
+            <Typewriter text="Write notes in sync with media" delay={30} />
           </p>
           <div className="pt-10 px-5">
             <ul className="list-inside flex flex-col gap-3">
@@ -49,7 +55,8 @@ const WelcomeMessage = ({ onClickTourButton }) => {
           >
             <Compass
               className={`${isHover ? "transform rotate-315" : ""}`}
-              size={16} />
+              size={16}
+            />
             Take the guided tour
           </Button>
         </div>
@@ -61,7 +68,7 @@ const WelcomeMessage = ({ onClickTourButton }) => {
         </Alert>
       </div>
       <div className="self-start mt-auto p-2">
-        <a href='https://github.com/fortyoneplustwo/notestamp'>
+        <a href="https://github.com/fortyoneplustwo/notestamp">
           <GitHubLogoIcon className="w-5 h-5" color="grey" />
         </a>
       </div>
@@ -71,11 +78,8 @@ const WelcomeMessage = ({ onClickTourButton }) => {
 
 const FeatureDescp = ({ icon: Icon, text, ...props }) => {
   return (
-    <li
-      className="inline-flex items-center gap-3"
-      {...props}
-    >
-      <span className= "h-full text-base text-[orangered]" >
+    <li className="inline-flex items-center gap-3" {...props}>
+      <span className="h-full text-base text-[orangered]">
         <Icon size={16} />
       </span>
       <span className="text-[0.9rem]">{text}</span>
@@ -84,7 +88,7 @@ const FeatureDescp = ({ icon: Icon, text, ...props }) => {
 }
 
 const Typewriter = ({ text, delay }) => {
-  const [currentText, setCurrentText] = useState('')
+  const [currentText, setCurrentText] = useState("")
   const [currentIndex, setCurrentIndex] = useState(0)
 
   useEffect(() => {
@@ -94,7 +98,7 @@ const Typewriter = ({ text, delay }) => {
         setCurrentIndex(prevIndex => prevIndex + 1)
       }, delay)
 
-      return () => clearTimeout(timeout);
+      return () => clearTimeout(timeout)
     }
   }, [currentIndex, delay, text])
 

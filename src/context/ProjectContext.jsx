@@ -1,15 +1,22 @@
 import { useContent } from "@/components/Editor/hooks/useContent"
-import { createContext, useCallback, use, useEffect, useRef, useState } from "react"
+import {
+  createContext,
+  useCallback,
+  use,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 
 const ProjectContext = createContext()
 
 export const useProjectContext = () => use(ProjectContext)
 
-export const ProjectProvider = ({ children }) => {
+export const ProjectProvider = ({ currProjectConfig, children }) => {
   const [isMounted, setIsMounted] = useState(false)
   const [isMediaMounted, setIsMediaMounted] = useState(false)
   const [isEditorMounted, setIsEditorMounted] = useState(false)
-  const mediaRef = useRef(null) 
+  const mediaRef = useRef(null)
   const editorRef = useRef(null)
   const { getContent } = useContent()
 
@@ -29,28 +36,42 @@ export const ProjectProvider = ({ children }) => {
     }
   }, [])
 
-  const setMediaRef = useCallback((node) => {
-    setIsMediaMounted(() => {
-      mediaRef.current = node
-      return !!node
-    })
-  }, [setIsMediaMounted])
+  const handleMediaHotkey = useCallback(event => {
+    return mediaRef?.current?.handleHotkey?.(event)
+  }, [])
 
-  const setEditorRef = useCallback((node) => {
-    setIsEditorMounted(() => {
-      editorRef.current = node
-      return !!node
-    })
-  }, [setIsEditorMounted])
+  const setMediaRef = useCallback(
+    node => {
+      setIsMediaMounted(() => {
+        mediaRef.current = node
+        return !!node
+      })
+    },
+    [setIsMediaMounted]
+  )
+
+  const setEditorRef = useCallback(
+    node => {
+      setIsEditorMounted(() => {
+        editorRef.current = node
+        return !!node
+      })
+    },
+    [setIsEditorMounted]
+  )
 
   return (
-    (<ProjectContext value={{ 
-      setMediaRef,
-      setEditorRef,
-      isMounted,
-      takeSnapshot,
-    }}>
-      { children }
-    </ProjectContext>)
-  );
+    <ProjectContext
+      value={{
+        setMediaRef,
+        setEditorRef,
+        isMounted,
+        takeSnapshot,
+        handleMediaHotkey,
+        currProjectConfig,
+      }}
+    >
+      {children}
+    </ProjectContext>
+  )
 }

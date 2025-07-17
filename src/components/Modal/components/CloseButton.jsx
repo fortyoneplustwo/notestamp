@@ -1,14 +1,13 @@
-import React from 'react'
-import { Icon } from '../../Editor/components/Toolbar'
+import React from "react"
+import { Icon } from "../../Editor/components/Toolbar"
 
 const CloseButton = ({ handler }) => {
-
   const closeButtonCSS = {
-    color: 'red',
-    border: '0',
-    cursor: 'pointer',
-    background: 'transparent',
-    padding: '0'
+    color: "red",
+    border: "0",
+    cursor: "pointer",
+    background: "transparent",
+    padding: "0",
   }
 
   return (

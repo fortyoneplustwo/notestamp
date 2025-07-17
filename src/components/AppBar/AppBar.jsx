@@ -3,7 +3,7 @@ import Logo from "./components/Logo/Logo"
 import AppToolbar from "./components/AppToolbar/AppToolbar"
 import ProfileSettings from "./components/ProfileSettings/ProfileSettings"
 
-const AppBar = ({ 
+const AppBar = ({
   navItems,
   onNavItemClick,
   showToolbar,
@@ -13,14 +13,11 @@ const AppBar = ({
   return (
     <div className="flex w-full gap-4">
       <Logo />
-      <span className="flex items-center grow" >
+      <span className="flex items-center grow">
         {showToolbar ? (
-          <AppToolbar
-            onClose={onCloseProject}
-            metadata={metadata}
-          />
+          <AppToolbar onClose={onCloseProject} metadata={metadata} />
         ) : (
-          <Nav items={navItems} onClick={onNavItemClick}/>
+          <Nav items={navItems} onClick={onNavItemClick} />
         )}
       </span>
       <ProfileSettings />

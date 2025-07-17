@@ -102,11 +102,7 @@ const parseText = t => {
     styles.fontFamily = "Courier"
   }
 
-  return (
-    <Text style={styles}>
-      {`${t.text === "" ? "\n" : t.text}`}
-    </Text>
-  )
+  return <Text style={styles}>{`${t.text === "" ? "\n" : t.text}`}</Text>
 }
 
 const parseNode = node => {
@@ -154,7 +150,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: "Times-Roman",
     fontSize: 9,
-  }
+  },
 })
 
 const MyDocument = ({ content }) => (
@@ -195,4 +191,3 @@ export const downloadPdf = async editor => {
     console.error(error)
   }
 }
-

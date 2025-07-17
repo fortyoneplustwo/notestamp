@@ -1,13 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from "react"
 import { columns } from "./components/Columns"
-import { Toolbar } from '../../MediaRenderer/components/Toolbar'
-import { useGetProjects } from '../../../hooks/useReadData'
-import { Button } from '@/components/ui/button'
-import { useGetDirHandle } from '../../../hooks/useFileSystem'
-import { useAppContext } from '../../../context/AppContext'
-import { FolderOpen } from 'lucide-react'
-import { DataTable } from './components/DataTable'
-import { Input } from '@/components/ui/input'
+import { Toolbar } from "../../MediaRenderer/components/Toolbar"
+import { useGetProjects } from "../../../hooks/useReadData"
+import { Button } from "@/components/ui/button"
+import { useGetDirHandle } from "../../../hooks/useFileSystem"
+import { useAppContext } from "../../../context/AppContext"
+import { FolderOpen } from "lucide-react"
+import { DataTable } from "./components/DataTable"
+import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
 
 const Dashboard = ({ onOpenProject }) => {
   const [inputValue, setInputValue] = useState("")
@@ -15,24 +16,24 @@ const Dashboard = ({ onOpenProject }) => {
     data: projects,
     fetchAll: fetchAllProjects,
     loading: loadingProjects,
-    error: errorFetchingProjects
+    error: errorFetchingProjects,
   } = useGetProjects()
   const { dirHandle, getDirHandle } = useGetDirHandle()
-  const { user, syncToFileSystem, cwd, setCwd } = useAppContext()
+  const { user, syncToFileSystem, cwd, setCwd, triggerRefetchAllProjects } =
+    useAppContext()
   const tableRef = useRef(null)
 
   useEffect(() => {
     if (user || cwd) {
       fetchAllProjects()
     }
-  }, [fetchAllProjects])
+  }, [fetchAllProjects, triggerRefetchAllProjects])
 
   useEffect(() => {
     if (!loadingProjects) {
       if (errorFetchingProjects) {
-        // handle error
+        toast.error("Failed to fetch list of projects")
       }
-      console.log(projects)
     }
   }, [errorFetchingProjects, loadingProjects])
 
@@ -42,21 +43,21 @@ const Dashboard = ({ onOpenProject }) => {
     }
   }, [dirHandle, setCwd])
 
-  const handleRowClicked = (title) =>
+  const handleRowClicked = title =>
     onOpenProject(projects.find(p => p.title === title))
 
   return (
     <div data-tour-id="dashboard" className="h-full">
       <Toolbar className="flex flex-row gap-3">
         <span className="font-bold max-w-sm truncate overflow-hidden whitespace-nowrap">
-          {(syncToFileSystem && cwd) ? `${cwd.name}` : "Library"}
+          {syncToFileSystem && cwd ? `${cwd.name}` : "Library"}
         </span>
         <div className="flex gap-3 ml-auto">
           {projects && projects?.length > 0 && (
             <Input
               placeholder="Search projects..."
               value={inputValue}
-              onChange={(event) => {
+              onChange={event => {
                 setInputValue(() => event.target.value)
                 tableRef.current?.filterProjects("title", event.target.value)
               }}

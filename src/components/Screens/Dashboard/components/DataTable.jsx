@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect } from "react"
 import {
   flexRender,
   getCoreRowModel,
@@ -14,19 +14,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useImperativeHandle, useState } from "react";
+import { useImperativeHandle, useState } from "react"
 
-export const DataTable = (
-  {
-    ref,
-    columns,
-    data,
-    onRowClick
-  }
-) => {
+export const DataTable = ({ ref, columns, data, onRowClick }) => {
   const [columnFilters, setColumnFilters] = useState([])
-  const [sorting, setSorting] = useState([{ id: "lastModified", desc: "true "}])
-  const [, setViewportWidth] = useState(window.innerWidth);
+  const [sorting, setSorting] = useState([
+    { id: "lastModified", desc: "true " },
+  ])
+  const [, setViewportWidth] = useState(window.innerWidth)
   const table = useReactTable({
     data,
     columns,
@@ -42,9 +37,9 @@ export const DataTable = (
   })
 
   useEffect(() => {
-    const handleResize = () => setViewportWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const handleResize = () => setViewportWidth(window.innerWidth)
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
   }, [])
 
   useImperativeHandle(ref, () => {
@@ -58,24 +53,24 @@ export const DataTable = (
     }
   })
 
-  // Fix: If the table overflows its scrollable container, 
+  // Fix: If the table overflows its scrollable container,
   // then the last row may not fully render.
   // Adding padding bottom pushes the content up a bit
   // so the last row can be fully rendered.
   return (
     <Table className="mb-3">
       <TableHeader>
-        {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id} >
-            {headerGroup.headers.map((header) => {
+        {table.getHeaderGroups().map(headerGroup => (
+          <TableRow key={headerGroup.id}>
+            {headerGroup.headers.map(header => {
               return (
                 <TableHead key={header.id}>
                   {header.isPlaceholder
                     ? null
                     : flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                 </TableHead>
               )
             })}
@@ -84,13 +79,13 @@ export const DataTable = (
       </TableHeader>
       <TableBody>
         {table.getRowModel().rows?.length ? (
-          table.getRowModel().rows.map((row) => (
+          table.getRowModel().rows.map(row => (
             <TableRow
               key={row.id}
               data-state={row.getIsSelected() && "selected"}
               onClick={() => onRowClick(row.getValue("title"))}
             >
-              {row.getVisibleCells().map((cell) => (
+              {row.getVisibleCells().map(cell => (
                 <TableCell key={cell.id}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
@@ -98,15 +93,15 @@ export const DataTable = (
             </TableRow>
           ))
         ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
+          <TableRow>
+            <TableCell colSpan={columns.length} className="h-24 text-center">
+              No results.
+            </TableCell>
+          </TableRow>
+        )}
       </TableBody>
     </Table>
   )
-};
+}
 
 export default DataTable

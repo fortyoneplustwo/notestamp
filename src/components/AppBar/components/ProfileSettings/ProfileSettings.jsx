@@ -17,8 +17,18 @@ const ProfileSettings = () => {
   const [isFileSyncChecked, setIsFileSyncChecked] = useState(false)
   const { data: userData, fetch: fetchUser } = useGetUserData()
   const { user, setUser, setSyncToFileSystem, setCwd } = useAppContext()
-  const { data: isLoggedIn, loginWithCredentials, loading: loadingLogIn, error: errorLoggingIn } = useLogin()
-  const { data: isLoggedOut, logout, loading: loadingLogOut, error: errorLoggingOut } = useLogout()
+  const {
+    data: isLoggedIn,
+    loginWithCredentials,
+    loading: loadingLogIn,
+    error: errorLoggingIn,
+  } = useLogin()
+  const {
+    data: isLoggedOut,
+    logout,
+    loading: loadingLogOut,
+    error: errorLoggingOut,
+  } = useLogout()
   const { registerWithCredentials } = useRegister()
   const { getDirHandle } = useGetDirHandle()
   const { clearCache } = useCustomFetch()
@@ -36,7 +46,7 @@ const ProfileSettings = () => {
       setUser(null)
       clearCache()
     }
-  },[isLoggedIn, isLoggedOut, fetchUser, setUser, clearCache])
+  }, [isLoggedIn, isLoggedOut, fetchUser, setUser, clearCache])
 
   useEffect(() => {
     if (!loadingLogIn) {
@@ -58,10 +68,10 @@ const ProfileSettings = () => {
   }, [loadingLogOut, errorLoggingOut])
 
   const handleRegister = (email, password) => {
-   registerWithCredentials({
+    registerWithCredentials({
       email: email,
       password: password,
-    }) 
+    })
     closeModal()
   }
 
@@ -80,7 +90,7 @@ const ProfileSettings = () => {
     logout()
   }
 
-  const handleToggleFileSync = async (checked) => {
+  const handleToggleFileSync = async checked => {
     if (checked) {
       try {
         const handle = await getDirHandle()
@@ -100,7 +110,7 @@ const ProfileSettings = () => {
     <span className="flex ml-auto gap-4">
       <span className="flex items-center" data-tour-id="file-sync-switch">
         <Toggle
-          onToggle={(checked) => {
+          onToggle={checked => {
             setIsFileSyncChecked(checked)
             handleToggleFileSync(checked)
           }}
@@ -110,32 +120,35 @@ const ProfileSettings = () => {
         </Toggle>
       </span>
       <ModeToggle />
-      {!user && false && ( // eslint-disable-line no-constant-binary-expression
-        <Button
-          variant="default"
-          size="xs"
-          onClick={() => openModal("loginModal", { 
-            onClose: closeModal,
-            onLogin: handleLogIn,
-            onRegister: () => {
-              openModal("registerModal", {
+      {!user && // eslint-disable-line no-constant-binary-expression
+        false && (
+          <Button
+            variant="default"
+            size="xs"
+            onClick={() =>
+              openModal("loginModal", {
                 onClose: closeModal,
-                onRegister: handleRegister,
+                onLogin: handleLogIn,
+                onRegister: () => {
+                  openModal("registerModal", {
+                    onClose: closeModal,
+                    onRegister: handleRegister,
+                  })
+                },
               })
             }
-          })}
-        >
-          <User size={16} />
-          Sign in
-        </Button>
-      )}
+          >
+            <User size={16} />
+            Sign in
+          </Button>
+        )}
       {user && (
-        <Button 
+        <Button
           variant="secondary"
           disabled={isLoggingOut}
           onClick={handleLogOut}
         >
-          Sign out 
+          Sign out
         </Button>
       )}
     </span>
