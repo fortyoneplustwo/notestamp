@@ -10,6 +10,8 @@ import { Separator } from "@/components/ui/separator"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { filterMetadata } from "@/utils/makeMetadataForSave"
+import { validKeys } from "@/config"
 
 const AppToolbar = ({ metadata, onClose }) => {
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth)
@@ -65,8 +67,9 @@ const AppToolbar = ({ metadata, onClose }) => {
       setIsSaving(true)
       const id = toast.loading("Saving project")
       try {
+        const filteredMetadata = filterMetadata(snapshot.metadata, validKeys)
         await updateWithData({
-          metadata: { ...snapshot.metadata },
+          metadata: { filteredMetadata },
           notes: snapshot.notes,
         })
         setIsSaving(false)
@@ -100,8 +103,9 @@ const AppToolbar = ({ metadata, onClose }) => {
         closeModal()
         const id = toast.loading("Saving project")
         try {
+          const filteredMetadata = filterMetadata(snapshot.metadata, validKeys)
           await saveWithData({
-            metadata: { ...snapshot.metadata, title },
+            metadata: { filteredMetadata, title },
             media: snapshot.media,
             notes: snapshot.notes,
           })

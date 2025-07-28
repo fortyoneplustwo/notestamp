@@ -1,11 +1,9 @@
-import { validKeys } from "../config"
-
-export const makeMetadataForSave = metadata => {
-  const filteredMetadata = {}
+export const filterMetadata = (metadata, keysToKeep) => {
+  const filtered = {}
   for (const key in metadata) {
-    if (validKeys.includes(key)) {
-      filteredMetadata[key] = metadata[key]
+    if (keysToKeep.includes(key)) {
+      filtered[key] = metadata[key]
     }
   }
-  return filteredMetadata
+  return filtered
 }
