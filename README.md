@@ -4,20 +4,29 @@ The application is published and ready to use at https://notestamp.com
 
 ## Description
 
-A single page web application for desktop that syncs notes with media using stamps.
+A Single Page Application that makes it easy to take notes in sync with media.
 
-**Media Display**: Left pane renders one of various media components such as YouTube Player, Sound Recorder, Audio Player, and PDF Reader.
-
-**Text Editor:** Right pane features a rich text editor. Pressing `<Enter>` inserts a stamp at the beginning of a line.
-
-**Stamp Functionality**: Clicking on a stamp returns the media to its state when the stamp was inserted. For audio/video media, this is the timestamp; for PDF media, it's the page number.
+The left pane renders one of various media options:
+YouTube Player, Sound Recorder, Audio Player, and PDF Reader. The right pane
+features a rich-text editor that will automatically insert stamps which reference
+the current state of the chosen media as you type.
+Clicking a particular stamp returns the media back to its state when that stamp was inserted.
 
 ## Motivation
 
-- To develop a powerful tool for efficient note-taking and reviewing of notes.
-- To empower users by allowing them to implement custom functionality that fits their needs.
-- To push the boundaries of what web applications can do, eventually reducing the reliance on OS-native software.
-- To contribute to the open-source and developer communities.
+I needed a tool that could help me take better notes for my university classes.
+The ones available on the market were pricey, platform-specific, and
+could only sync along to a sound recorder.
+
+## Goals
+
+I wanted this app to enhance live note-taking, transcribing, editing, and reviewing. To
+achieve this, it needed to
+
+- be platform-agnostic,
+- have a simple and straight to the point UI/UX,
+- be as indescernible from native software as possible, and
+- be easily extensible with new media options in the future.
 
 ## Stack
 
@@ -25,30 +34,43 @@ Vite, React, Slate, ShadCN, Tailwind.
 
 ## Custom Text-Editor
 
-The application features a custom rich-text editor I built that automatically inserts stamps while typing.
+The core of the app relies on a text editor that can automatically insert clickable
+symbols (stamps) while typing. No such UI component existed at the time, so
+I built one using [Slate](https://docs.slatejs.org/), a framework for building
+custom text editors.
 
-**For developers**
+I eventually published two libraries to help developers in need of a similar tool:
 
-I have made the standalone editor available as a [headless React library](https://github.com/fortyoneplustwo/notestamp-editor-react). It functions exactly like the one in the app.
-
-Should you need more custom behaviour, I recommend you build your own editor using [Slate](https://docs.slatejs.org/) and extend it with my [Slate plugin](https://github.com/fortyoneplustwo/slate-stamps) which allows you to define custom stamp functionality.
+1. [notestamp-editor-react](https://github.com/fortyoneplustwo/notestamp-editor-react):
+   A headless editor component for React that functions
+   exactly like the one used in Notestamp.
+2. [slate-stamps](https://github.com/fortyoneplustwo/slate-stamps): If you are
+   building a custom text editor using Slate, this
+   plugin can be used to extend it with similar stamp functionality which you can
+   customize to fit your needs.
 
 ## File System Access
 
-As the back-end is still under development, I have introduced **File Sync** mode. When enabled, this mode allows the application to access and modify files within a specified directory on your local device. Saving a project downloads the files directly to the chosen folder. Projects saved in this folder are automatically detected by the app, enabling seamless opening, editing, and management.
+Using the File System Access API, I introduced **File Sync** mode which when turned on,
+permits the app to read from and write to a designated directory on the user's
+local device. This approach delivers a native-like UX in opening, saving and
+deleting projects.
 
-This approach delivers a near-native user experience while remaining accessible to anyone with a web browser.
+## Framework to implement additional media options
 
-## Framework to extend the app with more media
+I have designed an intuitive framework to seamlessly add more media options.
+This not only simplifies development for myself, but also allows users
+with knowledge of programming to add their own custom functionality.
 
-I have designed an intuitive framework to seamlessly integrate custom media components beyond the default options. This simplifies development while allowing users with React knowledge to add their own functionality.
+The framework is straightforward and follows React principles to reduce mental
+overhead for the developer.
 
-The framework is straightforward. It requires editing a configuration file and, at most, overriding four functions within the media component.
-
-While the documentation is being updated, you can refer to this [tutorial](https://github.com/fortyoneplustwo/notestamp/wiki/Tutorial:-Implementing-a-custom-media-component) for a detailed walkthrough.
+While the documentation is being updated, you can refer to this
+[tutorial](https://github.com/fortyoneplustwo/notestamp/wiki/Tutorial:-Implementing-a-custom-media-component)
+for a detailed walkthrough.
 
 ## Install
 
-`npm install`
+`pnpn install`
 
-`npm start`
+`pnpm start`
