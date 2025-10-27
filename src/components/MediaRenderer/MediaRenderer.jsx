@@ -2,13 +2,25 @@ import React, { Suspense } from "react"
 import { defaultMediaConfig as mediaConfig } from "@/config"
 import { useProjectContext } from "../../context/ProjectContext"
 import Loading from "../Screens/Loading/Loading"
+import YoutubePlayer from "./media/YoutubePlayer"
+import AudioPlayer from "./media/AudioPlayer"
+import AudioRecorder from "./media/AudioRecorder"
+import PdfReader from "./media/PdfReader"
 
-const mediaImports = import.meta.glob(`./media/*/index.jsx`)
-const lazyLoadedMediaComponents = new Map()
+const globImports = import.meta.glob(`./media/*/index.jsx`)
+const defaultMediaComponents = {
+  youtube: YoutubePlayer,
+  audio: AudioPlayer,
+  recorder: AudioRecorder,
+  pdf: PdfReader,
+}
+const mediaComponentsMap = new Map()
 mediaConfig.forEach(({ type, dir }) => {
   const path = `./media/${dir}/index.jsx`
-  if (path in mediaImports) {
-    lazyLoadedMediaComponents.set(type, React.lazy(mediaImports[path]))
+  if (type in defaultMediaComponents) {
+    mediaComponentsMap.set(type, defaultMediaComponents[type])
+  } else if (path in globImports) {
+    mediaComponentsMap.set(type, React.lazy(globImports[path]))
   }
 })
 
@@ -16,7 +28,7 @@ const MediaRenderer = ({ ref, metadata }) => {
   const { setMediaRef } = useProjectContext()
 
   const MediaComponent = metadata?.type
-    ? lazyLoadedMediaComponents.get(metadata.type)
+    ? mediaComponentsMap.get(metadata.type)
     : null
 
   if (!MediaComponent) {
