@@ -1,7 +1,8 @@
-import js from "@eslint/js";
-import globals from "globals";
-import react from "eslint-plugin-react";
-import { defineConfig, globalIgnores } from "eslint/config";
+import js from "@eslint/js"
+import globals from "globals"
+import react from "eslint-plugin-react"
+import reactHooks from "eslint-plugin-react-hooks"
+import { defineConfig, globalIgnores } from "eslint/config"
 
 export default defineConfig([
   globalIgnores(["./public/pdf.worker.min.mjs"]),
@@ -19,6 +20,7 @@ export default defineConfig([
     files: ["**/*.{js,jsx,mjs,cjs,ts,tsx}"],
     plugins: {
       react,
+      "react-hooks": reactHooks,
     },
     settings: {
       react: {
@@ -32,6 +34,8 @@ export default defineConfig([
       "react/jsx-uses-react": "error",
       "react/jsx-uses-vars": "error",
       "react/react-in-jsx-scope": "off",
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn"
     },
   },
   {
@@ -39,4 +43,4 @@ export default defineConfig([
     files: ["**/*.{js,mjs,cjs,jsx}"],
     languageOptions: { globals: globals.browser },
   },
-]);
+])
