@@ -34,7 +34,9 @@
     "@radix-ui/react-toggle-group": "^1.1.7",
     "@radix-ui/react-tooltip": "^1.2.4",
     "@react-pdf/renderer": "^4.0.0",
+    "@tanstack/react-router": "^1.134.15",
     "@tanstack/react-table": "^8.20.6",
+    "@tanstack/router-plugin": "^1.134.15",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",
@@ -47,6 +49,7 @@
     "embla-carousel-react": "^8.6.0",
     "escape-html": "^1.0.3",
     "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "firebase": "^10.5.0",
     "html2canvas": "^1.4.1",
     "http-proxy-middleware": "^2.0.6",
@@ -64,7 +67,6 @@
     "react-joyride": "^2.9.3",
     "react-pdf": "^7.7.3",
     "react-resizable-panels": "^2.1.8",
-    "react-router-dom": "^6.14.2",
     "react-youtube": "^10.1.0",
     "recharts": "^2.15.3",
     "slate": "^0.112.0",
@@ -76,7 +78,8 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
     "wavesurfer.js": "^7.9.5",
-    "web-vitals": "^2.1.0"
+    "web-vitals": "^2.1.0",
+    "zustand": "^5.0.8"
   },
   "scripts": {
     "start": "vite",

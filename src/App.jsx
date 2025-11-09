@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react"
 import { TextEditor } from "./components/Editor/TextEditor"
 import { EventEmitter } from "./utils/EventEmitter"
-import WelcomeMessage from "./components/Screens/Welcome/WelcomeMessage"
+import { WelcomeMessage } from "./components/Screens/Welcome/WelcomeMessage"
 import Dashboard from "./components/Screens/Dashboard/Dashboard"
 import MediaRenderer from "./components/MediaRenderer/MediaRenderer"
 import { ProjectProvider } from "./context/ProjectContext"
@@ -20,8 +20,16 @@ import { useContent } from "./components/Editor/hooks/useContent"
 import "./index.css"
 import { toast } from "sonner"
 import { tour } from "./lib/tour"
+import { createRootRoute } from "@tanstack/react-router"
 
-const App = () => {
+
+export const rootRoute = createRootRoute({
+  component: App,
+  notFoundComponent: () => <>404 Not Found</>,
+  errorComponent: () => <>Error</>,
+})
+
+export function App () {
   const mediaRendererRef = useRef(null)
   const [isProjectOpen, setIsProjectOpen] = useState(null)
   const [currProjectMetadata, setCurrProjectMetadata] = useState(null)
@@ -130,4 +138,3 @@ const App = () => {
   )
 }
 
-export default App

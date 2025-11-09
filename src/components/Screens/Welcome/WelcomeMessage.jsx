@@ -10,8 +10,16 @@ import {
 } from "lucide-react"
 import { Compass } from "lucide-react"
 import React, { useEffect, useState } from "react"
+import { createRoute } from "@tanstack/react-router"
+import { rootRoute } from "@/App"
 
-const WelcomeMessage = ({ onClickTourButton }) => {
+export const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/',
+  component: WelcomeMessage,
+})
+
+export function WelcomeMessage({ onClickTourButton }) {
   const [isHover, setIsHover] = useState(false)
 
   return (
@@ -104,4 +112,3 @@ const Typewriter = ({ text, delay }) => {
 
   return <span>{currentText}</span>
 }
-export default WelcomeMessage
