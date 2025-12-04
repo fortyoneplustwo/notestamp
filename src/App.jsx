@@ -1,9 +1,6 @@
 import React, { useState, useRef, useEffect } from "react"
 import { TextEditor } from "./components/Editor/TextEditor"
 import { EventEmitter } from "./utils/EventEmitter"
-import { WelcomeMessage } from "./components/Screens/Welcome/WelcomeMessage"
-import Dashboard from "./components/Screens/Dashboard/Dashboard"
-import MediaRenderer from "./components/MediaRenderer/MediaRenderer"
 import { ProjectProvider } from "./context/ProjectContext"
 import LeftPane from "./components/Containers/LeftPane"
 import RightPane from "./components/Containers/RightPane"
@@ -19,27 +16,40 @@ import { useCreateEditor } from "./components/Editor/hooks/useCreateEditor"
 import { useContent } from "./components/Editor/hooks/useContent"
 import "./index.css"
 import { toast } from "sonner"
-import { tour } from "./lib/tour"
-import { createRootRoute } from "@tanstack/react-router"
+import { createRoute, Outlet, useNavigate } from "@tanstack/react-router"
+import { rootRoute } from "./router"
 
-
-export const rootRoute = createRootRoute({
+export const appLayoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: "_appLayout",
   component: App,
-  notFoundComponent: () => <>404 Not Found</>,
-  errorComponent: () => <>Error</>,
 })
 
-export function App () {
+export function App() {
   const mediaRendererRef = useRef(null)
   const [isProjectOpen, setIsProjectOpen] = useState(null)
   const [currProjectMetadata, setCurrProjectMetadata] = useState(null)
 
+  const navigate = useNavigate()
   const { editor } = useCreateEditor()
   const { setContent } = useContent()
   const { data: userData } = useGetUserData()
   const { user, setUser, syncToFileSystem } = useAppContext()
   const { fetchById: fetchNotesById, error: errorFetchingNotes } =
     useGetProjectNotes()
+
+  // useEffect(() => {
+  //   if (isProjectOpen) {
+  //     // go to media renderer
+  //   } else if (user) {
+  //     // go to protected dashboard
+  //   } else if (syncToFileSystem) {
+  //     // go to local dashboard
+  //     navigate({ to: "/local" })
+  //   } else {
+  //     navigate({ to: "/" })
+  //   }
+  // }, [navigate, isProjectOpen, user, syncToFileSystem])
 
   useEffect(() => {
     setUser(userData)
@@ -98,20 +108,11 @@ export function App () {
         <ProjectProvider currProjectConfig={currProjectMetadata}>
           <ModalProvider>
             <header className="flex row-span-1 bg-transparent pt-2 px-2">
-              <AppBar
-                showToolbar={isProjectOpen}
-                onCloseProject={() => {
-                  setIsProjectOpen(false)
-                  setCurrProjectMetadata(null)
-                }}
-                navItems={defaultMediaConfig.concat(myMediaComponents)}
-                onNavItemClick={handleOpenNewProject}
-                metadata={currProjectMetadata}
-              />
+              <AppBar navItems={defaultMediaConfig.concat(myMediaComponents)} />
             </header>
             <main className="row-span-2 grid grid-cols-2">
               <LeftPane>
-                {isProjectOpen ? (
+                {/* isProjectOpen ? (
                   <MediaRenderer
                     metadata={currProjectMetadata}
                     ref={node => (mediaRendererRef.current = node)}
@@ -119,8 +120,9 @@ export function App () {
                 ) : user || syncToFileSystem ? (
                   <Dashboard onOpenProject={handleOpenProject} />
                 ) : (
-                  <WelcomeMessage onClickTourButton={() => tour.drive()} />
-                )}
+                  <WelcomeMessage onClickTourButton={handleOnBeginTour} />
+                ) */}
+                <Outlet />
               </LeftPane>
               <RightPane>
                 <TextEditor
@@ -137,4 +139,3 @@ export function App () {
     </ThemeProvider>
   )
 }
-

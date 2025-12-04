@@ -6,8 +6,10 @@ import { formatTime } from "../../utils/formatTime"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import isHotkey from "is-hotkey"
+import { createRoute } from "@tanstack/react-router"
+import { mediaLayoutRoute } from "../../MediaRenderer"
 
-const YoutubePlayer = ({ ref, ...props }) => {
+function YoutubePlayer({ ref, ...props }) {
   const player = useRef(null)
 
   const hotkeyActions = new Map([

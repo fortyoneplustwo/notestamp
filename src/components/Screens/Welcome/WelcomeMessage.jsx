@@ -11,16 +11,18 @@ import {
 import { Compass } from "lucide-react"
 import React, { useEffect, useState } from "react"
 import { createRoute } from "@tanstack/react-router"
-import { rootRoute } from "@/App"
+import { appLayoutRoute } from "@/App"
+import { useJoyrideContext } from "@/context/JoyrideContext"
 
 export const indexRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => appLayoutRoute,
   path: '/',
   component: WelcomeMessage,
 })
 
-export function WelcomeMessage({ onClickTourButton }) {
+export function WelcomeMessage() {
   const [isHover, setIsHover] = useState(false)
+  const { handleOnBeginTour } = useJoyrideContext()
 
   return (
     <div className="h-full w-full flex flex-col">
@@ -57,7 +59,7 @@ export function WelcomeMessage({ onClickTourButton }) {
         <div className="flex items-center justify-center grow px-40 py-10">
           <Button
             className="grow"
-            onClick={onClickTourButton}
+            onClick={handleOnBeginTour}
             onMouseEnter={() => setIsHover(true)}
             onMouseLeave={() => setIsHover(false)}
           >

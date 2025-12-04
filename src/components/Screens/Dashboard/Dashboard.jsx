@@ -9,8 +9,23 @@ import { FolderOpen } from "lucide-react"
 import { DataTable } from "./components/DataTable"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
+import { appLayoutRoute } from "@/App"
+import { createRoute } from "@tanstack/react-router"
+import { localLayoutRoute } from "@/router"
 
-const Dashboard = ({ onOpenProject }) => {
+export const localDashboardRoute = createRoute({
+  getParentRoute: () => localLayoutRoute,
+  component: Dashboard,
+  path: "/",
+})
+
+export const dashboardRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  component: Dashboard,
+  path: "/dashboard",
+})
+
+function Dashboard ({ onOpenProject }) {
   const [inputValue, setInputValue] = useState("")
   const {
     data: projects,

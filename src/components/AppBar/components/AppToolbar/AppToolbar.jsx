@@ -12,6 +12,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { filterMetadata } from "@/utils/makeMetadataForSave"
 import { validKeys } from "@/config"
+import { useNavigate } from "@tanstack/react-router"
 
 const AppToolbar = ({ metadata, onClose }) => {
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth)
@@ -24,6 +25,7 @@ const AppToolbar = ({ metadata, onClose }) => {
   const { deleteById, error: deleteError } = useDeleteProject()
   const { fetchById: fetchNotesById } = useGetProjectNotes()
   const { takeSnapshot } = useProjectContext()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const handleResize = () => setViewportWidth(window.innerWidth)
@@ -115,7 +117,7 @@ const AppToolbar = ({ metadata, onClose }) => {
           refetchAllProjects()
         } catch (error) {
           toast.error("Save failed", { id })
-          console.error("Erro saving project:", error)
+          console.error("Error saving project:", error)
         }
 
         return
@@ -124,13 +126,14 @@ const AppToolbar = ({ metadata, onClose }) => {
   }
 
   const handleCloseProject = async () => {
-    if (!metadata?.title) return onClose()
+    const prevRoute = cwd ? "/local/workspace" : "/"
+    if (!metadata?.title) return navigate({ to: prevRoute })
 
     try {
       const snapshot = takeSnapshot()
       const cachedNotes = await fetchNotesById(metadata.title)
       if (cachedNotes === JSON.stringify(snapshot?.notes)) {
-        return onClose()
+        navigate({ to: prevRoute })
       }
 
       openModal("unsavedChangesModal", {
@@ -141,12 +144,12 @@ const AppToolbar = ({ metadata, onClose }) => {
         },
         onDiscard: () => {
           closeModal()
-          onClose()
+          navigate({ to: prevRoute })
         },
       })
     } catch (error) {
       console.error(error)
-      onClose()
+      navigate({ to: prevRoute })
     }
   }
 
