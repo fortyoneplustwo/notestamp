@@ -17,9 +17,9 @@ import { defaultMediaConfig } from "./config"
 import { myMediaComponents } from "./components/MediaRenderer/config"
 import { useCreateEditor } from "./components/Editor/hooks/useCreateEditor"
 import { useContent } from "./components/Editor/hooks/useContent"
-import { Joyride, Tooltip, useJoyride } from "./features/guided-tour"
 import "./index.css"
 import { toast } from "sonner"
+import { tour } from "./lib/tour"
 
 const App = () => {
   const mediaRendererRef = useRef(null)
@@ -30,8 +30,6 @@ const App = () => {
   const { setContent } = useContent()
   const { data: userData } = useGetUserData()
   const { user, setUser, syncToFileSystem } = useAppContext()
-  const { steps, run, stepIndex, handleOnBeginTour, handleJoyrideCallback } =
-    useJoyride()
   const { fetchById: fetchNotesById, error: errorFetchingNotes } =
     useGetProjectNotes()
 
@@ -113,7 +111,7 @@ const App = () => {
                 ) : user || syncToFileSystem ? (
                   <Dashboard onOpenProject={handleOpenProject} />
                 ) : (
-                  <WelcomeMessage onClickTourButton={handleOnBeginTour} />
+                  <WelcomeMessage onClickTourButton={() => tour.drive()} />
                 )}
               </LeftPane>
               <RightPane>
@@ -128,19 +126,6 @@ const App = () => {
           </ModalProvider>
         </ProjectProvider>
       </div>
-      <Joyride
-        locale={{ close: "Next" }}
-        stepIndex={stepIndex}
-        steps={steps}
-        run={run}
-        callback={handleJoyrideCallback}
-        spotlightClicks={true}
-        hideCloseButton={true}
-        disableOverlayClose={true}
-        showProgress={true}
-        tooltipComponent={Tooltip}
-        floaterProps={{ hideArrow: true }}
-      />
     </ThemeProvider>
   )
 }

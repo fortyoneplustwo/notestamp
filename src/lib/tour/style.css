@@ -1,0 +1,53 @@
+.driver-popover.custom {
+	background-color: var(--foreground);
+	color: var(--background);
+}
+
+.driver-popover.custom .driver-popover-title,
+.driver-popover.custom .driver-popover-description,
+.driver-popover.custom button {
+  font-family:
+    Outfit,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Roboto",
+    "Oxygen",
+    "Ubuntu",
+    "Cantarell",
+    "Fira Sans",
+    "Droid Sans",
+    "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.driver-popover.custom .driver-popover-title {
+	font-size: 1em;
+}
+
+.driver-popover.custom button {
+	font-weight: var(--font-weight-medium);
+	text-shadow: none;
+	border-color: none;
+}
+
+.driver-popover.custom button.driver-popover-close-btn {
+	background-color: transparent;
+	color: var(--background);
+}
+
+.driver-popover.custom .driver-popover-arrow-side-left.driver-popover-arrow {
+	border-left-color: var(--foreground);
+}
+.driver-popover.custom .driver-popover-arrow-side-right.driver-popover-arrow {
+	border-right-color: var(--foreground);
+}
+.driver-popover.custom .driver-popover-arrow-side-top.driver-popover-arrow {
+	border-top-color: var(--foreground);
+}
+.driver-popover.custom .driver-popover-arrow-side-bottom.driver-popover-arrow {
+	border-bottom-color: var(--foreground);
+}
+
