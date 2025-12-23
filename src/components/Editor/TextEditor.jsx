@@ -37,7 +37,8 @@ export const TextEditor = ({
     []
   )
 
-  const { setEditorRef, handleMediaHotkey, isMounted } = useProjectContext()
+  const { setEditorRef, handleMediaHotkey, isMediaMounted } =
+    useProjectContext()
   const { toggleMark } = useMarkButton()
   const { toggleBlock } = useBlockButton()
   const { handleCopy, handlePaste } = useCopyPaste()
@@ -189,13 +190,7 @@ export const TextEditor = ({
               return action()
             }
           }
-          // const toolbarHotkey = Object.keys(toolbarKeyShortcuts).find(hk =>
-          //   isHotkey(hk, event)
-          // )
-          // if (toolbarHotkey) {
-          //   return toolbarKeyShortcuts[toolbarHotkey]?.()
-          // }
-          if (isMounted) {
+          if (isMediaMounted) {
             return handleMediaHotkey(event)
           }
         }

@@ -1,77 +1,23 @@
-import { useContent } from "@/components/Editor/hooks/useContent"
-import {
-  createContext,
-  useCallback,
-  use,
-  useEffect,
-  useRef,
-  useState,
-} from "react"
+import { create } from "zustand"
 
-const ProjectContext = createContext()
+export const mediaRef = { current: null }
+export const editorRef = { current: null }
 
-export const useProjectContext = () => use(ProjectContext)
-
-export const ProjectProvider = ({ currProjectConfig, children }) => {
-  const [isMounted, setIsMounted] = useState(false)
-  const [isMediaMounted, setIsMediaMounted] = useState(false)
-  const [isEditorMounted, setIsEditorMounted] = useState(false)
-  const mediaRef = useRef(null)
-  const editorRef = useRef(null)
-  const { getContent } = useContent()
-
-  useEffect(() => {
-    if (isMediaMounted && isEditorMounted) {
-      setIsMounted(true)
-    } else {
-      setIsMounted(false)
-    }
-  }, [isMediaMounted, isEditorMounted])
-
-  const takeSnapshot = useCallback(() => {
+export const useProjectContext = create((set) => ({
+  // TODO: might not need currProjectConfig after all
+  currProjectConfig: null,
+  setCurrProjectConfig: (data) => set({ currProjectConfig: data }),
+  isMediaMounted: () => !!mediaRef.current,
+  isEditorMounted: () => !!editorRef.current,
+  setMediaRef: node => (mediaRef.current = node),
+  setEditorRef: node => (editorRef.current = node),
+  takeSnapshot: () => {
     return {
       metadata: mediaRef.current?.getMetadata?.(),
-      notes: editorRef.current && getContent(editorRef.current),
+      notes: editorRef.current && structuredClone(editorRef.current),
       media: mediaRef.current?.getMedia?.(),
     }
-  }, [])
+  },
+  handleMediaHotkey: (event) => mediaRef.current?.handleHotkey?.(event),
+}))
 
-  const handleMediaHotkey = useCallback(event => {
-    return mediaRef?.current?.handleHotkey?.(event)
-  }, [])
-
-  const setMediaRef = useCallback(
-    node => {
-      setIsMediaMounted(() => {
-        mediaRef.current = node
-        return !!node
-      })
-    },
-    [setIsMediaMounted]
-  )
-
-  const setEditorRef = useCallback(
-    node => {
-      setIsEditorMounted(() => {
-        editorRef.current = node
-        return !!node
-      })
-    },
-    [setIsEditorMounted]
-  )
-
-  return (
-    <ProjectContext
-      value={{
-        setMediaRef,
-        setEditorRef,
-        isMounted,
-        takeSnapshot,
-        handleMediaHotkey,
-        currProjectConfig,
-      }}
-    >
-      {children}
-    </ProjectContext>
-  )
-}

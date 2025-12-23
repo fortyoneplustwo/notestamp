@@ -126,7 +126,7 @@ const AppToolbar = ({ metadata, onClose }) => {
   }
 
   const handleCloseProject = async () => {
-    const prevRoute = cwd ? "/local/workspace" : "/"
+    const prevRoute = cwd ? "/dashboard" : "/"
     if (!metadata?.title) return navigate({ to: prevRoute })
 
     try {

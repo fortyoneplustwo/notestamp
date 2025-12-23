@@ -7,7 +7,8 @@ import { Toolbar } from "../../components/Toolbar"
 import { toast } from "sonner"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Circle, Pause, Square } from "lucide-react"
-import EventEmitter from "@/utils/EventEmitter"
+import { useNavigate } from "@tanstack/react-router"
+import { setMediaToForward } from "@/utils/switchMedia"
 
 const AudioRecorder = ({ ref, ...props }) => {
   const [started, setStarted] = useState(false)
@@ -17,6 +18,8 @@ const AudioRecorder = ({ ref, ...props }) => {
   const containerRef = useRef(null)
   const recorderRef = useRef(null)
   const durationRef = useRef(null)
+
+  const navigate = useNavigate()
 
   const { wavesurfer } = useWavesurfer({
     container: containerRef,
@@ -62,11 +65,11 @@ const AudioRecorder = ({ ref, ...props }) => {
       recorder.on("record-end", blob => {
         setStopped(true)
         const url = window.URL.createObjectURL(blob)
-        EventEmitter.dispatch("open-media-with-src", {
-          type: "audio",
+        setMediaToForward({
           src: url,
           mimetype: blob && blob.type?.split(";")[0],
         })
+        navigate({ from: "/", to: "audio" })
       })
     }
 

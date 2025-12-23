@@ -9,7 +9,11 @@ import { User } from "lucide-react"
 import { ModeToggle } from "./components/ModeToggle"
 import { useGetDirHandle } from "@/hooks/useFileSystem"
 import { Button } from "@/components/ui/button"
-import { useLocation, useNavigate, useParams } from "@tanstack/react-router"
+import {
+  useMatchRoute,
+  useNavigate,
+  useParams,
+} from "@tanstack/react-router"
 
 const ProfileSettings = () => {
   // eslint-disable-next-line no-unused-vars
@@ -35,7 +39,7 @@ const ProfileSettings = () => {
   const { clearCache } = useCustomFetch()
   const { openModal, closeModal } = useModal()
   const navigate = useNavigate()
-  const location = useLocation()
+  const matchRoute = useMatchRoute()
   const params = useParams({ strict: false })
 
   useEffect(() => {
@@ -100,8 +104,9 @@ const ProfileSettings = () => {
         const handle = await getDirHandle()
         setCwd(handle)
         setSyncToFileSystem(true)
-        // navigate to /local
-        navigate({ to: "/local/workspace" + location.pathname })
+        if (matchRoute({ to: "/" })) {
+          navigate({ to: "dashboard", from: "/" })
+        }
       } catch (error) {
         console.error(error)
         setIsFileSyncChecked(false)
@@ -110,11 +115,10 @@ const ProfileSettings = () => {
     } else {
       setCwd(null)
       setSyncToFileSystem(false)
-      const path = location.pathname
-      if (path.startsWith("/local/workspace")) {
-        const suffix = path.slice(`/local/workspace`.length)
-        navigate({ to: suffix.startsWith("/") ? suffix : `/${suffix}` })
+      if (!user && matchRoute({ to: "/dashboard" })) {
+        navigate({ to: "/" })
       }
+      // NOTE: should reload /dashboard if user logged in?
     }
   }
 

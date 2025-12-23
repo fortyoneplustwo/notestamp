@@ -7,9 +7,14 @@ import AudioPlayer from "./media/AudioPlayer"
 import AudioRecorder from "./media/AudioRecorder"
 import PdfReader from "./media/PdfReader"
 import { appLayoutRoute } from "@/App"
-import { createRoute, Outlet, useLoaderData, useMatch } from "@tanstack/react-router"
+import {
+  createRoute,
+  Outlet,
+  useLoaderData,
+  useMatch,
+} from "@tanstack/react-router"
 import { fetchMetadata } from "@/utils/fetchMetadata"
-import { localLayoutRoute } from "@/router"
+import { invalidateForward, mediaToForward, shouldForwardMedia } from "@/utils/switchMedia"
 
 const globImports = import.meta.glob(`./media/*/index.jsx`)
 const defaultMediaComponents = {
@@ -28,24 +33,6 @@ mediaConfig.forEach(({ type, dir }) => {
   }
 })
 
-export const localMediaLayoutRoute = createRoute({
-  getParentRoute: () => localLayoutRoute,
-  id: "_localMediaLayout",
-  component: MediaRenderer,
-})
-
-export const localMediaIdRoute = createRoute({
-  getParentRoute: () => localMediaLayoutRoute,
-  path: "$mediaId",
-  loader: ({ params }) => {
-    return fetchMetadata(params.mediaId)
-  },
-  pendingComponent: () => Loading,
-  notFoundComponent: () => <>404: Oops! This media component does not exist.</>,
-  errorComponent: () => <>Error</>,
-  component: Media,
-})
-
 export const mediaLayoutRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   id: "_mediaLayout",
@@ -56,7 +43,17 @@ export const mediaIdRoute = createRoute({
   getParentRoute: () => mediaLayoutRoute,
   path: "$mediaId",
   loader: ({ params }) => {
-    return fetchMetadata(params.mediaId)
+    const metadata = fetchMetadata(params.mediaId)
+    // TODO: case: saved project -> override with project's metadata
+    // Add fetchMetadataById to router context on before load
+    // then call in route's loader
+    if (shouldForwardMedia) {
+      const merged = { ...metadata, ...mediaToForward }
+      invalidateForward()
+      return merged
+    }
+    // NOTE: May want to load media here
+    return metadata
   },
   pendingComponent: () => Loading,
   notFoundComponent: () => <>404: Oops! This media component does not exist.</>,
@@ -77,6 +74,9 @@ function Media() {
   const metadata = useLoaderData({})
   const { setMediaRef } = useProjectContext()
   const Comp = mediaComponentsMap.get(match.params.mediaId)
+
+  // TODO: read (tanstack)query data here
+  // then pass to props
 
   if (!Comp) {
     return (
