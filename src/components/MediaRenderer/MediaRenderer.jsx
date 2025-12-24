@@ -1,6 +1,6 @@
 import React from "react"
 import { defaultMediaConfig as mediaConfig } from "@/config"
-import { useProjectContext } from "../../context/ProjectContext"
+import { editorRef, useProjectContext } from "../../context/ProjectContext"
 import Loading from "../Screens/Loading/Loading"
 import YoutubePlayer from "./media/YoutubePlayer"
 import AudioPlayer from "./media/AudioPlayer"
@@ -12,9 +12,23 @@ import {
   Outlet,
   useLoaderData,
   useMatch,
+  useRouteContext,
 } from "@tanstack/react-router"
-import { fetchMetadata } from "@/utils/fetchMetadata"
-import { invalidateForward, mediaToForward, shouldForwardMedia } from "@/utils/switchMedia"
+import { fetchMetadata as fetchProjectConfig } from "@/utils/fetchMetadata"
+import {
+  invalidateForward,
+  mediaToForward,
+  shouldForwardMedia,
+} from "@/utils/switchMedia"
+import {
+  fetchMediaById,
+  // fetchMediaByUrl,
+  fetchMetadata,
+  fetchNotes,
+} from "@/lib/fetch/api-read"
+import { useQuery } from "@tanstack/react-query"
+import { toast } from "sonner"
+import { useContent } from "../Editor/hooks/useContent"
 
 const globImports = import.meta.glob(`./media/*/index.jsx`)
 const defaultMediaComponents = {
@@ -36,47 +50,113 @@ mediaConfig.forEach(({ type, dir }) => {
 export const mediaLayoutRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   id: "_mediaLayout",
-  component: MediaRenderer,
+  component: () => (
+    <div className="h-full overflow-hidden">
+      <Outlet />
+    </div>
+  ),
 })
 
 export const mediaIdRoute = createRoute({
   getParentRoute: () => mediaLayoutRoute,
-  path: "$mediaId",
-  loader: ({ params }) => {
-    const metadata = fetchMetadata(params.mediaId)
-    // TODO: case: saved project -> override with project's metadata
-    // Add fetchMetadataById to router context on before load
-    // then call in route's loader
-    if (shouldForwardMedia) {
-      const merged = { ...metadata, ...mediaToForward }
-      invalidateForward()
-      return merged
+  path: "$mediaId/$",
+  beforeLoad: ({ context: { queryClient }, params }) => {
+    let projectId = ""
+    try {
+      const decoded = decodeURI(params._splat)
+      projectId = decoded
+    } catch {
+      throw Error("Invalid URL")
     }
-    // NOTE: May want to load media here
-    return metadata
+
+    return {
+      projectId,
+      metadataQueryOptions: {
+        queryKey: ["metadata", projectId],
+        queryFn: () => fetchMetadata(projectId),
+        enabled: !!projectId,
+        initialData: () => {
+          const { projects } = projectId
+            ? queryClient.getQueryData(["projects"])
+            : { projects: [] }
+          const metadata = projects?.find(p => p.id === projectId)
+          return metadata
+        },
+      },
+      notesQueryOptions: {
+        queryKey: ["notes", projectId],
+        queryFn: () => fetchNotes(projectId),
+      },
+      mediaQueryOptions: {
+        queryKey: ["media", projectId],
+        queryFn: () => fetchMediaById(projectId),
+      },
+    }
+  },
+  loader: async ({
+    context: {
+      projectId,
+      queryClient,
+      metadataQueryOptions,
+      notesQueryOptions,
+      // mediaQueryOptions,
+    },
+    params,
+  }) => {
+    let newProjectConfig = fetchProjectConfig(params.mediaId)
+
+    // TODO: implement media prefetch with option to stream/download
+
+    if (projectId) {
+      queryClient.prefetchQuery(notesQueryOptions)
+      await queryClient.ensureQueryData(metadataQueryOptions)
+      // await queryClient.prefetchQuery(mediaQueryOptions)
+    } else if (shouldForwardMedia) {
+      // await queryClient.prefetchQuery({
+      //   queryKey: ["media", mediaToForward.src],
+      //   queryFn: () => fetchMediaByUrl(mediaToForward.src),
+      // })
+      newProjectConfig = { ...newProjectConfig, ...mediaToForward }
+      invalidateForward()
+    }
+
+    return {
+      projectId,
+      newProjectConfig,
+    }
   },
   pendingComponent: () => Loading,
   notFoundComponent: () => <>404: Oops! This media component does not exist.</>,
-  errorComponent: () => <>Error</>,
+  errorComponent: () => <>{"Couldn't load media"}</>,
   component: Media,
 })
 
-function MediaRenderer() {
-  return (
-    <div className="h-full overflow-hidden">
-      <Outlet />
-    </div>
-  )
-}
-
 function Media() {
   const match = useMatch({ strict: false })
-  const metadata = useLoaderData({})
+  const { newProjectConfig } = useLoaderData({})
   const { setMediaRef } = useProjectContext()
-  const Comp = mediaComponentsMap.get(match.params.mediaId)
+  const { metadataQueryOptions, notesQueryOptions } = useRouteContext({})
+  const { data: fetchedMetadata, error: errorFetchingMetadata } =
+    useQuery(metadataQueryOptions)
+  const { data: fetchedNotes, errorFetchingNotes } = useQuery(notesQueryOptions)
+  const { setContent } = useContent()
 
-  // TODO: read (tanstack)query data here
-  // then pass to props
+  if (errorFetchingMetadata) {
+    console.error(`Error fetching metadata: ${errorFetchingMetadata}`)
+    throw Error()
+  }
+  const metadata = fetchedMetadata
+    ? { ...newProjectConfig, ...fetchedMetadata }
+    : newProjectConfig
+
+  if (errorFetchingNotes) {
+    console.error(`Error fetching notes: ${errorFetchingNotes}`)
+    toast.error("Failed to fetch notes for this project")
+  }
+  setContent(editorRef.current, fetchedNotes)
+
+
+  const Comp = mediaComponentsMap.get(match.params.mediaId)
 
   if (!Comp) {
     return (
@@ -98,5 +178,3 @@ function Media() {
     />
   )
 }
-
-export default MediaRenderer

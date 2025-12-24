@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react"
 import { columns } from "./components/Columns"
 import { Toolbar } from "../../MediaRenderer/components/Toolbar"
-import { useGetProjects } from "../../../hooks/useReadData"
 import { Button } from "@/components/ui/button"
 import { useGetDirHandle } from "../../../hooks/useFileSystem"
 import { useAppContext } from "../../../context/AppContext"
@@ -10,40 +9,36 @@ import { DataTable } from "./components/DataTable"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { appLayoutRoute } from "@/App"
-import { createRoute } from "@tanstack/react-router"
+import {
+  createRoute,
+  useNavigate,
+  useRouteContext,
+} from "@tanstack/react-router"
+import { fetchProjects } from "@/lib/fetch/api-read"
+import { useQuery } from "@tanstack/react-query"
 
 export const dashboardRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   component: Dashboard,
   path: "/dashboard",
+  beforeLoad: () => ({
+    projectsQueryOptions: {
+      queryKey: ["projects"],
+      queryFn: fetchProjects,
+    },
+  }),
+  loader: async ({ context }) => {
+    await context.queryClient.prefetchQuery(context.projectsQueryOptions)
+  },
 })
 
-function Dashboard({ onOpenProject }) {
+function Dashboard() {
   const [inputValue, setInputValue] = useState("")
-  const {
-    data: projects,
-    fetchAll: fetchAllProjects,
-    loading: loadingProjects,
-    error: errorFetchingProjects,
-  } = useGetProjects()
   const { dirHandle, getDirHandle } = useGetDirHandle()
-  const { user, syncToFileSystem, cwd, setCwd, triggerRefetchAllProjects } =
-    useAppContext()
+  const { user, syncToFileSystem, cwd, setCwd } = useAppContext()
   const tableRef = useRef(null)
-
-  useEffect(() => {
-    if (user || cwd) {
-      fetchAllProjects()
-    }
-  }, [fetchAllProjects, triggerRefetchAllProjects])
-
-  useEffect(() => {
-    if (!loadingProjects) {
-      if (errorFetchingProjects) {
-        toast.error("Failed to fetch list of projects")
-      }
-    }
-  }, [errorFetchingProjects, loadingProjects])
+  const { queryClient, projectsQueryOptions } = useRouteContext({})
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (dirHandle) {
@@ -51,8 +46,24 @@ function Dashboard({ onOpenProject }) {
     }
   }, [dirHandle, setCwd])
 
-  const handleRowClicked = title =>
-    onOpenProject(projects.find(p => p.title === title))
+  useEffect(() => {
+    if (user || cwd) {
+      queryClient.invalidateQueries({ queryKey: ["projects"] })
+    }
+  }, [user, cwd, queryClient])
+
+  const {
+    data: { projects },
+    error,
+  } = useQuery(projectsQueryOptions)
+  if (error) {
+    toast.error("Failed to fetch list of projects")
+  }
+
+  const handleOpenProject = title => {
+    const selected = projects.find(project => project.title === title)
+    navigate({ from: "/", to: `${selected.type}/${encodeURI(selected.title)}` })
+  }
 
   return (
     <div data-tour-id="dashboard" className="h-full">
@@ -73,12 +84,7 @@ function Dashboard({ onOpenProject }) {
             />
           )}
           {syncToFileSystem && (
-            <Button
-              size="xs"
-              title="Change directory"
-              className="open-dir-btn"
-              onClick={getDirHandle}
-            >
+            <Button size="xs" title="Change directory" onClick={getDirHandle}>
               <FolderOpen />
             </Button>
           )}
@@ -90,7 +96,7 @@ function Dashboard({ onOpenProject }) {
             columns={columns}
             data={projects}
             ref={tableRef}
-            onRowClick={handleRowClicked}
+            onRowClick={handleOpenProject}
           />
         )}
       </div>

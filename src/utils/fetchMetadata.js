@@ -10,6 +10,4 @@ export const fetchMetadata = (type, id) => {
       ...metadata,
     }
   }
-
-  // Otherwise we need to hook into the current state
 }
