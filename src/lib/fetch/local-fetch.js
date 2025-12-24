@@ -169,6 +169,7 @@ export const localFetch = async (endpoint, params = null) => {
             )
           }
         }
+        console.log(params.metadata)
         const mediaFile =
           params?.media &&
           new File(

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect, useMemo } from "react"
 import { defaultMediaConfig as mediaConfig } from "@/config"
 import { editorRef, useProjectContext } from "../../context/ProjectContext"
 import Loading from "../Screens/Loading/Loading"
@@ -14,7 +14,7 @@ import {
   useMatch,
   useRouteContext,
 } from "@tanstack/react-router"
-import { fetchMetadata as fetchProjectConfig } from "@/utils/fetchMetadata"
+import { getProjectConfig } from "@/utils/getProjectConfig"
 import {
   invalidateForward,
   mediaToForward,
@@ -86,6 +86,7 @@ export const mediaIdRoute = createRoute({
       notesQueryOptions: {
         queryKey: ["notes", projectId],
         queryFn: () => fetchNotes(projectId),
+        enabled: !!projectId,
       },
       mediaQueryOptions: {
         queryKey: ["media", projectId],
@@ -103,9 +104,9 @@ export const mediaIdRoute = createRoute({
     },
     params,
   }) => {
-    let newProjectConfig = fetchProjectConfig(params.mediaId)
+    let newProjectConfig = getProjectConfig(params.mediaId)
 
-    // TODO: implement media prefetch with option to stream/download
+    // TODO: implement media prefetch with option to stream/download?
 
     if (projectId) {
       queryClient.prefetchQuery(notesQueryOptions)
@@ -134,27 +135,37 @@ export const mediaIdRoute = createRoute({
 function Media() {
   const match = useMatch({ strict: false })
   const { newProjectConfig } = useLoaderData({})
-  const { setMediaRef } = useProjectContext()
+  const { setMediaRef, setActiveProject } = useProjectContext()
   const { metadataQueryOptions, notesQueryOptions } = useRouteContext({})
   const { data: fetchedMetadata, error: errorFetchingMetadata } =
     useQuery(metadataQueryOptions)
-  const { data: fetchedNotes, errorFetchingNotes } = useQuery(notesQueryOptions)
+  const { data: fetchedNotes, error: errorFetchingNotes } = useQuery(notesQueryOptions)
   const { setContent } = useContent()
 
   if (errorFetchingMetadata) {
     console.error(`Error fetching metadata: ${errorFetchingMetadata}`)
     throw Error()
   }
-  const metadata = fetchedMetadata
-    ? { ...newProjectConfig, ...fetchedMetadata }
-    : newProjectConfig
+
+  const metadata = useMemo(
+    () =>
+      fetchedMetadata
+        ? { ...newProjectConfig, ...fetchedMetadata }
+        : newProjectConfig,
+    [fetchedMetadata, newProjectConfig]
+  )
+
+  useEffect(() => {
+    setActiveProject(metadata)
+    return () => setActiveProject(null)
+  }, [setActiveProject, metadata])
 
   if (errorFetchingNotes) {
     console.error(`Error fetching notes: ${errorFetchingNotes}`)
     toast.error("Failed to fetch notes for this project")
+    throw Error()
   }
-  setContent(editorRef.current, fetchedNotes)
-
+  fetchedNotes && setContent(editorRef.current, fetchedNotes)
 
   const Comp = mediaComponentsMap.get(match.params.mediaId)
 

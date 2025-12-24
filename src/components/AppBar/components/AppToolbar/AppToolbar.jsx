@@ -1,7 +1,4 @@
 import React, { useEffect, useState } from "react"
-import { useSaveProject } from "@/hooks/useWriteData"
-import { useDeleteProject, useUpdateProject } from "@/hooks/useUpdateData"
-import { useGetProjectNotes } from "@/hooks/useReadData"
 import { useModal } from "@/context/ModalContext"
 import { useProjectContext } from "@/context/ProjectContext"
 import { useAppContext } from "@/context/AppContext"
@@ -12,20 +9,25 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { filterMetadata } from "@/utils/makeMetadataForSave"
 import { validKeys } from "@/config"
-import { useNavigate } from "@tanstack/react-router"
+import { useNavigate, useRouteContext } from "@tanstack/react-router"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { createProject } from "@/lib/fetch/api-write"
+import { updateProject } from "@/lib/fetch/api-update"
+import { deleteProject } from "@/lib/fetch/api-delete"
+import { fetchNotes } from "@/lib/fetch/api-read"
 
-const AppToolbar = ({ metadata, onClose }) => {
+const AppToolbar = () => {
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth)
-  const [isSaving, setIsSaving] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
   const { openModal, closeModal } = useModal()
-  const { user, cwd, refetchAllProjects } = useAppContext()
-  const { saveWithData, error: saveError } = useSaveProject()
-  const { updateWithData, error: updateError } = useUpdateProject()
-  const { deleteById, error: deleteError } = useDeleteProject()
-  const { fetchById: fetchNotesById } = useGetProjectNotes()
-  const { takeSnapshot } = useProjectContext()
+  const { user, cwd } = useAppContext()
+  const { activeProject, takeSnapshot } = useProjectContext()
   const navigate = useNavigate()
+  const { queryClient } = useRouteContext({})
+  const { data: fetchedNotes } = useQuery({
+    queryFn: projectId => fetchNotes(projectId),
+    queryKey: ["notes", activeProject?.title],
+    enabled: !!activeProject?.title,
+  })
 
   useEffect(() => {
     const handleResize = () => setViewportWidth(window.innerWidth)
@@ -33,26 +35,43 @@ const AppToolbar = ({ metadata, onClose }) => {
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
+  const saveNewProject = useMutation({
+    mutationFn: data => createProject(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["projects"] }),
+    onError: error => console.error(error),
+  })
+  const saveExistingProject = useMutation({
+    mutationFn: data => updateProject(data),
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({
+        queryKey: ["notes", variables.metadata.title],
+      })
+    },
+    onError: error => console.error(error),
+  })
+  const removeProject = useMutation({
+    mutationFn: data => deleteProject(data.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] })
+      navigate({ from: "/", to: "/dashboard" })
+    },
+    onError: error => console.error(error),
+  })
+
   const handleDeleteProject = () => {
     const snapshot = takeSnapshot()
     openModal("deleteModal", {
       onClose: closeModal,
       onDelete: async () => {
-        setIsDeleting(true)
         closeModal()
-        const id = toast.loading("Deleting project")
-        onClose()
-        try {
-          await deleteById(snapshot.metadata?.title)
-          setIsDeleting(false)
-          if (deleteError) throw new Error()
-          toast.success("Project deleted", { id })
-          refetchAllProjects()
-        } catch (error) {
-          console.error(error)
-          toast.error("Failed to delete project")
-        }
-        return
+        toast.promise(
+          removeProject.mutateAsync({ id: snapshot.metadata.title }),
+          {
+            loading: "Deleting...",
+            success: () => "Deleted!",
+            error: "Failed to delete",
+          }
+        )
       },
     })
   }
@@ -61,27 +80,23 @@ const AppToolbar = ({ metadata, onClose }) => {
     const snapshot = takeSnapshot()
 
     // Case: Existitng project
-    if (metadata?.title) {
+    if (activeProject?.title) {
       if (!snapshot.metadata || !snapshot.notes) {
         toast.error("Invalid project")
         return
       }
-      setIsSaving(true)
-      const id = toast.loading("Saving project")
-      try {
-        const filteredMetadata = filterMetadata(snapshot.metadata, validKeys)
-        await updateWithData({
-          metadata: { filteredMetadata },
+      const filteredMetadata = filterMetadata(snapshot.metadata, validKeys)
+      toast.promise(
+        saveExistingProject.mutateAsync({
+          metadata: { ...filteredMetadata },
           notes: snapshot.notes,
-        })
-        setIsSaving(false)
-        if (updateError) throw new Error()
-        toast.success("Project saved", { id })
-        refetchAllProjects()
-      } catch (error) {
-        toast.error("Update failed", { id })
-        console.error("Error updating project:", error)
-      }
+        }),
+        {
+          loading: "Saving...",
+          success: () => "Saved!",
+          error: "Failed to save",
+        }
+      )
       return
     }
 
@@ -90,7 +105,7 @@ const AppToolbar = ({ metadata, onClose }) => {
       metadata: { ...snapshot.metadata },
       onClose: closeModal,
       onSave: async title => {
-        if (!snapshot.metadata && !snapshot.src) {
+        if (!snapshot.media && !snapshot.src) {
           toast.warning("No media detected")
           return
         }
@@ -101,39 +116,32 @@ const AppToolbar = ({ metadata, onClose }) => {
           return
         }
 
-        setIsSaving(true)
+        const filteredMetadata = filterMetadata(snapshot.metadata, validKeys)
         closeModal()
-        const id = toast.loading("Saving project")
-        try {
-          const filteredMetadata = filterMetadata(snapshot.metadata, validKeys)
-          await saveWithData({
-            metadata: { filteredMetadata, title },
+        toast.promise(
+          saveNewProject.mutateAsync({
+            metadata: { ...filteredMetadata, title },
             media: snapshot.media,
             notes: snapshot.notes,
-          })
-          setIsSaving(false)
-          if (saveError) throw new Error()
-          toast.success("Project saved", { id })
-          refetchAllProjects()
-        } catch (error) {
-          toast.error("Save failed", { id })
-          console.error("Error saving project:", error)
-        }
-
-        return
+          }),
+          {
+            loading: "Saving...",
+            success: () => "Saved!",
+            error: "Failed to save",
+          }
+        )
       },
     })
   }
 
   const handleCloseProject = async () => {
-    const prevRoute = cwd ? "/dashboard" : "/"
-    if (!metadata?.title) return navigate({ to: prevRoute })
+    const prevRoute = cwd || user ? "/dashboard" : "/"
+    if (!activeProject?.title) return navigate({ to: prevRoute })
 
     try {
       const snapshot = takeSnapshot()
-      const cachedNotes = await fetchNotesById(metadata.title)
-      if (cachedNotes === JSON.stringify(snapshot?.notes)) {
-        navigate({ to: prevRoute })
+      if (fetchedNotes === JSON.stringify(snapshot?.notes)) {
+        return navigate({ to: prevRoute })
       }
 
       openModal("unsavedChangesModal", {
@@ -163,28 +171,32 @@ const AppToolbar = ({ metadata, onClose }) => {
           }px`,
         }}
       >
-        <Label className="text-sm">{metadata?.title || metadata?.label}</Label>
+        <Label className="text-sm">
+          {activeProject?.title || activeProject?.label}
+        </Label>
       </span>
-      {metadata && (
+      {activeProject && (
         <span data-tour-id="toolbar" className="flex flex-row gap-3 ml-auto">
           {(user || cwd) && (
             <>
-              {metadata?.type !== "recorder" && (
+              {activeProject?.type !== "recorder" && (
                 <Button
                   variant="outline"
                   size="xs"
                   onClick={handleSaveProject}
-                  disabled={isSaving}
+                  disabled={
+                    saveNewProject.isPending || saveExistingProject.isPending
+                  }
                 >
                   <Save size={16} /> Save
                 </Button>
               )}
-              {metadata?.title && (
+              {activeProject?.title && (
                 <Button
                   variant="outline"
                   size="xs"
                   onClick={handleDeleteProject}
-                  disabled={isDeleting}
+                  disabled={removeProject.isPending}
                 >
                   <Trash size={16} /> Delete
                 </Button>

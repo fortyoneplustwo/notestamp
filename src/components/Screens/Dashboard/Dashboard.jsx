@@ -16,6 +16,7 @@ import {
 } from "@tanstack/react-router"
 import { fetchProjects } from "@/lib/fetch/api-read"
 import { useQuery } from "@tanstack/react-query"
+import { redirect } from "@tanstack/react-router"
 
 export const dashboardRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
@@ -28,6 +29,8 @@ export const dashboardRoute = createRoute({
     },
   }),
   loader: async ({ context }) => {
+    const { cwd } = useAppContext.getState()
+    if (!context.user && !cwd) throw redirect({ to: "/" })
     await context.queryClient.prefetchQuery(context.projectsQueryOptions)
   },
 })

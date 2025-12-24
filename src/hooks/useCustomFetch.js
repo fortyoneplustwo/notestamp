@@ -1,8 +1,8 @@
 import { useCallback } from "react"
 import { useAppContext } from "../context/AppContext"
-import { backendFetch } from "../utils/backendFetch"
-import { fsFetch } from "../utils/fsFetch"
 import { useWrappedRequest } from "./useWrappedRequest"
+import { remoteFetch } from "@/lib/fetch/remote-fetch"
+import { localFetch } from "@/lib/fetch/local-fetch"
 
 export const useCustomFetch = () => {
   const { cache, syncToFileSystem, cwd } = useAppContext()
@@ -12,12 +12,12 @@ export const useCustomFetch = () => {
     async (endpoint, params) => {
       // Local device takes precedence over remote server
       if (syncToFileSystem) {
-        return await fsFetch(endpoint, {
+        return await localFetch(endpoint, {
           ...(params || {}),
           cwd: cwd,
         })
       } else {
-        return await backendFetch(endpoint, params)
+        return await remoteFetch(endpoint, params)
       }
     },
     [cwd, syncToFileSystem]
