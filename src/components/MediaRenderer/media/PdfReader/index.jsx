@@ -172,7 +172,7 @@ const PdfReader = ({ ref, ...props }) => {
                 <span>
                   <Input
                     className="h-6 text-sm p-0 m-0 w-10 inline-block text-center border-none"
-                    value={pageNumber}
+                    value={pageNumber  || 1}
                     onSubmit={e => {
                       if (e.target.value > 0 && e.target.value < numPages) {
                         setPageNumber(e.target.value)
