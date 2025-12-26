@@ -9,7 +9,11 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { filterMetadata } from "@/utils/makeMetadataForSave"
 import { validKeys } from "@/config"
-import { useNavigate, useRouteContext } from "@tanstack/react-router"
+import {
+  useBlocker,
+  useNavigate,
+  useRouteContext,
+} from "@tanstack/react-router"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { createProject } from "@/lib/fetch/api-write"
 import { updateProject } from "@/lib/fetch/api-update"
@@ -18,23 +22,18 @@ import { fetchNotes } from "@/lib/fetch/api-read"
 
 const AppToolbar = () => {
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth)
+
   const { openModal, closeModal } = useModal()
   const { user, cwd } = useAppContext()
   const { activeProject, takeSnapshot } = useProjectContext()
   const navigate = useNavigate()
+
   const { queryClient } = useRouteContext({})
   const { data: fetchedNotes } = useQuery({
     queryFn: projectId => fetchNotes(projectId),
     queryKey: ["notes", activeProject?.title],
     enabled: !!activeProject?.title,
   })
-
-  useEffect(() => {
-    const handleResize = () => setViewportWidth(window.innerWidth)
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
-
   const saveNewProject = useMutation({
     mutationFn: data => createProject(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["projects"] }),
@@ -57,6 +56,44 @@ const AppToolbar = () => {
     },
     onError: error => console.error(error),
   })
+
+  useBlocker({
+    shouldBlockFn: () => {
+      const snapshot = takeSnapshot()
+      if (!activeProject?.title) {
+        // TODO: implement isDirty for new project
+        return false
+      }
+      if (fetchedNotes === JSON.stringify(snapshot?.notes)) {
+        return false
+      }
+
+      const shouldBlock = new Promise(resolve => {
+        openModal("unsavedChangesModal", {
+          onClose: () => {
+            closeModal()
+            resolve(true)
+          },
+          onSave: () => {
+            closeModal()
+            handleSaveProject()
+            resolve(false)
+          },
+          onDiscard: () => {
+            closeModal()
+            resolve(false)
+          },
+        })
+      })
+      return shouldBlock
+    },
+  })
+
+  useEffect(() => {
+    const handleResize = () => setViewportWidth(window.innerWidth)
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
 
   const handleDeleteProject = () => {
     const snapshot = takeSnapshot()
@@ -136,29 +173,7 @@ const AppToolbar = () => {
 
   const handleCloseProject = async () => {
     const prevRoute = cwd || user ? "/dashboard" : "/"
-    if (!activeProject?.title) return navigate({ to: prevRoute })
-
-    try {
-      const snapshot = takeSnapshot()
-      if (fetchedNotes === JSON.stringify(snapshot?.notes)) {
-        return navigate({ to: prevRoute })
-      }
-
-      openModal("unsavedChangesModal", {
-        onClose: closeModal,
-        onSave: () => {
-          closeModal()
-          handleSaveProject()
-        },
-        onDiscard: () => {
-          closeModal()
-          navigate({ to: prevRoute })
-        },
-      })
-    } catch (error) {
-      console.error(error)
-      navigate({ to: prevRoute })
-    }
+    return navigate({ to: prevRoute })
   }
 
   return (
