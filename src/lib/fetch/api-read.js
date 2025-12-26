@@ -1,5 +1,13 @@
 import { customFetch } from "./custom-fetch"
 
+export const fetchUser = async () => {
+  const response = await customFetch("getUserData")
+  if (!response.ok) {
+    throw Error(`Network error: Response not ok`)
+  }
+  return response.json()
+}
+
 export const fetchProjects = async () => {
   const response = await customFetch("listProjects")
   if (!response.ok) {
@@ -21,16 +29,21 @@ export const fetchMediaById = async projectId => {
   if (!response.ok) {
     throw Error(`Network error: Response not ok`)
   }
-  return response.json()
+  return response.blob()
 }
 
-export const fetchMediaByUrl = async () => {}
+export const fetchMediaByUrl = async url => {
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw Error(`Network error: Response not ok`)
+  }
+  return response.blob()
+}
 
-export const fetchNotes = async (projectId) => {
+export const fetchNotes = async projectId => {
   const response = await customFetch("getProjectNotes", { projectId })
   if (!response.ok) {
     throw Error(`Network error: Response not ok`)
   }
   return response.text()
 }
-

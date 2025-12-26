@@ -1,10 +1,15 @@
-import React, { useEffect, useImperativeHandle, useRef, useState } from "react"
+import React, {
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { Document, Page } from "react-pdf"
 import { pdfjs } from "react-pdf"
 import "../../style/Background.css"
 import "react-pdf/dist/Page/TextLayer.css"
 import { Toolbar } from "../../components/Toolbar"
-import { useGetProjectMedia } from "../../../../hooks/useReadData"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -12,6 +17,8 @@ import { Dropzone } from "../../components/Dropzone"
 import { FileUp } from "lucide-react"
 import { FileInput } from "../../components/FileInput"
 import isHotkey from "is-hotkey"
+import { fetchMediaById } from "@/lib/fetch/api-read"
+import { useQuery } from "@tanstack/react-query"
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
 
@@ -23,28 +30,33 @@ const PdfReader = ({ ref, ...props }) => {
   const [pageScale, setPageScale] = useState(1)
   const [containerWidth, setContainerWidth] = useState(0)
   const containerRef = useRef(null)
-  const { data: pdf, fetchById: fetchPdfById } = useGetProjectMedia()
 
-  const hotkeyActions = new Map([
-    ["mod+[", () => handleZoomOut()],
-    ["mod+]", () => handleZoomIn()],
-    ["mod+9", () => handlePagePrev()],
-    ["mod+0", () => handlePageNext()],
-  ])
+  const { data: fetchedPdf, isSuccess } = useQuery({
+    queryFn: () => fetchMediaById(props.title),
+    queryKey: ["media", props.title],
+    enabled: !!props?.title,
+  })
+
+  useEffect(() => {
+    if (isSuccess && fetchedPdf) {
+      setSource(fetchedPdf)
+    }
+  }, [isSuccess, fetchedPdf, setSource])
+
+  // TODO: handle pending and error states of fetching media
+
+  const hotkeyActions = useMemo(
+    () =>
+      new Map([
+        ["mod+[", () => handleZoomOut()],
+        ["mod+]", () => handleZoomIn()],
+        ["mod+9", () => handlePagePrev()],
+        ["mod+0", () => handlePageNext()],
+      ]),
+    []
+  )
 
   const isLoading = renderedPageNumber !== pageNumber
-
-  useEffect(() => {
-    if (props.title) {
-      fetchPdfById(props.title)
-    }
-  }, [props.title, fetchPdfById])
-
-  useEffect(() => {
-    if (pdf) {
-      setSource(pdf)
-    }
-  }, [pdf, setSource])
 
   useEffect(() => {
     const updateWidth = () => {
