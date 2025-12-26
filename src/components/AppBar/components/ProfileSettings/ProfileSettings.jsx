@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react"
-import { useLogin, useLogout, useRegister } from "@/hooks/useAuth"
-import { useGetUserData } from "@/hooks/useReadData"
-import { useCustomFetch } from "@/hooks/useCustomFetch"
+import { useState } from "react"
+// import { useRegister } from "@/hooks/useAuth"
 import { useAppContext } from "@/context/AppContext"
 import { useModal } from "@/context/ModalContext"
 import { Toggle } from "./components/Toggle.jsx"
@@ -12,7 +10,6 @@ import { Button } from "@/components/ui/button"
 import {
   useMatchRoute,
   useNavigate,
-  useParams,
 } from "@tanstack/react-router"
 
 const ProfileSettings = () => {
@@ -20,82 +17,79 @@ const ProfileSettings = () => {
   const [isLogginIn, setIsLoggingIn] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [isFileSyncChecked, setIsFileSyncChecked] = useState(false)
-  const { data: userData, fetch: fetchUser } = useGetUserData()
   const { user, setUser, setSyncToFileSystem, setCwd } = useAppContext()
-  const {
-    data: isLoggedIn,
-    loginWithCredentials,
-    loading: loadingLogIn,
-    error: errorLoggingIn,
-  } = useLogin()
-  const {
-    data: isLoggedOut,
-    logout,
-    loading: loadingLogOut,
-    error: errorLoggingOut,
-  } = useLogout()
-  const { registerWithCredentials } = useRegister()
+  // const {
+  //   data: isLoggedIn,
+  //   loginWithCredentials,
+  //   loading: loadingLogIn,
+  //   error: errorLoggingIn,
+  // } = useLogin()
+  // const {
+  //   data: isLoggedOut,
+  //   logout,
+  //   loading: loadingLogOut,
+  //   error: errorLoggingOut,
+  // } = useLogout()
+  // const { registerWithCredentials } = useRegister()
   const { getDirHandle } = useGetDirHandle()
-  const { clearCache } = useCustomFetch()
   const { openModal, closeModal } = useModal()
   const navigate = useNavigate()
   const matchRoute = useMatchRoute()
-  const params = useParams({ strict: false })
 
-  useEffect(() => {
-    setUser(userData)
-  }, [userData, setUser])
+  // useEffect(() => {
+  //   setUser(userData)
+  // }, [userData, setUser])
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      fetchUser()
-    }
-    if (isLoggedOut) {
-      setUser(null)
-      clearCache()
-    }
-  }, [isLoggedIn, isLoggedOut, fetchUser, setUser, clearCache])
+  // useEffect(() => {
+  //   if (isLoggedIn) {
+  //     fetchUser()
+  //   }
+  //   if (isLoggedOut) {
+  //     setUser(null)
+  //     clearCache()
+  //   }
+  // }, [isLoggedIn, isLoggedOut, fetchUser, setUser, clearCache])
 
-  useEffect(() => {
-    if (!loadingLogIn) {
-      setIsLoggingIn(false)
-      if (errorLoggingIn) {
-        // toast.error("Error logging in")
-        return
-      }
-    }
-  }, [loadingLogIn, errorLoggingIn, fetchUser])
+  // useEffect(() => {
+  //   if (!loadingLogIn) {
+  //     setIsLoggingIn(false)
+  //     if (errorLoggingIn) {
+  //       // toast.error("Error logging in")
+  //       return
+  //     }
+  //   }
+  // }, [loadingLogIn, errorLoggingIn, fetchUser])
 
-  useEffect(() => {
-    if (!loadingLogOut) {
-      setIsLoggingOut(false)
-      if (errorLoggingOut) {
-        // handle error
-      }
-    }
-  }, [loadingLogOut, errorLoggingOut])
+  // useEffect(() => {
+  //   if (!loadingLogOut) {
+  //     setIsLoggingOut(false)
+  //     if (errorLoggingOut) {
+  //       // handle error
+  //     }
+  //   }
+  // }, [loadingLogOut, errorLoggingOut])
 
   const handleRegister = (email, password) => {
-    registerWithCredentials({
-      email: email,
-      password: password,
-    })
+    // registerWithCredentials({
+    //   email: email,
+    //   password: password,
+    // })
     closeModal()
   }
 
   const handleLogIn = (email, password) => {
     setIsLoggingIn(true)
-    loginWithCredentials({
-      email: email,
-      password: password,
-    })
+    // loginWithCredentials({
+    //   email: email,
+    //   password: password,
+    // })
     closeModal()
   }
 
   const handleLogOut = () => {
     setIsLoggingOut(true)
-    clearCache()
-    logout()
+    // clearCache()
+    // logout()
   }
 
   const handleToggleFileSync = async checked => {
