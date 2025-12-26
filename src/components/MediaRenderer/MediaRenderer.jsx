@@ -22,13 +22,15 @@ import {
 } from "@/utils/switchMedia"
 import {
   fetchMediaById,
-  // fetchMediaByUrl,
+  fetchMediaByUrl,
   fetchMetadata,
   fetchNotes,
 } from "@/lib/fetch/api-read"
 import { useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { useContent } from "../Editor/hooks/useContent"
+import { useAppContext } from "@/context/AppContext"
+import { redirect } from "@tanstack/react-router"
 
 const globImports = import.meta.glob(`./media/*/index.jsx`)
 const defaultMediaComponents = {
@@ -59,14 +61,20 @@ export const mediaLayoutRoute = createRoute({
 
 export const mediaIdRoute = createRoute({
   getParentRoute: () => mediaLayoutRoute,
-  path: "$mediaId/$",
+  path: "/$mediaId/$",
   beforeLoad: ({ context: { queryClient }, params }) => {
+    // TODO: move this part to params.parse ?
     let projectId = ""
     try {
       const decoded = decodeURI(params._splat)
       projectId = decoded
     } catch {
       throw Error("Invalid URL")
+    }
+
+    const { user, cwd } = useAppContext.getState()
+    if (params._splat && (!user && !cwd)) {
+      throw redirect({ to: "/" })
     }
 
     return {
@@ -91,6 +99,7 @@ export const mediaIdRoute = createRoute({
       mediaQueryOptions: {
         queryKey: ["media", projectId],
         queryFn: () => fetchMediaById(projectId),
+        staleTime: Infinity,
       },
     }
   },
@@ -100,23 +109,21 @@ export const mediaIdRoute = createRoute({
       queryClient,
       metadataQueryOptions,
       notesQueryOptions,
-      // mediaQueryOptions,
+      mediaQueryOptions,
     },
     params,
   }) => {
     let newProjectConfig = getProjectConfig(params.mediaId)
 
-    // TODO: implement media prefetch with option to stream/download?
-
     if (projectId) {
       queryClient.prefetchQuery(notesQueryOptions)
       await queryClient.ensureQueryData(metadataQueryOptions)
-      // await queryClient.prefetchQuery(mediaQueryOptions)
+      await queryClient.prefetchQuery(mediaQueryOptions)
     } else if (shouldForwardMedia) {
-      // await queryClient.prefetchQuery({
-      //   queryKey: ["media", mediaToForward.src],
-      //   queryFn: () => fetchMediaByUrl(mediaToForward.src),
-      // })
+      await queryClient.prefetchQuery({
+        queryKey: ["media", mediaToForward.src],
+        queryFn: () => fetchMediaByUrl(mediaToForward.src),
+      })
       newProjectConfig = { ...newProjectConfig, ...mediaToForward }
       invalidateForward()
     }
@@ -139,7 +146,8 @@ function Media() {
   const { metadataQueryOptions, notesQueryOptions } = useRouteContext({})
   const { data: fetchedMetadata, error: errorFetchingMetadata } =
     useQuery(metadataQueryOptions)
-  const { data: fetchedNotes, error: errorFetchingNotes } = useQuery(notesQueryOptions)
+  const { data: fetchedNotes, error: errorFetchingNotes } =
+    useQuery(notesQueryOptions)
   const { setContent } = useContent()
 
   if (errorFetchingMetadata) {

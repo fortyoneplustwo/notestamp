@@ -13,24 +13,30 @@ import {
   createRoute,
   useNavigate,
   useRouteContext,
+  redirect,
+  notFound,
 } from "@tanstack/react-router"
 import { fetchProjects } from "@/lib/fetch/api-read"
 import { useQuery } from "@tanstack/react-query"
-import { redirect } from "@tanstack/react-router"
 
 export const dashboardRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   component: Dashboard,
-  path: "/dashboard",
-  beforeLoad: () => ({
-    projectsQueryOptions: {
-      queryKey: ["projects"],
-      queryFn: fetchProjects,
-    },
-  }),
-  loader: async ({ context }) => {
+  path: "/dashboard/$",
+  beforeLoad: ({ params, context }) => {
+    if (params._splat) {
+      throw notFound()
+    }
     const { cwd } = useAppContext.getState()
     if (!context.user && !cwd) throw redirect({ to: "/" })
+    return {
+      projectsQueryOptions: {
+        queryKey: ["projects"],
+        queryFn: fetchProjects,
+      },
+    }
+  },
+  loader: async ({ context }) => {
     await context.queryClient.prefetchQuery(context.projectsQueryOptions)
   },
 })
