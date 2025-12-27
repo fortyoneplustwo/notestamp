@@ -57,11 +57,13 @@ const AudioPlayer = ({ ref, ...props }) => {
     queryFn: () => fetchMediaById(props.title),
     queryKey: ["media", props.title],
     enabled: !!props?.title,
+    staleTime: Infinity,
   })
   const fetchBlobByUrl = useQuery({
     queryFn: () => fetchMediaByUrl(props.src),
     queryKey: ["media", props.src],
     enabled: !!props?.src,
+    staleTime: Infinity,
   })
 
   useEffect(() => {

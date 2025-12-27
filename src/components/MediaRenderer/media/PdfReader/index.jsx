@@ -35,6 +35,7 @@ const PdfReader = ({ ref, ...props }) => {
     queryFn: () => fetchMediaById(props.title),
     queryKey: ["media", props.title],
     enabled: !!props?.title,
+    staleTime: Infinity,
   })
 
   useEffect(() => {
