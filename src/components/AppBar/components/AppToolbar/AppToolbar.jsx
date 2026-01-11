@@ -14,11 +14,12 @@ import {
   useNavigate,
   useRouteContext,
 } from "@tanstack/react-router"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { createProject } from "@/lib/fetch/api-write"
-import { updateProject } from "@/lib/fetch/api-update"
-import { deleteProject } from "@/lib/fetch/api-delete"
-import { fetchNotes } from "@/lib/fetch/api-read"
+import {
+  useAddProjectMutation,
+  useDeleteProjectMutation,
+  useUpdateProjectMutation,
+} from "@/hooks/useProjectMutation"
+import { useMutationState } from "@tanstack/react-query"
 
 const AppToolbar = () => {
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth)
@@ -27,34 +28,19 @@ const AppToolbar = () => {
   const { user, cwd } = useAppContext()
   const { activeProject, takeSnapshot } = useProjectContext()
   const navigate = useNavigate()
-
   const { queryClient } = useRouteContext({})
-  const { data: fetchedNotes } = useQuery({
-    queryFn: projectId => fetchNotes(projectId),
-    queryKey: ["notes", activeProject?.title],
-    enabled: !!activeProject?.title,
-  })
-  const saveNewProject = useMutation({
-    mutationFn: data => createProject(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["projects"] }),
-    onError: error => console.error(error),
-  })
-  const saveExistingProject = useMutation({
-    mutationFn: data => updateProject(data),
-    onSuccess: (data, variables, context) => {
-      queryClient.invalidateQueries({
-        queryKey: ["notes", variables.metadata.title],
-      })
-    },
-    onError: error => console.error(error),
-  })
-  const removeProject = useMutation({
-    mutationFn: data => deleteProject(data.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] })
-      navigate({ from: "/", to: "/dashboard" })
-    },
-    onError: error => console.error(error),
+
+  // TODO: don't forget to cacel all curr mutations in onMutate
+  const addProjectMutation = useAddProjectMutation()
+  const updateProjectMutation = useUpdateProjectMutation()
+  const deleteProjectMutation = useDeleteProjectMutation()
+
+  const addProjectMutations = useMutationState({
+    filters: { mutationKey: ["addProject"] },
+    select: mut => ({
+      title: mut.state.variables?.metadata?.title,
+      status: mut.state.status,
+    }),
   })
 
   useBlocker({
@@ -64,7 +50,10 @@ const AppToolbar = () => {
         // TODO: implement isDirty for new project
         return false
       }
-      if (fetchedNotes === JSON.stringify(snapshot?.notes)) {
+      if (
+        queryClient.getQueryData(["notes", activeProject.title]) ===
+        JSON.stringify(snapshot?.notes)
+      ) {
         return false
       }
 
@@ -102,7 +91,7 @@ const AppToolbar = () => {
       onDelete: async () => {
         closeModal()
         toast.promise(
-          removeProject.mutateAsync({ id: snapshot.metadata.title }),
+          deleteProjectMutation.mutateAsync({ id: snapshot.metadata.title }),
           {
             loading: "Deleting...",
             success: () => "Deleted!",
@@ -116,15 +105,21 @@ const AppToolbar = () => {
   const handleSaveProject = async () => {
     const snapshot = takeSnapshot()
 
-    // Case: Existitng project
-    if (activeProject?.title) {
+    // Case: Existing project
+    if (
+      activeProject?.title &&
+      (!addProjectMutations.some(mut => mut.title === activeProject.title) ||
+        addProjectMutations.find(mut => mut.title === activeProject.title)
+          ?.status === "success")
+      // !unfulfilledAddProjectMutations.includes(activeProject?.title)
+    ) {
       if (!snapshot.metadata || !snapshot.notes) {
         toast.error("Invalid project")
         return
       }
       const filteredMetadata = filterMetadata(snapshot.metadata, validKeys)
       toast.promise(
-        saveExistingProject.mutateAsync({
+        updateProjectMutation.mutateAsync({
           metadata: { ...filteredMetadata },
           notes: snapshot.notes,
         }),
@@ -153,11 +148,15 @@ const AppToolbar = () => {
           return
         }
 
+        // WARN: snapshot metadata is missing fields label and type
         const filteredMetadata = filterMetadata(snapshot.metadata, validKeys)
         closeModal()
         toast.promise(
-          saveNewProject.mutateAsync({
-            metadata: { ...filteredMetadata, title },
+          addProjectMutation.mutateAsync({
+            metadata: {
+              ...filteredMetadata,
+              title,
+            },
             media: snapshot.media,
             notes: snapshot.notes,
           }),
@@ -172,8 +171,7 @@ const AppToolbar = () => {
   }
 
   const handleCloseProject = async () => {
-    const prevRoute = cwd || user ? "/dashboard" : "/"
-    return navigate({ to: prevRoute })
+    navigate({ to: cwd || user ? "/dashboard" : "/" })
   }
 
   return (
@@ -190,44 +188,43 @@ const AppToolbar = () => {
           {activeProject?.title || activeProject?.label}
         </Label>
       </span>
-      {activeProject && (
-        <span data-tour-id="toolbar" className="flex flex-row gap-3 ml-auto">
-          {(user || cwd) && (
-            <>
-              {activeProject?.type !== "recorder" && (
-                <Button
-                  variant="outline"
-                  size="xs"
-                  onClick={handleSaveProject}
-                  disabled={
-                    saveNewProject.isPending || saveExistingProject.isPending
-                  }
-                >
-                  <Save size={16} /> Save
-                </Button>
-              )}
-              {activeProject?.title && (
-                <Button
-                  variant="outline"
-                  size="xs"
-                  onClick={handleDeleteProject}
-                  disabled={removeProject.isPending}
-                >
-                  <Trash size={16} /> Delete
-                </Button>
-              )}
-            </>
-          )}
-          <Button
-            variant="destructive"
-            size="xs"
-            className="close-btn"
-            onClick={handleCloseProject}
-          >
-            <CircleX size={16} /> Close
-          </Button>
-        </span>
-      )}
+      <span data-tour-id="toolbar" className="flex flex-row gap-3 ml-auto">
+        {(user || cwd) && !!activeProject && (
+          <>
+            {activeProject?.type !== "recorder" && (
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={handleSaveProject}
+                disabled={
+                  addProjectMutation.isPending ||
+                  updateProjectMutation.isPending
+                }
+              >
+                <Save size={16} /> Save
+              </Button>
+            )}
+            {activeProject?.title && (
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={handleDeleteProject}
+                disabled={deleteProjectMutation.isPending}
+              >
+                <Trash size={16} /> Delete
+              </Button>
+            )}
+          </>
+        )}
+        <Button
+          variant="destructive"
+          size="xs"
+          className="close-btn"
+          onClick={handleCloseProject}
+        >
+          <CircleX size={16} /> Close
+        </Button>
+      </span>
       <Separator orientation="vertical" />
     </span>
   )

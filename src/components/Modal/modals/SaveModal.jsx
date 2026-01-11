@@ -22,15 +22,13 @@ const SaveModal = ({ metadata = null, onSave, onClose }) => {
           onSave(metadata?.title || e.target.filename.value)
         }}
       >
-        {!metadata?.title && (
-          <Input
-            type="text"
-            name="filename"
-            defaultValue={metadata ? metadata.title : ""}
-            autoFocus
-            required
-          />
-        )}
+        <Input
+          type="text"
+          name="filename"
+          defaultValue={metadata ? metadata.title : ""}
+          autoFocus
+          required
+        />
       </form>
       <DialogFooter>
         <Button form="saveForm" type="submit" className="float-right">

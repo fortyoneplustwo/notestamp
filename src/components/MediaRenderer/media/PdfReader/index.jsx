@@ -96,7 +96,7 @@ const PdfReader = ({ ref, ...props }) => {
         }
       },
       getMedia: () => {
-        return props.title ? null : source
+        return source
       },
       handleHotkey: event => {
         for (const [hotkey, action] of hotkeyActions.entries()) {

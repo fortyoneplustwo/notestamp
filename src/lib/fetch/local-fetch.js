@@ -29,7 +29,7 @@ const isValidProject = async dir => {
             return false
           }
         }
-        metadata.lastModified = new Date(metadataFile.lastModified)
+        // metadata.lastModified = new Date(metadataFile.lastModified) // TODO: remove
         return metadata // Metadata file found and is valid
       }
     }
@@ -142,9 +142,13 @@ export const localFetch = async (endpoint, params = null) => {
       case "saveProject": {
         const metadataFile =
           params?.metadata &&
-          new File([JSON.stringify(params.metadata)], ".metadata.json", {
-            type: "application/json",
-          })
+          new File(
+            [JSON.stringify({ ...params.metadata, lastModified: new Date() })],
+            ".metadata.json",
+            {
+              type: "application/json",
+            }
+          )
         const notesFile =
           params?.notes &&
           new File(
@@ -169,7 +173,6 @@ export const localFetch = async (endpoint, params = null) => {
             )
           }
         }
-        console.log(params.metadata)
         const mediaFile =
           params?.media &&
           new File(

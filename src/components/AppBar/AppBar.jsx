@@ -6,21 +6,18 @@ import { useParams } from "@tanstack/react-router"
 import { defaultMediaConfig } from "@/config"
 import { useMemo } from "react"
 
-const AppBar = ({
-  navItems,
-}) => {
+const AppBar = ({ navItems }) => {
   const { mediaId } = useParams({ strict: false })
-  const metadata = useMemo(() => defaultMediaConfig.find((m) => m.type === mediaId), [mediaId])
-  
+  const isValidMediaId = useMemo(
+    () => defaultMediaConfig.find(m => m.type === mediaId),
+    [mediaId]
+  )
+
   return (
     <div className="flex w-full gap-4">
       <Logo />
       <span className="flex items-center grow">
-        {metadata ? (
-          <AppToolbar metadata={metadata} />
-        ) : (
-          <Nav items={navItems}/>
-        )}
+        {isValidMediaId ? <AppToolbar /> : <Nav items={navItems} />}
       </span>
       <ProfileSettings />
     </div>

@@ -12,7 +12,9 @@ import {
   Outlet,
   useLoaderData,
   useMatch,
+  useNavigate,
   useRouteContext,
+  useRouter,
 } from "@tanstack/react-router"
 import { getProjectConfig } from "@/utils/getProjectConfig"
 import {
@@ -30,7 +32,8 @@ import { useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { useContent } from "../Editor/hooks/useContent"
 import { useAppContext } from "@/context/AppContext"
-import { redirect } from "@tanstack/react-router"
+import { redirect, notFound } from "@tanstack/react-router"
+import { Error as ErrorScreen } from "../Screens/Loading/Error"
 
 const globImports = import.meta.glob(`./media/*/index.jsx`)
 const defaultMediaComponents = {
@@ -61,24 +64,23 @@ export const mediaLayoutRoute = createRoute({
 
 export const mediaIdRoute = createRoute({
   getParentRoute: () => mediaLayoutRoute,
-  path: "/$mediaId/$",
-  beforeLoad: ({ context: { queryClient }, params }) => {
-    // TODO: move this part to params.parse ?
-    let projectId = ""
+  path: "/$mediaId/{-$projectId}",
+  beforeLoad: ({
+    context: { queryClient },
+    params: { mediaId, projectId },
+  }) => {
     try {
-      const decoded = decodeURI(params._splat)
-      projectId = decoded
+      getProjectConfig(mediaId)
     } catch {
-      throw Error("Invalid URL")
+      throw notFound()
     }
 
     const { user, cwd } = useAppContext.getState()
-    if (params._splat && (!user && !cwd)) {
+    if (projectId && !user && !cwd) {
       throw redirect({ to: "/" })
     }
 
     return {
-      projectId,
       metadataQueryOptions: {
         queryKey: ["metadata", projectId],
         queryFn: () => fetchMetadata(projectId),
@@ -86,15 +88,22 @@ export const mediaIdRoute = createRoute({
         initialData: () => {
           const { projects } = projectId
             ? queryClient.getQueryData(["projects"])
-            : { projects: [] }
+            : { projects: [] } // TODO: change return value of the query to return a list directly?
           const metadata = projects?.find(p => p.id === projectId)
           return metadata
         },
+        // Opening a project puts it in "draft" mode which means:
+        //  1. We should fetch the most up-to-date data
+        //  2. No background refetches are allowed to overwrite the draft
+        staleTime: Infinity,
       },
       notesQueryOptions: {
         queryKey: ["notes", projectId],
-        queryFn: () => fetchNotes(projectId),
+        queryFn: async () => {
+          return fetchNotes(projectId)
+        },
         enabled: !!projectId,
+        staleTime: Infinity,
       },
       mediaQueryOptions: {
         queryKey: ["media", projectId],
@@ -105,78 +114,138 @@ export const mediaIdRoute = createRoute({
   },
   loader: async ({
     context: {
-      projectId,
       queryClient,
       metadataQueryOptions,
       notesQueryOptions,
       mediaQueryOptions,
     },
-    params,
+    params: { mediaId, projectId },
   }) => {
-    let newProjectConfig = getProjectConfig(params.mediaId)
+    const templateMetadata = getProjectConfig(mediaId)
+    let provisionalMetadata = undefined
+    let unfulfilledMutation = undefined
 
     if (projectId) {
-      queryClient.prefetchQuery(notesQueryOptions)
-      await queryClient.ensureQueryData(metadataQueryOptions)
-      await queryClient.prefetchQuery(mediaQueryOptions)
+      // await new Promise(reject => {
+      //   setTimeout(() => {
+      //     reject(new Error("test error"))
+      //   }, 3 * 1000)
+      // }) // Wait 3 secs (for testing only)
+
+      // Handle case when project is a pending/failed mutation
+      unfulfilledMutation = queryClient
+        .getMutationCache()
+        .getAll()
+        .find(
+          mut =>
+            mut.state.status === "error" &&
+            mut.state.variables.title === projectId
+        )
+      if (unfulfilledMutation) {
+        // If unfulfilled mutation, don't prefetch. Just ensure the cache was
+        // optimistically updated and let the component fetch from cache on mount.
+        await Promise.all([
+          queryClient.ensureQueryData(metadataQueryOptions),
+          queryClient.ensureQueryData(metadataQueryOptions),
+          queryClient.ensureQueryData(metadataQueryOptions),
+        ])
+      } else {
+        await Promise.all([
+          queryClient.prefetchQuery(notesQueryOptions),
+          // Highly likely the user opened the project throught the dashboard,
+          // so the metadata should already be available in projects list
+          queryClient.ensureQueryData(metadataQueryOptions),
+          queryClient.prefetchQuery(mediaQueryOptions),
+        ])
+      }
+      provisionalMetadata = templateMetadata
     } else if (shouldForwardMedia) {
       await queryClient.prefetchQuery({
         queryKey: ["media", mediaToForward.src],
         queryFn: () => fetchMediaByUrl(mediaToForward.src),
       })
-      newProjectConfig = { ...newProjectConfig, ...mediaToForward }
+      provisionalMetadata = { ...templateMetadata, ...mediaToForward }
       invalidateForward()
+    } else {
+      provisionalMetadata = templateMetadata
     }
 
     return {
-      projectId,
-      newProjectConfig,
+      provisionalMetadata,
+      unfulfilledMutation: unfulfilledMutation,
     }
   },
-  pendingComponent: () => Loading,
-  notFoundComponent: () => <>404: Oops! This media component does not exist.</>,
-  errorComponent: () => <>{"Couldn't load media"}</>,
+  pendingMs: 10,
+  pendingComponent: () => {
+    const { user, cwd } = useAppContext()
+    const navigate = useNavigate()
+    return (
+      <Loading
+        onCancel={() => navigate({ to: user || cwd ? "dashboard" : "/" })}
+      />
+    )
+  },
+  errorComponent: ({ error }) => {
+    const router = useRouter()
+    const { user, cwd } = useAppContext()
+    const navigate = useNavigate()
+    return (
+      <ErrorScreen
+        errorMsg={error.message}
+        onRetry={router.invalidate}
+        onExit={() => {
+          if (user || cwd) return navigate({ to: "/dashboard" })
+          navigate({ to: "/" })
+        }}
+      />
+    )
+  },
   component: Media,
 })
 
 function Media() {
   const match = useMatch({ strict: false })
-  const { newProjectConfig } = useLoaderData({})
+  const { provisionalMetadata } = useLoaderData({})
   const { setMediaRef, setActiveProject } = useProjectContext()
+  const { setContent } = useContent()
   const { metadataQueryOptions, notesQueryOptions } = useRouteContext({})
+
   const { data: fetchedMetadata, error: errorFetchingMetadata } =
     useQuery(metadataQueryOptions)
   const { data: fetchedNotes, error: errorFetchingNotes } =
     useQuery(notesQueryOptions)
-  const { setContent } = useContent()
 
-  if (errorFetchingMetadata) {
-    console.error(`Error fetching metadata: ${errorFetchingMetadata}`)
-    throw Error()
-  }
+  useEffect(() => {
+    if (errorFetchingMetadata) {
+      console.error(`Error fetching metadata: ${errorFetchingMetadata}`)
+      throw Error()
+    }
+  }, [errorFetchingMetadata])
+
+  useEffect(() => {
+    if (errorFetchingNotes) {
+      console.error(`Error fetching notes: ${errorFetchingNotes}`)
+      toast.error("Failed to fetch notes for this project")
+      throw Error()
+    }
+  }, [errorFetchingNotes])
 
   const metadata = useMemo(
     () =>
       fetchedMetadata
-        ? { ...newProjectConfig, ...fetchedMetadata }
-        : newProjectConfig,
-    [fetchedMetadata, newProjectConfig]
+        ? { ...provisionalMetadata, ...fetchedMetadata }
+        : { ...provisionalMetadata },
+    [fetchedMetadata, provisionalMetadata]
   )
 
   useEffect(() => {
-    setActiveProject(metadata)
+    if (metadata) {
+      setActiveProject(metadata)
+    }
     return () => setActiveProject(null)
   }, [setActiveProject, metadata])
 
-  if (errorFetchingNotes) {
-    console.error(`Error fetching notes: ${errorFetchingNotes}`)
-    toast.error("Failed to fetch notes for this project")
-    throw Error()
-  }
-  fetchedNotes && setContent(editorRef.current, fetchedNotes)
-
   const Comp = mediaComponentsMap.get(match.params.mediaId)
-
   if (!Comp) {
     return (
       <div className="h-full items-center justify-center">
@@ -184,6 +253,8 @@ function Media() {
       </div>
     )
   }
+
+  fetchedNotes && setContent(editorRef.current, fetchedNotes)
 
   return (
     <Comp

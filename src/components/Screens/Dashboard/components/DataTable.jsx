@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useImperativeHandle, useState } from "react"
+import { cn } from "@/lib/utils"
 
 export const DataTable = ({ ref, columns, data, onRowClick }) => {
   const [columnFilters, setColumnFilters] = useState([])
@@ -81,6 +82,10 @@ export const DataTable = ({ ref, columns, data, onRowClick }) => {
         {table.getRowModel().rows?.length ? (
           table.getRowModel().rows.map(row => (
             <TableRow
+              className={cn({
+                // "bg-red-300/50": row.original.status === "error",
+                // "bg-yellow-200/50": row.original.status === "pending"
+              })}
               key={row.id}
               data-state={row.getIsSelected() && "selected"}
               onClick={() => onRowClick(row.getValue("title"))}

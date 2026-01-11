@@ -8,6 +8,7 @@ import {
 import { ArrowUpDown, ChevronDown } from "lucide-react"
 import { useState } from "react"
 import { defaultMediaConfig as mediaComponents } from "@/config"
+import { LoaderCircle, CircleAlert } from "lucide-react"
 
 export const columns = [
   {
@@ -21,9 +22,22 @@ export const columns = [
       return (
         <div
           style={{ maxWidth: `${colWidth}px` }}
-          className="truncate overflow-hidden whitespace-nowrap"
+          className="flex items-center gap-2 h-full truncate overflow-hidden whitespace-nowrap"
         >
-          {row.getValue("title")}
+          {row.original?.status && (
+            <span className="h-full text-base">
+              {row.original?.status === "error" && (
+                <CircleAlert size={12} className="text-red-500 h-full" />
+              )}
+              {row.original?.status === "pending" && (
+                <LoaderCircle
+                  size={12}
+                  className="animate-spin text-zinc-500 h-full"
+                />
+              )}
+            </span>
+          )}
+          <span>{row.getValue("title")}</span>
         </div>
       )
     },
