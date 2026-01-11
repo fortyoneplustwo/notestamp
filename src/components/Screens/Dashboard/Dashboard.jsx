@@ -190,8 +190,8 @@ function Dashboard() {
           if (acc?.val && val && val.submittedAt > acc.val.submittedAt) {
             return { key, val }
           }
-          if (!acc?.val) return { key, val } // if acc undefined, return curr (which may be undefined)
-          return acc // acc not undefined
+          if (!acc?.val) return { key, val }
+          return acc
         },
         undefined
       )
@@ -214,20 +214,17 @@ function Dashboard() {
       return false
     })
 
-    // push adds that were never fulfilled
-    // i.e. not part of projects pulled from server
-    const unfulfilledAdds = []
+    const neverFulfilledAdds = []
     for (const key in dedupedUnfulfilledAddMutations) {
       if (!projects.some(p => p.title === key)) {
-        unfulfilledAdds.push(dedupedUnfulfilledAddMutations[key])
+        neverFulfilledAdds.push(dedupedUnfulfilledAddMutations[key])
       }
     }
 
-    // merge to create staged projects
     return [
       ...optimisticProjects,
       ...unfulfilledSaves,
-      ...unfulfilledAdds,
+      ...neverFulfilledAdds,
       ...failedDeletes,
     ]
   }, [
