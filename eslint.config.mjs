@@ -3,13 +3,13 @@ import globals from "globals"
 import react from "eslint-plugin-react"
 import reactHooks from "eslint-plugin-react-hooks"
 import pluginRouter from '@tanstack/eslint-plugin-router'
-// import pluginQuery from '@tanstack/eslint-plugin-query'
+import pluginQuery from '@tanstack/eslint-plugin-query'
 import { defineConfig, globalIgnores } from "eslint/config"
 
 export default defineConfig([
   globalIgnores(["./public/pdf.worker.min.mjs"]),
   ...pluginRouter.configs["flat/recommended"],
-  // ...pluginQuery.configs["flat/recommended"],
+  ...pluginQuery.configs["flat/recommended"],
   {
     name: "js/recommended",
     files: ["**/*.{js,mjs,cjs,jsx}"],
