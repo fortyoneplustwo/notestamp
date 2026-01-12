@@ -17,7 +17,9 @@ import {
   notFound,
 } from "@tanstack/react-router"
 import { fetchProjects } from "@/lib/fetch/api-read"
-import { useMutationState, useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useMutationState } from "@tanstack/react-query"
+import { Loader } from "lucide-react"
+import Loading from "../Loading/Loading"
 
 export const dashboardRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
@@ -33,21 +35,38 @@ export const dashboardRoute = createRoute({
       projectsQueryOptions: {
         queryKey: ["projects"],
         queryFn: fetchProjects,
+        initialPageParam: 0,
+        getNextPageParam: lastPage => lastPage?.nextOffset,
+        staleTime: Infinity,
       },
     }
   },
   loader: async ({ context }) => {
-    await context.queryClient.prefetchQuery(context.projectsQueryOptions)
+    context.queryClient.prefetchQuery({
+      queryKey: ["projects"],
+      queryFn: async () => {
+        const firstPage = await fetchProjects({ pageParam: 0 })
+        return {
+          pages: [firstPage],
+          pageParams: [0],
+        }
+      },
+      staleTime: Infinity,
+    })
   },
 })
 
 function Dashboard() {
   const [inputValue, setInputValue] = useState("")
+
   const { dirHandle, getDirHandle } = useGetDirHandle()
   const { user, syncToFileSystem, cwd, setCwd } = useAppContext()
-  const tableRef = useRef(null)
   const { queryClient, projectsQueryOptions } = useRouteContext({})
   const navigate = useNavigate()
+
+  const tableRef = useRef(null)
+  const paginationRef = useRef(null)
+  const scrollContainerRef = useRef(null)
 
   useEffect(() => {
     if (dirHandle) {
@@ -62,12 +81,19 @@ function Dashboard() {
   }, [user, cwd, queryClient])
 
   const {
-    data: { projects },
+    data,
     error,
-  } = useQuery(projectsQueryOptions)
-  if (error) {
-    toast.error("Failed to fetch list of projects")
-  }
+    status,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery(projectsQueryOptions)
+
+  useEffect(() => {
+    if (error) {
+      toast.error("Failed to fetch list of projects")
+    }
+  }, [error])
 
   const unfulfilledAddMutations = useMutationState({
     filters: {
@@ -162,6 +188,13 @@ function Dashboard() {
     ]
   )
 
+  const projects = useMemo(() => {
+    if (!data?.pages || data.pages.length === 0) return []
+    return data.pages.flatMap(page => {
+      return page?.projects
+    })
+  }, [data])
+
   const stagedProjects = useMemo(() => {
     const unfulfilledSaves = []
     const failedDeletes = []
@@ -240,14 +273,55 @@ function Dashboard() {
     navigate({ from: "/", to: `${selected.type}/${encodeURI(selected.title)}` })
   }
 
+  useEffect(() => {
+    const target = paginationRef.current
+    const root = scrollContainerRef.current
+
+    if (!target || !root) return
+
+    const observer = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage()
+          }
+        }
+      },
+      { root: root, threshold: 1.0 }
+    )
+    observer.observe(target)
+
+    return () => observer.disconnect()
+  }, [hasNextPage, fetchNextPage, isFetchingNextPage, data])
+
+  const Pagination = () => {
+    if (!hasNextPage) return null
+    return (
+      <div
+        ref={paginationRef}
+        className="border-t flex items-center justify-center h-24 text-center"
+      >
+        <Button
+          variant="outline"
+          onClick={fetchNextPage}
+          size="sm"
+          disabled={isFetchingNextPage}
+        >
+          {isFetchingNextPage && <Loader className="animate-spin" />}
+          Load more
+        </Button>
+      </div>
+    )
+  }
+
   return (
-    <div data-tour-id="dashboard" className="h-full">
+    <div data-tour-id="dashboard" className="flex flex-col h-full">
       <Toolbar className="flex flex-row gap-3">
         <span className="font-bold max-w-sm truncate overflow-hidden whitespace-nowrap">
           {syncToFileSystem && cwd ? `${cwd.name}` : "Library"}
         </span>
         <div className="flex gap-3 ml-auto">
-          {projects && projects?.length > 0 && (
+          {stagedProjects && stagedProjects?.length > 0 && (
             <Input
               placeholder="Search projects..."
               value={inputValue}
@@ -265,14 +339,22 @@ function Dashboard() {
           )}
         </div>
       </Toolbar>
-      <div className="h-full overflow-scroll">
-        {cwd && projects && (
-          <DataTable
-            columns={columns}
-            data={stagedProjects}
-            ref={tableRef}
-            onRowClick={handleOpenProject}
-          />
+      <div className="flex-1 min-h-0 overflow-auto" ref={scrollContainerRef}>
+        {status === "pending" && <Loading />}
+        {status === "success" && (
+          <>
+            <DataTable
+              scrollContainerRef={scrollContainerRef}
+              isFetchingNextPage={isFetchingNextPage}
+              hasNextPage={hasNextPage}
+              fetchNextPage={fetchNextPage}
+              columns={columns}
+              data={stagedProjects}
+              ref={tableRef}
+              onRowClick={handleOpenProject}
+            />
+            <Pagination />
+          </>
         )}
       </div>
     </div>

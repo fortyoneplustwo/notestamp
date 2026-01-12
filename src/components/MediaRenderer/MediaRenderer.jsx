@@ -176,15 +176,7 @@ export const mediaIdRoute = createRoute({
     }
   },
   pendingMs: 10,
-  pendingComponent: () => {
-    const { user, cwd } = useAppContext()
-    const navigate = useNavigate()
-    return (
-      <Loading
-        onCancel={() => navigate({ to: user || cwd ? "dashboard" : "/" })}
-      />
-    )
-  },
+  pendingComponent: Loading,
   errorComponent: ({ error }) => {
     const router = useRouter()
     const { user, cwd } = useAppContext()

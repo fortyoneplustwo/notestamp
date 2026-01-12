@@ -84,7 +84,20 @@ export const localFetch = async (endpoint, params = null) => {
           )
         }
         await Promise.all(promises) // Check for validity in parallel
-        const data = JSON.stringify({ projects: validProjects })
+
+        const chunkSize = 20
+        const chunk = validProjects.slice(
+          params?.pageParam,
+          params?.pageParam + chunkSize
+        )
+
+        const data = JSON.stringify({
+          projects: chunk,
+          nextOffset:
+            params?.pageParam + chunkSize < validProjects.length
+              ? params?.pageParam + chunkSize
+              : null,
+        })
         return new Response(data, status200)
       }
 

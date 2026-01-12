@@ -1,7 +1,6 @@
-import { Button } from "@/components/ui/button"
 import { Loader } from "lucide-react"
 
-const Loading = ({ onCancel }) => (
+const Loading = () => (
   <>
     <div
       data-testid="loading-screen"
