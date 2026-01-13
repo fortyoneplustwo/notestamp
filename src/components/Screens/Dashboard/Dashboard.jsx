@@ -20,6 +20,7 @@ import { fetchProjects } from "@/lib/fetch/api-read"
 import { useInfiniteQuery, useMutationState } from "@tanstack/react-query"
 import { Loader } from "lucide-react"
 import Loading from "../Loading/Loading"
+import { useDebounce } from "@uidotdev/usehooks"
 
 export const dashboardRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
@@ -58,6 +59,7 @@ export const dashboardRoute = createRoute({
 
 function Dashboard() {
   const [inputValue, setInputValue] = useState("")
+  const debouncedInput = useDebounce(inputValue, 300)
 
   const { dirHandle, getDirHandle } = useGetDirHandle()
   const { user, syncToFileSystem, cwd, setCwd } = useAppContext()
@@ -79,6 +81,12 @@ function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ["projects"] })
     }
   }, [user, cwd, queryClient])
+
+  useEffect(() => {
+    if (typeof debouncedInput === "string") {
+      tableRef.current?.filterProjects("title", debouncedInput)
+    }
+  }, [debouncedInput])
 
   const {
     data,
@@ -324,11 +332,7 @@ function Dashboard() {
           {stagedProjects && stagedProjects?.length > 0 && (
             <Input
               placeholder="Search projects..."
-              value={inputValue}
-              onChange={event => {
-                setInputValue(() => event.target.value)
-                tableRef.current?.filterProjects("title", event.target.value)
-              }}
+              onChange={e => setInputValue(e.target.value)}
               className="max-w-xs min-w-[150px] h-6"
             />
           )}
