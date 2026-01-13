@@ -156,7 +156,7 @@ export const localFetch = async (endpoint, params = null) => {
         const metadataFile =
           params?.metadata &&
           new File(
-            [JSON.stringify({ ...params.metadata, lastModified: new Date() })],
+            [JSON.stringify(params.metadata)],
             ".metadata.json",
             {
               type: "application/json",

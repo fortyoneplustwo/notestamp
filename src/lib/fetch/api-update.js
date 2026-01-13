@@ -1,13 +1,12 @@
 import { customFetch } from "./custom-fetch"
+import { ProjectUpdateSchema } from "./schemas"
 
-// TODO: rename to updateNotes
-// then have a separate updateMetadata for things like rename
 export const updateProject = async (data) => {
+  const validated = ProjectUpdateSchema.parse(data)
   const response = await customFetch("saveProject", {
-    metadata: data.metadata,
-    notes: data.notes,
+    metadata: validated.metadata,
+    notes: validated.notes,
   })
-  
   if (!response.ok) {
     throw Error("Network error: Response not ok")
   }

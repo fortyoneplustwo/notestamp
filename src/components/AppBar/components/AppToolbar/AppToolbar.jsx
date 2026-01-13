@@ -30,7 +30,7 @@ const AppToolbar = () => {
   const navigate = useNavigate()
   const { queryClient } = useRouteContext({})
 
-  // TODO: don't forget to cacel all curr mutations in onMutate
+  // TODO: don't forget to cancel all curr mutations in onMutate
   const addProjectMutation = useAddProjectMutation()
   const updateProjectMutation = useUpdateProjectMutation()
   const deleteProjectMutation = useDeleteProjectMutation()
@@ -111,7 +111,6 @@ const AppToolbar = () => {
       (!addProjectMutations.some(mut => mut.title === activeProject.title) ||
         addProjectMutations.find(mut => mut.title === activeProject.title)
           ?.status === "success")
-      // !unfulfilledAddProjectMutations.includes(activeProject?.title)
     ) {
       if (!snapshot.metadata || !snapshot.notes) {
         toast.error("Invalid project")
@@ -120,7 +119,7 @@ const AppToolbar = () => {
       const filteredMetadata = filterMetadata(snapshot.metadata, validKeys)
       toast.promise(
         updateProjectMutation.mutateAsync({
-          metadata: { ...filteredMetadata },
+          metadata: { ...filteredMetadata, lastModified: new Date().toISOString() },
           notes: snapshot.notes,
         }),
         {
@@ -137,7 +136,7 @@ const AppToolbar = () => {
       metadata: { ...snapshot.metadata },
       onClose: closeModal,
       onSave: async title => {
-        if (!snapshot.media && !snapshot.src) {
+        if (!snapshot.media && !snapshot.metadata?.src) {
           toast.warning("No media detected")
           return
         }
@@ -148,7 +147,6 @@ const AppToolbar = () => {
           return
         }
 
-        // WARN: snapshot metadata is missing fields label and type
         const filteredMetadata = filterMetadata(snapshot.metadata, validKeys)
         closeModal()
         toast.promise(
@@ -156,6 +154,7 @@ const AppToolbar = () => {
             metadata: {
               ...filteredMetadata,
               title,
+              lastModified: new Date().toISOString(),
             },
             media: snapshot.media,
             notes: snapshot.notes,
