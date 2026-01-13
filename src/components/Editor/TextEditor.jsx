@@ -11,6 +11,7 @@ import { useLists, withLists } from "./plugins/withLists"
 import { useStableFn, withStamps } from "slate-stamps"
 import { StampedElement } from "./components/StampedElement"
 import { useCopyPaste } from "./hooks/useCopyPaste"
+import { useDebounce } from "@uidotdev/usehooks"
 
 export const TextEditor = ({
   onStampInsert,
@@ -36,6 +37,7 @@ export const TextEditor = ({
       ],
     []
   )
+  const [value, setValue] = useState(initialValue)
 
   const { setEditorRef, handleMediaHotkey, isMediaMounted } =
     useProjectContext()
@@ -44,6 +46,7 @@ export const TextEditor = ({
   const { handleCopy, handlePaste } = useCopyPaste()
   const { marks } = useMarks()
   const { lists: listTypes, listItem: listItemType } = useLists()
+  const debouncedValue = useDebounce(value, 500)
 
   const toolbarKeyShortcuts = new Map([
     ["mod+b", () => toggleMark(editor, marks.bold)],
@@ -62,6 +65,11 @@ export const TextEditor = ({
       setEditorRef(null)
     }
   }, [setEditorRef])
+
+  useEffect(() => {
+    const content = JSON.stringify(debouncedValue)
+    localStorage.setItem("content", content)
+  }, [debouncedValue])
 
   /**
    * Custom behaviour
@@ -203,13 +211,12 @@ export const TextEditor = ({
       <Slate
         editor={editor}
         initialValue={initialValue}
-        onChange={value => {
+        onChange={val => {
           const isAstChange = editor.operations.some(
             op => "set_selection" !== op.type
           )
           if (isAstChange) {
-            const content = JSON.stringify(value)
-            localStorage.setItem("content", content)
+            setValue(val)
           }
         }}
       >
