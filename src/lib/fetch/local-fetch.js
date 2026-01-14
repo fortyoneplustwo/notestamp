@@ -84,16 +84,38 @@ export const localFetch = async (endpoint, params = null) => {
         }
         await Promise.all(promises) // Check for validity in parallel
 
-        const filteredAndSorted = validProjects
-          .filter(project =>
-            params?.searchParam
-              ? project.title.includes(params.searchParam)
-              : true
+        let filteredProjects = validProjects.filter(project =>
+          params?.searchParam
+            ? project.title.includes(params.searchParam)
+            : true
+        )
+
+        if (params?.columnFilters && params.columnFilters.length > 0) {
+          const filterByType = params.columnFilters.find(
+            filter => filter.id === "type"
           )
-          // .sort((a, b) => new Date(a.lastModified) - new Date(b.lastModified))
+          if (filterByType) {
+            filteredProjects = filteredProjects.filter(project =>
+              filterByType.value ? project.type === filterByType.value : true
+            )
+          }
+        }
+
+        if (params?.sorting && params.sorting.length > 0) {
+          const sortByLastModified = params.sorting.find(
+            sorting => sorting.id === "lastModified"
+          )
+          if (sortByLastModified) {
+            filteredProjects = filteredProjects.sort((a, b) =>
+              sortByLastModified.desc
+                ? new Date(b.lastModified) - new Date(a.lastModified)
+                : new Date(a.lastModified) - new Date(b.lastModified)
+            )
+          }
+        }
 
         const chunkSize = 20
-        const chunk = filteredAndSorted.slice(
+        const chunk = filteredProjects.slice(
           params?.pageParam,
           params?.pageParam + chunkSize
         )

@@ -17,7 +17,11 @@ import {
   notFound,
 } from "@tanstack/react-router"
 import { fetchProjects } from "@/lib/fetch/api-read"
-import { useInfiniteQuery, useMutationState, keepPreviousData } from "@tanstack/react-query"
+import {
+  useInfiniteQuery,
+  useMutationState,
+  keepPreviousData,
+} from "@tanstack/react-query"
 import { Loader } from "lucide-react"
 import Loading from "../Loading/Loading"
 import { useDebounce } from "@uidotdev/usehooks"
@@ -34,8 +38,8 @@ export const dashboardRoute = createRoute({
     if (!context.user && !cwd) throw redirect({ to: "/" })
     return {
       projectsQueryOptions: {
-        queryKey: ["projects", { searchParam: "" }],
-        queryFn: fetchProjects,
+        // queryKey: ["projects", { searchParam: "" }],
+        // queryFn: fetchProjects,
         initialPageParam: 0,
         placeholderData: keepPreviousData,
         getNextPageParam: lastPage => lastPage?.nextOffset,
@@ -45,9 +49,21 @@ export const dashboardRoute = createRoute({
   },
   loader: async ({ context }) => {
     context.queryClient.prefetchQuery({
-      queryKey: ["projects", { searchParam: "" }],
+      queryKey: [
+        "projects",
+        {
+          searchParam: "",
+          columnFilters: [{ id: "type", value: null }],
+          sorting: [
+            {
+              id: "lastModified",
+              desc: true,
+            },
+          ],
+        },
+      ],
       queryFn: async () => {
-        const firstPage = await fetchProjects({ pageParam: 0, searchParam: "" })
+        const firstPage = await fetchProjects({ pageParam: 0 })
         return {
           pages: [firstPage],
           pageParams: [0],
@@ -61,6 +77,11 @@ export const dashboardRoute = createRoute({
 function Dashboard() {
   const [inputValue, setInputValue] = useState("")
   const debouncedInput = useDebounce(inputValue, 300)
+
+  const [columnFilters, setColumnFilters] = useState([
+    { id: "type", value: null },
+  ])
+  const [sorting, setSorting] = useState([{ id: "lastModified", desc: true }])
 
   const { dirHandle, getDirHandle } = useGetDirHandle()
   const { user, syncToFileSystem, cwd, setCwd } = useAppContext()
@@ -93,15 +114,36 @@ function Dashboard() {
   } = useInfiniteQuery({
     ...projectsQueryOptions,
     queryFn: ({ pageParam }) =>
-      fetchProjects({ pageParam, searchParam: debouncedInput }),
-    queryKey: ["projects", { searchParam: debouncedInput }],
+      fetchProjects({
+        pageParam,
+        searchParam: debouncedInput,
+        columnFilters,
+        sorting,
+      }),
+    queryKey: [
+      "projects",
+      { searchParam: debouncedInput, columnFilters, sorting },
+    ],
   })
 
   useEffect(() => {
     if (error) {
+      console.error(error)
       toast.error("Failed to fetch list of projects")
     }
   }, [error])
+
+  const handleColumnFiltersChange = updater => {
+    const newColumnFiltersVal =
+      updater instanceof Function ? updater(columnFilters) : updater
+    setColumnFilters(newColumnFiltersVal)
+  }
+
+  const handleSortingChange = updater => {
+    const newSortingVal =
+      updater instanceof Function ? updater(sorting) : updater
+    setSorting(newSortingVal)
+  }
 
   const unfulfilledAddMutations = useMutationState({
     filters: {
@@ -348,6 +390,10 @@ function Dashboard() {
         {status === "success" && (
           <>
             <DataTable
+              columnFilters={columnFilters}
+              onColumnFiltersChange={handleColumnFiltersChange}
+              sorting={sorting}
+              onSortingChange={handleSortingChange}
               scrollContainerRef={scrollContainerRef}
               isFetchingNextPage={isFetchingNextPage}
               hasNextPage={hasNextPage}

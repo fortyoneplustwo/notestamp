@@ -17,19 +17,24 @@ import {
 import { useImperativeHandle, useState } from "react"
 import { cn } from "@/lib/utils"
 
-export const DataTable = ({ ref, columns, data, onRowClick }) => {
-  const [columnFilters, setColumnFilters] = useState([])
-  const [sorting, setSorting] = useState([
-    { id: "lastModified", desc: "true " },
-  ])
+export const DataTable = ({
+  ref,
+  columns,
+  data,
+  onRowClick,
+  columnFilters,
+  sorting,
+  onColumnFiltersChange,
+  onSortingChange,
+}) => {
   const [, setViewportWidth] = useState(window.innerWidth)
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange: onColumnFiltersChange,
     getFilteredRowModel: getFilteredRowModel(),
-    onSortingChange: setSorting,
+    onSortingChange: onSortingChange,
     getSortedRowModel: getSortedRowModel(),
     state: {
       columnFilters,
