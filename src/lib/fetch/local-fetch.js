@@ -29,7 +29,6 @@ const isValidProject = async dir => {
             return false
           }
         }
-        // metadata.lastModified = new Date(metadataFile.lastModified) // TODO: remove
         return metadata // Metadata file found and is valid
       }
     }
