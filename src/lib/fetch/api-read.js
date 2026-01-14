@@ -17,10 +17,13 @@ export const fetchUser = async () => {
   return response.json()
 }
 
-export const fetchProjects = async ({ pageParam }) => {
+export const fetchProjects = async ({ pageParam, searchParam, sortParam }) => {
+  console.log("fetchProjects", pageParam, searchParam, sortParam)
   const validatedPageParam = PageParamSchema.parse(pageParam)
   const response = await customFetch("listProjects", {
     pageParam: validatedPageParam,
+    searchParam,
+    sortParam,
   })
   if (!response.ok) {
     throw Error(`Network error: Response not ok`)

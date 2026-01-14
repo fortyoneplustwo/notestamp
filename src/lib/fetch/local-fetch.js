@@ -84,8 +84,16 @@ export const localFetch = async (endpoint, params = null) => {
         }
         await Promise.all(promises) // Check for validity in parallel
 
+        const filteredAndSorted = validProjects
+          .filter(project =>
+            params?.searchParam
+              ? project.title.includes(params.searchParam)
+              : true
+          )
+          // .sort((a, b) => new Date(a.lastModified) - new Date(b.lastModified))
+
         const chunkSize = 20
-        const chunk = validProjects.slice(
+        const chunk = filteredAndSorted.slice(
           params?.pageParam,
           params?.pageParam + chunkSize
         )
@@ -154,13 +162,9 @@ export const localFetch = async (endpoint, params = null) => {
       case "saveProject": {
         const metadataFile =
           params?.metadata &&
-          new File(
-            [JSON.stringify(params.metadata)],
-            ".metadata.json",
-            {
-              type: "application/json",
-            }
-          )
+          new File([JSON.stringify(params.metadata)], ".metadata.json", {
+            type: "application/json",
+          })
         const notesFile =
           params?.notes &&
           new File(

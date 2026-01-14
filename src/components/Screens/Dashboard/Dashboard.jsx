@@ -17,7 +17,7 @@ import {
   notFound,
 } from "@tanstack/react-router"
 import { fetchProjects } from "@/lib/fetch/api-read"
-import { useInfiniteQuery, useMutationState } from "@tanstack/react-query"
+import { useInfiniteQuery, useMutationState, keepPreviousData } from "@tanstack/react-query"
 import { Loader } from "lucide-react"
 import Loading from "../Loading/Loading"
 import { useDebounce } from "@uidotdev/usehooks"
@@ -34,9 +34,10 @@ export const dashboardRoute = createRoute({
     if (!context.user && !cwd) throw redirect({ to: "/" })
     return {
       projectsQueryOptions: {
-        queryKey: ["projects"],
+        queryKey: ["projects", { searchParam: "" }],
         queryFn: fetchProjects,
         initialPageParam: 0,
+        placeholderData: keepPreviousData,
         getNextPageParam: lastPage => lastPage?.nextOffset,
         staleTime: Infinity,
       },
@@ -44,9 +45,9 @@ export const dashboardRoute = createRoute({
   },
   loader: async ({ context }) => {
     context.queryClient.prefetchQuery({
-      queryKey: ["projects"],
+      queryKey: ["projects", { searchParam: "" }],
       queryFn: async () => {
-        const firstPage = await fetchProjects({ pageParam: 0 })
+        const firstPage = await fetchProjects({ pageParam: 0, searchParam: "" })
         return {
           pages: [firstPage],
           pageParams: [0],
@@ -82,12 +83,6 @@ function Dashboard() {
     }
   }, [user, cwd, queryClient])
 
-  useEffect(() => {
-    if (typeof debouncedInput === "string") {
-      tableRef.current?.filterProjects("title", debouncedInput)
-    }
-  }, [debouncedInput])
-
   const {
     data,
     error,
@@ -95,7 +90,12 @@ function Dashboard() {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery(projectsQueryOptions)
+  } = useInfiniteQuery({
+    ...projectsQueryOptions,
+    queryFn: ({ pageParam }) =>
+      fetchProjects({ pageParam, searchParam: debouncedInput }),
+    queryKey: ["projects", { searchParam: debouncedInput }],
+  })
 
   useEffect(() => {
     if (error) {
@@ -329,7 +329,7 @@ function Dashboard() {
           {syncToFileSystem && cwd ? `${cwd.name}` : "Library"}
         </span>
         <div className="flex gap-3 ml-auto">
-          {stagedProjects && stagedProjects?.length > 0 && (
+          {stagedProjects && (
             <Input
               placeholder="Search projects..."
               onChange={e => setInputValue(e.target.value)}
