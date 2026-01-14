@@ -38,7 +38,7 @@ export const MetadataSchema = z.object({
   title: z.string(),
   label: z.string(),
   type: z.string(),
-  // TODO: this should really be an optional url
+  // TODO: Src should really be an optional url
   src: z.string().refine(val => val === "" || z.url().parse(val)),
   mimetype: z.string(),
   lastModified: z.optional(z.string()),
@@ -49,16 +49,47 @@ export const ProjectsListSchema = z.object({
   nextOffset: z.nullable(z.number()),
 })
 
+// TODO: Media should really be of type File
 export const MediaSchema = z.instanceof(Blob)
 
-export const ProjectCreateSchema = z.object({
-  metadata: MetadataSchema,
-  media: z.optional(MediaSchema),
-  notes: SlateValueSchema,
-})
+export const ProjectCreateSchema = z
+  .object({
+    metadata: MetadataSchema,
+    media: z.optional(MediaSchema),
+    notes: SlateValueSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (data?.media) {
+      if (!data.metadata?.mimetype) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["metadata", "mimetype"],
+          message: "Mime type is required with media file",
+        })
+        return false
+      }
+      if (data.media.type !== data.metadata.mimetype) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["media"],
+          message: "Metadata and media mime types must match",
+        })
+        return false
+      }
+    } else {
+      if (!data.metadata?.src) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["metadata", "src"],
+          message: "No media source defined",
+        })
+        return false
+      }
+    }
+    return true
+  })
 
 export const ProjectUpdateSchema = z.object({
   metadata: MetadataSchema,
   notes: SlateValueSchema,
 })
-
