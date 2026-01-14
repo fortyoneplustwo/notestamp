@@ -48,10 +48,12 @@ const AppToolbar = () => {
       if (!user && !cwd) return false
 
       if (!activeProject?.title) {
-        const isMediaDirty = Boolean(snapshot.metadata?.src || snapshot.media)
-        if(!isMediaDirty) {
-          return false
-        }
+        return false
+        // TODO: open saved new project on success
+        // const isMediaDirty = Boolean(snapshot.metadata?.src || snapshot.media)
+        // if(!isMediaDirty) {
+        //   return false
+        // }
       }
 
       const isEditorDirty = 
