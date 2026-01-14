@@ -10,11 +10,15 @@ export const useAddProjectMutation = () => {
 
   const mutation = useMutation({
     mutationFn: data => {
-        return createProject(data)
+      return createProject(data)
     },
     onMutate: newProject => {
-      // Optimistically update project data
       const projectId = newProject.metadata.title
+      // First cancel any ongoing mutations
+      queryClient.cancelQueries(["metadata", projectId])
+      queryClient.cancelQueries(["media", projectId])
+      queryClient.cancelQueries(["notes", projectId])
+      // Optimistically update project data
       queryClient.setQueryData(["metadata", projectId], newProject.metadata)
       queryClient.setQueryData(["media", projectId], newProject.media)
       queryClient.setQueryData(
@@ -42,7 +46,7 @@ export const useAddProjectMutation = () => {
     },
     onSettled: () => {
       // Clear pending/error state in project list
-      queryClient.invalidateQueries({ queryKey: ["projects"] })
+      return queryClient.invalidateQueries({ queryKey: ["projects"] })
     },
     mutationKey: ["addProject"],
   })
@@ -55,11 +59,13 @@ export const useUpdateProjectMutation = () => {
 
   const mutation = useMutation({
     mutationFn: data => {
-        return updateProject(data)
+      return updateProject(data)
     },
     onMutate: variables => {
-      // Optimistically update project data (notes only)
       const projectId = variables.metadata.title
+      // First cancel any ongoing mutations
+      queryClient.cancelQueries(["notes", projectId])
+      // Optimistically update project data (notes only)
       queryClient.setQueryData(
         ["notes", projectId],
         JSON.stringify(variables.notes)
@@ -77,7 +83,7 @@ export const useUpdateProjectMutation = () => {
     },
     onSettled: () => {
       // Clear pending/error state in project list
-      queryClient.invalidateQueries({ queryKey: ["projects"] })
+      return queryClient.invalidateQueries({ queryKey: ["projects"] })
     },
     mutationKey: ["updateProject"],
   })
@@ -92,7 +98,7 @@ export const useDeleteProjectMutation = () => {
 
   const mutation = useMutation({
     mutationFn: data => {
-        return deleteProject(data.id)
+      return deleteProject(data.id)
     },
     onMutate: () => {
       return activeProject
@@ -107,7 +113,7 @@ export const useDeleteProjectMutation = () => {
       console.error(error)
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] })
+      return queryClient.invalidateQueries({ queryKey: ["projects"] })
     },
     mutationKey: ["deleteProject"],
   })
