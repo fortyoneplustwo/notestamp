@@ -30,7 +30,6 @@ const AppToolbar = () => {
   const navigate = useNavigate()
   const { queryClient } = useRouteContext({})
 
-  // TODO: don't forget to cancel all curr mutations in onMutate
   const addProjectMutation = useAddProjectMutation()
   const updateProjectMutation = useUpdateProjectMutation()
   const deleteProjectMutation = useDeleteProjectMutation()
@@ -46,14 +45,19 @@ const AppToolbar = () => {
   useBlocker({
     shouldBlockFn: () => {
       const snapshot = takeSnapshot()
+      if (!user && !cwd) return false
+
       if (!activeProject?.title) {
-        // TODO: implement isDirty for new project
-        return false
+        const isMediaDirty = Boolean(snapshot.metadata?.src || snapshot.media)
+        if(!isMediaDirty) {
+          return false
+        }
       }
-      if (
-        queryClient.getQueryData(["notes", activeProject.title]) ===
+
+      const isEditorDirty = 
+        queryClient.getQueryData(["notes", activeProject.title]) !==
         JSON.stringify(snapshot?.notes)
-      ) {
+      if (!isEditorDirty) {
         return false
       }
 
