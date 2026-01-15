@@ -86,11 +86,21 @@ export const mediaIdRoute = createRoute({
         queryFn: () => fetchMetadata(projectId),
         enabled: !!projectId,
         initialData: () => {
-          const { projects } = projectId
-            ? queryClient.getQueryData(["projects"])
-            : { projects: [] } // TODO: change return value of the query to return a list directly?
-          const metadata = projects?.find(p => p.id === projectId)
-          return metadata
+          // If we navigated by clicking on a project in the dashboard,
+          // then we can simply grab the metadata from its cache
+          const activeQueryFromDashboard = queryClient.getQueryCache().find({
+            queryKey: ["projects"],
+            exact: false,
+            active: true,
+          })
+          const pages = activeQueryFromDashboard.state.data?.pages
+          let cachedMetadata = undefined
+          for (const page of pages) {
+            cachedMetadata = page.projects?.find(
+              project => project.title === projectId
+            )
+          }
+          return cachedMetadata
         },
         // Opening a project puts it in "draft" mode which means:
         //  1. We should fetch the most up-to-date data
@@ -132,32 +142,11 @@ export const mediaIdRoute = createRoute({
       //   }, 3 * 1000)
       // }) // Wait 3 secs (for testing only)
 
-      // Handle case when project is a pending/failed mutation
-      unfulfilledMutation = queryClient
-        .getMutationCache()
-        .getAll()
-        .find(
-          mut =>
-            mut.state.status === "error" &&
-            mut.state.variables.title === projectId
-        )
-      if (unfulfilledMutation) {
-        // If unfulfilled mutation, don't prefetch. Just ensure the cache was
-        // optimistically updated and let the component fetch from cache on mount.
-        await Promise.all([
-          queryClient.ensureQueryData(metadataQueryOptions),
-          queryClient.ensureQueryData(metadataQueryOptions),
-          queryClient.ensureQueryData(metadataQueryOptions),
-        ])
-      } else {
-        await Promise.all([
-          queryClient.prefetchQuery(notesQueryOptions),
-          // Highly likely the user opened the project throught the dashboard,
-          // so the metadata should already be available in projects list
-          queryClient.ensureQueryData(metadataQueryOptions),
-          queryClient.prefetchQuery(mediaQueryOptions),
-        ])
-      }
+      await Promise.all([
+        queryClient.prefetchQuery(notesQueryOptions),
+        queryClient.prefetchQuery(metadataQueryOptions),
+        queryClient.prefetchQuery(mediaQueryOptions),
+      ])
       provisionalMetadata = templateMetadata
     } else if (shouldForwardMedia) {
       await queryClient.prefetchQuery({
@@ -217,7 +206,7 @@ function Media() {
   useEffect(() => {
     if (errorFetchingNotes) {
       console.error(`Error fetching notes: ${errorFetchingNotes}`)
-      toast.error("Failed to fetch notes for this project")
+      toast.error("Failed to fetch notes")
       throw Error()
     }
   }, [errorFetchingNotes])

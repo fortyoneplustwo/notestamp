@@ -56,7 +56,7 @@ const AppToolbar = () => {
         // }
       }
 
-      const isEditorDirty = 
+      const isEditorDirty =
         queryClient.getQueryData(["notes", activeProject.title]) !==
         JSON.stringify(snapshot?.notes)
       if (!isEditorDirty) {
@@ -97,7 +97,12 @@ const AppToolbar = () => {
       onDelete: async () => {
         closeModal()
         toast.promise(
-          deleteProjectMutation.mutateAsync({ id: snapshot.metadata.title }),
+          deleteProjectMutation.mutateAsync(
+            { id: snapshot.metadata.title },
+            {
+              onSuccess: () => navigate({ from: "/", to: "/dashboard" }),
+            }
+          ),
           {
             loading: "Deleting...",
             success: () => "Deleted!",
@@ -108,36 +113,7 @@ const AppToolbar = () => {
     })
   }
 
-  const handleSaveProject = async () => {
-    const snapshot = takeSnapshot()
-
-    // Case: Existing project
-    if (
-      activeProject?.title &&
-      (!addProjectMutations.some(mut => mut.title === activeProject.title) ||
-        addProjectMutations.find(mut => mut.title === activeProject.title)
-          ?.status === "success")
-    ) {
-      if (!snapshot.metadata || !snapshot.notes) {
-        toast.error("Invalid project")
-        return
-      }
-      const filteredMetadata = filterMetadata(snapshot.metadata, validKeys)
-      toast.promise(
-        updateProjectMutation.mutateAsync({
-          metadata: { ...filteredMetadata, lastModified: new Date().toISOString() },
-          notes: snapshot.notes,
-        }),
-        {
-          loading: "Saving...",
-          success: () => "Saved!",
-          error: "Failed to save",
-        }
-      )
-      return
-    }
-
-    // Case: New project
+  const openSaveModal = snapshot => {
     openModal("projectSaver", {
       metadata: { ...snapshot.metadata },
       onClose: closeModal,
@@ -173,6 +149,48 @@ const AppToolbar = () => {
         )
       },
     })
+  }
+
+  const updateProject = snapshot => {
+    if (!snapshot.metadata || !snapshot.notes) {
+      toast.error("Invalid project")
+      return
+    }
+    const filteredMetadata = filterMetadata(snapshot.metadata, validKeys)
+    toast.promise(
+      updateProjectMutation.mutateAsync({
+        metadata: {
+          ...filteredMetadata,
+          lastModified: new Date().toISOString(),
+        },
+        notes: snapshot.notes,
+      }),
+      {
+        loading: "Saving...",
+        success: () => "Saved!",
+        error: "Failed to save",
+      }
+    )
+  }
+
+  const handleSaveProject = async () => {
+    const snapshot = takeSnapshot()
+
+    const addProjectMutationsOfActiveProject = addProjectMutations.filter(
+      mut => mut.title === activeProject.title
+    )
+    const hasAddMutations = addProjectMutationsOfActiveProject.length > 0
+    const isAddMutationSuccess = addProjectMutationsOfActiveProject.some(
+      mut => mut.status === "success"
+    )
+    const isExistingProject =
+      activeProject?.title && (!hasAddMutations || isAddMutationSuccess)
+
+    if (isExistingProject) {
+      updateProject(snapshot)
+    } else {
+      openSaveModal(snapshot)
+    }
   }
 
   const handleCloseProject = async () => {

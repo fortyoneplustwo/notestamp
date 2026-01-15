@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query"
-import { useNavigate, useRouteContext } from "@tanstack/react-router"
+import { useRouteContext } from "@tanstack/react-router"
 import { createProject } from "@/lib/fetch/api-write"
 import { updateProject } from "@/lib/fetch/api-update"
 import { deleteProject } from "@/lib/fetch/api-delete"
@@ -93,7 +93,6 @@ export const useUpdateProjectMutation = () => {
 
 export const useDeleteProjectMutation = () => {
   const { queryClient } = useRouteContext({})
-  const navigate = useNavigate()
   const { activeProject } = useProjectContext()
 
   const mutation = useMutation({
@@ -103,11 +102,11 @@ export const useDeleteProjectMutation = () => {
     onMutate: () => {
       return activeProject
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["metadata"] })
-      queryClient.invalidateQueries({ queryKey: ["media"] })
-      queryClient.invalidateQueries({ queryKey: ["notes"] })
-      navigate({ from: "/", to: "/dashboard" })
+    onSuccess: (data, variables) => {
+      const projectId = variables.id
+      queryClient.invalidateQueries({ queryKey: ["metadata", projectId] })
+      queryClient.invalidateQueries({ queryKey: ["media", projectId] })
+      queryClient.invalidateQueries({ queryKey: ["notes", projectId] })
     },
     onError: error => {
       console.error(error)

@@ -206,6 +206,21 @@ function Dashboard() {
     },
   })
 
+  const successfulDeleteMutations = useMutationState({
+    filters: {
+      mutationKey: ["deleteProject"],
+      predicate: mut => mut.state.status === "success"
+    },
+    select: mut => {
+      return {
+        ...mut.state.context,
+        status: mut.state.status,
+        submittedAt: mut.state.submittedAt,
+        lastModified: new Date(mut.state.submittedAt).toISOString(),
+      }
+    }
+  })
+
   const dedupByLatestSubmission = mutations => {
     if (mutations.length === 0) return {}
     return mutations.reverse().reduce((acc, curr) => {
@@ -222,6 +237,7 @@ function Dashboard() {
     dedupedUnfulfilledUpdateMutations,
     dedupedPendingDeleteMutations,
     dedupedFailedDeleteMutations,
+    dedupedSuccessfulDeleteMutations,
   ] = useMemo(
     () =>
       [
@@ -229,12 +245,14 @@ function Dashboard() {
         unfulfilledUpdateMutations,
         pendingDeleteMutations,
         failedDeleteMutations,
+        successfulDeleteMutations,
       ].map(arr => dedupByLatestSubmission(arr)),
     [
       unfulfilledAddMutations,
       unfulfilledUpdateMutations,
       failedDeleteMutations,
       pendingDeleteMutations,
+      successfulDeleteMutations,
     ]
   )
 
@@ -267,6 +285,10 @@ function Dashboard() {
         "failedDelete",
         dedupedFailedDeleteMutations[upstream.title]
       )
+      mutations.set(
+        "successfulDelete",
+        dedupedSuccessfulDeleteMutations[upstream.title]
+      )
 
       const mostRecentMutation = Array.from(mutations).reduce(
         (acc, [key, val]) => {
@@ -283,7 +305,9 @@ function Dashboard() {
         !mostRecentMutation?.val ||
         mostRecentMutation.val.submittedAt < Date.parse(upstream.lastModified)
       ) {
-        if (mostRecentMutation?.key === "pendingDelete") return false // not sure about this
+        if (mostRecentMutation?.key === "pendingDelete") {
+          return false // NOTE: test this
+        }
         return true
       }
       if (mostRecentMutation?.key === "unfulfilledUpdate") {
@@ -315,6 +339,7 @@ function Dashboard() {
     dedupedUnfulfilledUpdateMutations,
     dedupedPendingDeleteMutations,
     dedupedFailedDeleteMutations,
+    dedupedSuccessfulDeleteMutations,
     projects,
   ])
 
