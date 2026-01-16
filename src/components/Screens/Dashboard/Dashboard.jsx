@@ -25,6 +25,7 @@ import {
 import { Loader } from "lucide-react"
 import Loading from "../Loading/Loading"
 import { useDebounce } from "@uidotdev/usehooks"
+import { Pagination } from "./components/Pagination"
 
 export const dashboardRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
@@ -209,7 +210,7 @@ function Dashboard() {
   const successfulDeleteMutations = useMutationState({
     filters: {
       mutationKey: ["deleteProject"],
-      predicate: mut => mut.state.status === "success"
+      predicate: mut => mut.state.status === "success",
     },
     select: mut => {
       return {
@@ -218,7 +219,7 @@ function Dashboard() {
         submittedAt: mut.state.submittedAt,
         lastModified: new Date(mut.state.submittedAt).toISOString(),
       }
-    }
+    },
   })
 
   const dedupByLatestSubmission = mutations => {
@@ -306,7 +307,7 @@ function Dashboard() {
         mostRecentMutation.val.submittedAt < Date.parse(upstream.lastModified)
       ) {
         if (mostRecentMutation?.key === "pendingDelete") {
-          return false // NOTE: test this
+          return false // NOTE: not sure about this
         }
         return true
       }
@@ -369,26 +370,6 @@ function Dashboard() {
     return () => observer.disconnect()
   }, [hasNextPage, fetchNextPage, isFetchingNextPage, data])
 
-  const Pagination = () => {
-    if (!hasNextPage) return null
-    return (
-      <div
-        ref={paginationRef}
-        className="border-t flex items-center justify-center h-24 text-center"
-      >
-        <Button
-          variant="outline"
-          onClick={fetchNextPage}
-          size="sm"
-          disabled={isFetchingNextPage}
-        >
-          {isFetchingNextPage && <Loader className="animate-spin" />}
-          Load more
-        </Button>
-      </div>
-    )
-  }
-
   return (
     <div data-tour-id="dashboard" className="flex flex-col h-full">
       <Toolbar className="flex flex-row gap-3">
@@ -428,7 +409,12 @@ function Dashboard() {
               ref={tableRef}
               onRowClick={handleOpenProject}
             />
-            <Pagination />
+            <Pagination
+              ref={paginationRef}
+              fetchNextPage={fetchNextPage}
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+            />
           </>
         )}
       </div>
