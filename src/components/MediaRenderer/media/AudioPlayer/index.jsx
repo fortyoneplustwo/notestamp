@@ -42,12 +42,16 @@ const AudioPlayer = ({ ref, ...props }) => {
   const [isMuted, setIsMuted] = useState(false)
   const [loopActive, setLoopActive] = useState(false)
 
-  const hotkeyActions = useMemo(() => new Map([
-    ["mod+k", () => handlePlayPause()],
-    ["mod+9", () => handleRewind()],
-    ["mod+0", () => handleForward()],
-    ["mod+m", () => handleToggleMute()],
-  ]), [])
+  const hotkeyActions = useMemo(
+    () =>
+      new Map([
+        ["mod+k", () => handlePlayPause()],
+        ["mod+9", () => handleRewind()],
+        ["mod+0", () => handleForward()],
+        ["mod+m", () => handleToggleMute()],
+      ]),
+    []
+  )
 
   const containerRef = useRef(null)
   const regionsRef = useRef(null)
@@ -71,11 +75,12 @@ const AudioPlayer = ({ ref, ...props }) => {
       setMediaAvailable(true)
     }
   }, [fetchBlobById.isSuccess, fetchBlobById.data, mediaAvailable])
+
   useEffect(() => {
     if (!mediaAvailable && fetchBlobByUrl.isSuccess && fetchBlobByUrl.data) {
       setMediaAvailable(true)
     }
-  }, [fetchBlobByUrl, mediaAvailable])
+  }, [fetchBlobByUrl.isSuccess, fetchBlobByUrl.data, mediaAvailable])
 
   const plugins = useMemo(() => {
     return [
