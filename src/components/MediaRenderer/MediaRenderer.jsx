@@ -93,7 +93,7 @@ export const mediaIdRoute = createRoute({
             exact: false,
             active: true,
           })
-          const pages = activeQueryFromDashboard.state.data?.pages
+          const pages = activeQueryFromDashboard?.state.data?.pages || []
           let cachedMetadata = undefined
           for (const page of pages) {
             cachedMetadata = page.projects?.find(
