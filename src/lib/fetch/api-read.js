@@ -1,4 +1,5 @@
 import { customFetch } from "./custom-fetch"
+import { localFetch } from "./local-fetch"
 import {
   MediaSchema,
   MediaUrlSchema,
@@ -55,6 +56,10 @@ export const fetchProjects = async ({
   //    500
   //  )
   // })
+}
+
+export const fetchDirHandle = async ({ id, cwd }) => {
+  return new Promise(resolve => setTimeout(() => resolve("test"), 2000))
 }
 
 export const fetchMetadata = async projectId => {

@@ -117,20 +117,8 @@ const AppToolbar = () => {
     openModal("projectSaver", {
       metadata: { ...snapshot.metadata },
       onClose: closeModal,
-      onSave: async title => {
-        if (!snapshot.media && !snapshot.metadata?.src) {
-          toast.warning("No media detected")
-          return
-        }
-
-        if (!snapshot.metadata || !snapshot.notes) {
-          closeModal()
-          toast.error("Invalid project")
-          return
-        }
-
+      onSubmit: async title => {
         const filteredMetadata = filterMetadata(snapshot.metadata, validKeys)
-        closeModal()
         toast.promise(
           addProjectMutation.mutateAsync({
             metadata: {
@@ -189,6 +177,16 @@ const AppToolbar = () => {
     if (isExistingProject) {
       updateProject(snapshot)
     } else {
+      if (!snapshot.media && !snapshot.metadata?.src) {
+        closeModal()
+        toast.warning("No media detected")
+        return
+      }
+      if (!snapshot.metadata || !snapshot.notes) {
+        closeModal()
+        toast.error("Invalid project")
+        return
+      }
       openSaveModal(snapshot)
     }
   }
