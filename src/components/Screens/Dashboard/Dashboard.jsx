@@ -22,7 +22,6 @@ import {
   useMutationState,
   keepPreviousData,
 } from "@tanstack/react-query"
-import { Loader } from "lucide-react"
 import Loading from "../Loading/Loading"
 import { useDebounce } from "@uidotdev/usehooks"
 import { Pagination } from "./components/Pagination"
