@@ -139,6 +139,17 @@ export const localFetch = async (endpoint, params = null) => {
         }
         return new Response(null, status404)
 
+      case "getDuplicate":
+        for await (const entry of params?.cwd?.values() || []) {
+          if (entry.name === params?.projectId) {
+            return new Response(
+              JSON.stringify({ isDuplicate: true }),
+              status200
+            )
+          }
+        }
+        return new Response(JSON.stringify({ isDuplicate: false }), status200)
+
       case "getProjectMedia":
         for await (const entry of params?.cwd?.values() || []) {
           if (entry.name === params?.projectId) {

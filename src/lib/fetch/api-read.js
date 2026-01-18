@@ -1,5 +1,4 @@
 import { customFetch } from "./custom-fetch"
-import { localFetch } from "./local-fetch"
 import {
   MediaSchema,
   MediaUrlSchema,
@@ -8,6 +7,7 @@ import {
   ProjectIdSchema,
   ProjectsListSchema,
   NotesAsStringSchema,
+  ProjectDuplicateSchema,
 } from "./schemas"
 
 export const fetchUser = async () => {
@@ -58,8 +58,16 @@ export const fetchProjects = async ({
   // })
 }
 
-export const fetchDirHandle = async ({ id, cwd }) => {
-  return new Promise(resolve => setTimeout(() => resolve("test"), 2000))
+export const fetchDuplicate = async ({ projectId }) => {
+  const validatedProjectId = ProjectIdSchema.parse(projectId)
+  const response = await customFetch("getDuplicate", {
+    validatedProjectId,
+  })
+  if (!response.ok) {
+    throw Error(`Network error: Response not ok`)
+  }
+  const data = await response.json()
+  return ProjectDuplicateSchema.parse(data)
 }
 
 export const fetchMetadata = async projectId => {

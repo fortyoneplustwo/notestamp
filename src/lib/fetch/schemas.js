@@ -93,3 +93,5 @@ export const ProjectUpdateSchema = z.object({
   metadata: MetadataSchema,
   notes: SlateValueSchema,
 })
+
+export const ProjectDuplicateSchema = z.object({ isDuplicate: z.boolean() })
