@@ -143,13 +143,13 @@ export const mediaIdRoute = createRoute({
       // }) // Wait 3 secs (for testing only)
 
       await Promise.all([
-        queryClient.prefetchQuery(notesQueryOptions),
-        queryClient.prefetchQuery(metadataQueryOptions),
+        queryClient.ensureQueryData(notesQueryOptions),
+        queryClient.ensureQueryData(metadataQueryOptions),
         queryClient.prefetchQuery(mediaQueryOptions),
       ])
       provisionalMetadata = templateMetadata
     } else if (shouldForwardMedia) {
-      await queryClient.prefetchQuery({
+      await queryClient.ensureQueryData({
         queryKey: ["media", mediaToForward.src],
         queryFn: () => fetchMediaByUrl(mediaToForward.src),
       })
@@ -193,8 +193,10 @@ function Media() {
 
   const { data: fetchedMetadata, error: errorFetchingMetadata } =
     useQuery(metadataQueryOptions)
-  const { data: fetchedNotes, error: errorFetchingNotes } =
-    useQuery(notesQueryOptions)
+  const {
+    data: fetchedNotes,
+    error: errorFetchingNotes,
+  } = useQuery(notesQueryOptions)
 
   useEffect(() => {
     if (errorFetchingMetadata) {
@@ -210,6 +212,10 @@ function Media() {
       throw Error()
     }
   }, [errorFetchingNotes])
+
+  useEffect(() => {
+    if (fetchedNotes) setContent(editorRef.current, fetchedNotes)
+  }, [fetchedNotes, setContent])
 
   const metadata = useMemo(
     () =>
@@ -234,8 +240,6 @@ function Media() {
       </div>
     )
   }
-
-  fetchedNotes && setContent(editorRef.current, fetchedNotes)
 
   return (
     <Comp
