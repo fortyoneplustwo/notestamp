@@ -59,6 +59,7 @@ const SaveModal = ({ metadata = null, onSubmit, onClose }) => {
         return
       }
       onSubmit(event.target.filename.value)
+      onClose()
     } catch (err) {
       setErrMsg(err.message)
       setTimeout(() => inputRef.current?.focus(), 0)
