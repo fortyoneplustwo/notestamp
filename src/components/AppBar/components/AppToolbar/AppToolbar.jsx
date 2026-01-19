@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { useModal } from "@/context/ModalContext"
 import { useProjectContext } from "@/context/ProjectContext"
 import { useAppContext } from "@/context/AppContext"
@@ -27,8 +27,8 @@ const AppToolbar = () => {
   const { openModal, closeModal } = useModal()
   const { user, cwd } = useAppContext()
   const { activeProject, takeSnapshot } = useProjectContext()
-  const navigate = useNavigate()
   const { queryClient } = useRouteContext({})
+  const navigate = useNavigate()
 
   const addProjectMutation = useAddProjectMutation()
   const updateProjectMutation = useUpdateProjectMutation()
@@ -42,6 +42,18 @@ const AppToolbar = () => {
     }),
   })
 
+  const isExistingProject = useMemo(() => {
+    if (!activeProject?.title) return false
+    const addProjectMutationsOfActiveProject = addProjectMutations?.filter(
+      mut => mut.title === activeProject.title
+    )
+    const hasAddMutations = addProjectMutationsOfActiveProject.length > 0
+    const isAddMutationSuccess = addProjectMutationsOfActiveProject.some(
+      mut => mut.status === "success"
+    )
+    return Boolean(!hasAddMutations || isAddMutationSuccess)
+  }, [addProjectMutations, activeProject])
+
   useBlocker({
     shouldBlockFn: () => {
       const snapshot = takeSnapshot()
@@ -49,7 +61,6 @@ const AppToolbar = () => {
 
       if (!activeProject?.title) {
         return false
-        // TODO: open saved new project on success
         // const isMediaDirty = Boolean(snapshot.metadata?.src || snapshot.media)
         // if(!isMediaDirty) {
         //   return false
@@ -120,15 +131,28 @@ const AppToolbar = () => {
       onSubmit: async title => {
         const filteredMetadata = filterMetadata(snapshot.metadata, validKeys)
         toast.promise(
-          addProjectMutation.mutateAsync({
-            metadata: {
-              ...filteredMetadata,
-              title,
-              lastModified: new Date().toISOString(),
+          addProjectMutation.mutateAsync(
+            {
+              metadata: {
+                ...filteredMetadata,
+                title,
+                lastModified: new Date().toISOString(),
+              },
+              media: snapshot.media,
+              notes: snapshot.notes,
             },
-            media: snapshot.media,
-            notes: snapshot.notes,
-          }),
+            {
+              onSuccess: () => {
+                navigate({
+                  params: prev => ({
+                    ...prev,
+                    projectId: title,
+                  }),
+                  replace: true,
+                })
+              },
+            }
+          ),
           {
             loading: "Saving...",
             success: () => "Saved!",
@@ -163,27 +187,14 @@ const AppToolbar = () => {
 
   const handleSaveProject = async () => {
     const snapshot = takeSnapshot()
-
-    const addProjectMutationsOfActiveProject = addProjectMutations.filter(
-      mut => mut.title === activeProject.title
-    )
-    const hasAddMutations = addProjectMutationsOfActiveProject.length > 0
-    const isAddMutationSuccess = addProjectMutationsOfActiveProject.some(
-      mut => mut.status === "success"
-    )
-    const isExistingProject =
-      activeProject?.title && (!hasAddMutations || isAddMutationSuccess)
-
     if (isExistingProject) {
       updateProject(snapshot)
     } else {
       if (!snapshot.media && !snapshot.metadata?.src) {
-        closeModal()
         toast.warning("No media detected")
         return
       }
       if (!snapshot.metadata || !snapshot.notes) {
-        closeModal()
         toast.error("Invalid project")
         return
       }

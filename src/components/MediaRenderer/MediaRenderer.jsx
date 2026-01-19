@@ -164,7 +164,7 @@ export const mediaIdRoute = createRoute({
       unfulfilledMutation: unfulfilledMutation,
     }
   },
-  pendingMs: 10,
+  pendingMs: 500,
   pendingComponent: Loading,
   errorComponent: ({ error }) => {
     const router = useRouter()
@@ -193,10 +193,8 @@ function Media() {
 
   const { data: fetchedMetadata, error: errorFetchingMetadata } =
     useQuery(metadataQueryOptions)
-  const {
-    data: fetchedNotes,
-    error: errorFetchingNotes,
-  } = useQuery(notesQueryOptions)
+  const { data: fetchedNotes, error: errorFetchingNotes } =
+    useQuery(notesQueryOptions)
 
   useEffect(() => {
     if (errorFetchingMetadata) {
