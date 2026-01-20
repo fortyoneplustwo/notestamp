@@ -15,6 +15,7 @@ import {
   useRouteContext,
   redirect,
   notFound,
+  HeadContent,
 } from "@tanstack/react-router"
 import { fetchProjects } from "@/lib/fetch/api-read"
 import {
@@ -72,6 +73,13 @@ export const dashboardRoute = createRoute({
       staleTime: Infinity,
     })
   },
+  head: () => ({
+    meta: [
+      {
+        title: "Dashboard | Notestamp",
+      },
+    ],
+  }),
 })
 
 function Dashboard() {
@@ -370,54 +378,57 @@ function Dashboard() {
   }, [hasNextPage, fetchNextPage, isFetchingNextPage, data])
 
   return (
-    <div data-tour-id="dashboard" className="flex flex-col h-full">
-      <Toolbar className="flex flex-row gap-3">
-        <span className="font-bold max-w-sm truncate overflow-hidden whitespace-nowrap">
-          {syncToFileSystem && cwd ? `${cwd.name}` : "Library"}
-        </span>
-        <div className="flex gap-3 ml-auto">
-          {stagedProjects && (
-            <Input
-              placeholder="Search projects..."
-              onChange={e => setInputValue(e.target.value)}
-              className="max-w-xs min-w-[150px] h-6"
-            />
-          )}
-          {syncToFileSystem && (
-            <Button size="xs" title="Change directory" onClick={getDirHandle}>
-              <FolderOpen />
-            </Button>
+    <>
+      <HeadContent />
+      <div data-tour-id="dashboard" className="flex flex-col h-full">
+        <Toolbar className="flex flex-row gap-3">
+          <span className="font-bold max-w-sm truncate overflow-hidden whitespace-nowrap">
+            {syncToFileSystem && cwd ? `${cwd.name}` : "Library"}
+          </span>
+          <div className="flex gap-3 ml-auto">
+            {stagedProjects && (
+              <Input
+                placeholder="Search projects..."
+                onChange={e => setInputValue(e.target.value)}
+                className="max-w-xs min-w-[150px] h-6"
+              />
+            )}
+            {syncToFileSystem && (
+              <Button size="xs" title="Change directory" onClick={getDirHandle}>
+                <FolderOpen />
+              </Button>
+            )}
+          </div>
+        </Toolbar>
+        <div className="flex-1 min-h-0 overflow-auto" ref={scrollContainerRef}>
+          {status === "pending" && <Loading />}
+          {status === "success" && (
+            <>
+              <DataTable
+                columnFilters={columnFilters}
+                onColumnFiltersChange={handleColumnFiltersChange}
+                sorting={sorting}
+                onSortingChange={handleSortingChange}
+                scrollContainerRef={scrollContainerRef}
+                isFetchingNextPage={isFetchingNextPage}
+                hasNextPage={hasNextPage}
+                fetchNextPage={fetchNextPage}
+                columns={columns}
+                data={stagedProjects}
+                ref={tableRef}
+                onRowClick={handleOpenProject}
+              />
+              <Pagination
+                ref={paginationRef}
+                fetchNextPage={fetchNextPage}
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+              />
+            </>
           )}
         </div>
-      </Toolbar>
-      <div className="flex-1 min-h-0 overflow-auto" ref={scrollContainerRef}>
-        {status === "pending" && <Loading />}
-        {status === "success" && (
-          <>
-            <DataTable
-              columnFilters={columnFilters}
-              onColumnFiltersChange={handleColumnFiltersChange}
-              sorting={sorting}
-              onSortingChange={handleSortingChange}
-              scrollContainerRef={scrollContainerRef}
-              isFetchingNextPage={isFetchingNextPage}
-              hasNextPage={hasNextPage}
-              fetchNextPage={fetchNextPage}
-              columns={columns}
-              data={stagedProjects}
-              ref={tableRef}
-              onRowClick={handleOpenProject}
-            />
-            <Pagination
-              ref={paginationRef}
-              fetchNextPage={fetchNextPage}
-              hasNextPage={hasNextPage}
-              isFetchingNextPage={isFetchingNextPage}
-            />
-          </>
-        )}
       </div>
-    </div>
+    </>
   )
 }
 

@@ -5,6 +5,7 @@ import Loading from "../Screens/Loading/Loading"
 import { appLayoutRoute } from "@/App"
 import {
   createRoute,
+  HeadContent,
   Outlet,
   useLoaderData,
   useNavigate,
@@ -181,6 +182,15 @@ export const mediaIdRoute = createRoute({
       />
     )
   },
+  head: ({ params: { mediaId, projectId } }) => ({
+    meta: [
+      {
+        title: projectId
+          ? `${projectId} | Notestamp`
+          : `${defaultMediaConfig.find(({ type }) => type === mediaId)?.label} | Notestamp`,
+      },
+    ],
+  }),
   component: Media,
 })
 
@@ -235,5 +245,17 @@ function Media() {
   }
 
   return (
+    <>
+      <HeadContent />
+      <Comp
+        ref={node => {
+          setMediaRef(node)
+          return () => {
+            setMediaRef(null)
+          }
+        }}
+        {...metadata}
+      />
+    </>
   )
 }

@@ -45,24 +45,24 @@ export function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <div className="grid grid-rows-[auto_1fr] h-screen bg-sidebar-accent dark:bg-mybgprim">
-          <ModalProvider>
-            <header className="flex row-span-1 bg-transparent pt-2 px-2">
-              <AppBar navItems={defaultMediaConfig.concat(myMediaComponents)} />
-            </header>
-            <main className="row-span-2 grid grid-cols-2">
-              <LeftPane>
-                <Outlet />
-              </LeftPane>
-              <RightPane>
-                <TextEditor
-                  editor={editor}
-                  onStampInsert={handleGetMediaState}
-                  onStampClick={handleSeekMedia}
-                />
-              </RightPane>
-            </main>
-            <Toaster position="bottom-left" richColors />
-          </ModalProvider>
+        <ModalProvider>
+          <header className="flex row-span-1 bg-transparent pt-2 px-2">
+            <AppBar navItems={defaultMediaConfig.concat(myMediaComponents)} />
+          </header>
+          <main className="row-span-2 grid grid-cols-2">
+            <LeftPane>
+              <Outlet />
+            </LeftPane>
+            <RightPane>
+              <TextEditor
+                editor={editor}
+                onStampInsert={handleGetMediaState}
+                onStampClick={handleSeekMedia}
+              />
+            </RightPane>
+          </main>
+          <Toaster position="bottom-left" richColors />
+        </ModalProvider>
       </div>
     </ThemeProvider>
   )

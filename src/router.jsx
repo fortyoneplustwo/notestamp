@@ -1,6 +1,8 @@
 import {
   createRootRouteWithContext,
   createRouter,
+  HeadContent,
+  Outlet,
 } from "@tanstack/react-router"
 import { indexRoute } from "./components/Screens/Welcome/WelcomeMessage"
 import { appLayoutRoute } from "./App"
@@ -22,13 +24,37 @@ const appLayoutTree = appLayoutRoute.addChildren([
 ])
 
 export const rootRoute = createRootRouteWithContext()({
+  head: () => ({
+    meta: [
+      { title: "Notestamp" },
+      {
+        name: "description",
+        content: "Write notes synced with media",
+      },
+    ],
+    links: [
+      { rel: "stylesheet", href: "https://fonts.cdnfonts.com/css/fira-code-2" },
+      { rel: "stylesheet", href: "https://fonts.cdnfonts.com/css/outfit" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,400,0,0",
+      },
+      { rel: "stylesheet", href: "https://fonts.cdnfonts.com/css/mosk" },
+    ],
+  }),
   errorComponent: () => <>Error</>,
+  component: () => (
+    <>
+      <HeadContent />
+      <Outlet />
+    </>
+  ),
 })
 
 export const routeTree = rootRoute.addChildren([appLayoutTree])
 
 const queryClient = new QueryClient()
-window.__TANSTACK_QUERY_CLIENT__ = queryClient;
+window.__TANSTACK_QUERY_CLIENT__ = queryClient
 
 export const router = createRouter({
   routeTree,
@@ -36,5 +62,9 @@ export const router = createRouter({
   Wrap: ({ children }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   ),
-  defaultNotFoundComponent: () => <div className="h-screen"><NotFound/></div>,
+  defaultNotFoundComponent: () => (
+    <div className="h-screen">
+      <NotFound />
+    </div>
+  ),
 })
