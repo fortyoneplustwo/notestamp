@@ -1,18 +1,14 @@
 import React, { useEffect, useMemo } from "react"
-import { defaultMediaConfig as mediaConfig } from "@/config"
+import { defaultMediaConfig } from "@/config"
 import { editorRef, useProjectContext } from "../../context/ProjectContext"
 import Loading from "../Screens/Loading/Loading"
-import YoutubePlayer from "./media/YoutubePlayer"
-import AudioPlayer from "./media/AudioPlayer"
-import AudioRecorder from "./media/AudioRecorder"
-import PdfReader from "./media/PdfReader"
 import { appLayoutRoute } from "@/App"
 import {
   createRoute,
   Outlet,
   useLoaderData,
-  useMatch,
   useNavigate,
+  useParams,
   useRouteContext,
   useRouter,
 } from "@tanstack/react-router"
@@ -35,21 +31,8 @@ import { useAppContext } from "@/context/AppContext"
 import { redirect, notFound } from "@tanstack/react-router"
 import { Error as ErrorScreen } from "../Screens/Loading/Error"
 
-const globImports = import.meta.glob(`./media/*/index.jsx`)
-const defaultMediaComponents = {
-  youtube: YoutubePlayer,
-  audio: AudioPlayer,
-  recorder: AudioRecorder,
-  pdf: PdfReader,
-}
-const mediaComponentsMap = new Map()
-mediaConfig.forEach(({ type, dir }) => {
-  const path = `./media/${dir}/index.jsx`
-  if (type in defaultMediaComponents) {
-    mediaComponentsMap.set(type, defaultMediaComponents[type])
-  } else if (path in globImports) {
-    mediaComponentsMap.set(type, React.lazy(globImports[path]))
-  }
+const mediaModules = import.meta.glob(`./media/*/index.jsx`, {
+  import: "default",
 })
 
 export const mediaLayoutRoute = createRoute({
@@ -65,7 +48,7 @@ export const mediaLayoutRoute = createRoute({
 export const mediaIdRoute = createRoute({
   getParentRoute: () => mediaLayoutRoute,
   path: "/$mediaId/{-$projectId}",
-  beforeLoad: ({
+  beforeLoad: async ({
     context: { queryClient },
     params: { mediaId, projectId },
   }) => {
@@ -131,6 +114,22 @@ export const mediaIdRoute = createRoute({
     },
     params: { mediaId, projectId },
   }) => {
+    // Dynamically import media modules to trigger chunk download.
+    // These are likely cached during preloading.
+    let mediaModule = undefined
+    const config = defaultMediaConfig.find(c => c.type === mediaId)
+    if (!config) {
+      throw new Error(
+        `No configuration found for media module with id: ${mediaId}`
+      )
+    }
+    const path = `./media/${config.dir}/index.jsx`
+    try {
+      mediaModule = await mediaModules[path]()
+    } catch (err) {
+      console.error("Failed to preload media module:", err)
+    }
+
     const templateMetadata = getProjectConfig(mediaId)
     let provisionalMetadata = undefined
     let unfulfilledMutation = undefined
@@ -162,6 +161,7 @@ export const mediaIdRoute = createRoute({
     return {
       provisionalMetadata,
       unfulfilledMutation: unfulfilledMutation,
+      Comp: mediaModule,
     }
   },
   pendingMs: 500,
@@ -185,11 +185,11 @@ export const mediaIdRoute = createRoute({
 })
 
 function Media() {
-  const match = useMatch({ strict: false })
-  const { provisionalMetadata } = useLoaderData({})
+  const { provisionalMetadata, Comp } = useLoaderData({})
   const { setMediaRef, setActiveProject } = useProjectContext()
-  const { setContent } = useContent()
   const { metadataQueryOptions, notesQueryOptions } = useRouteContext({})
+  const { mediaId } = useParams({})
+  const { setContent } = useContent()
 
   const { data: fetchedMetadata, error: errorFetchingMetadata } =
     useQuery(metadataQueryOptions)
@@ -230,24 +230,10 @@ function Media() {
     return () => setActiveProject(null)
   }, [setActiveProject, metadata])
 
-  const Comp = mediaComponentsMap.get(match.params.mediaId)
   if (!Comp) {
-    return (
-      <div className="h-full items-center justify-center">
-        <p>Oops! This media component does not exist.</p>
-      </div>
-    )
+    throw new Error(`Media module component with id '${mediaId}' is undefined`)
   }
 
   return (
-    <Comp
-      ref={node => {
-        setMediaRef(node)
-        return () => {
-          setMediaRef(null)
-        }
-      }}
-      {...metadata}
-    />
   )
 }
