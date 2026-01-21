@@ -1,9 +1,32 @@
 import { driver } from "driver.js"
 import "driver.js/dist/driver.css"
-import './style.css'
+import "./style.css"
+
+const controller = new AbortController()
+
+const onNavigate = options => {
+  const { precommitHandler, handler, to } = options
+  const navigation = window.navigation
+  navigation.addEventListener(
+    "navigate",
+    event => {
+      if (!event.canIntercept) return
+      if (event.hashChange || event.downloadRequest !== null) return
+      const url = new URL(event.destination.url)
+      if (url.pathname.startsWith(to)) {
+        event.intercept({
+          precommitHandler: precommitHandler.bind(options),
+          handler: handler.bind(options),
+        })
+      }
+    },
+    { once: true, signal: controller.signal }
+  )
+}
 
 export const tour = driver({
-  popoverClass: 'custom',
+  showProgress: true,
+  popoverClass: "custom",
   nextBtnText: "Next",
   doneBtnText: "End tour",
   overlayClickBehavior: () => {},
@@ -11,6 +34,9 @@ export const tour = driver({
     if (!tour.hasNextStep() || confirm("Exit tour?")) {
       tour.destroy()
     }
+  },
+  onDestroyed: () => {
+    controller.abort()
   },
   steps: [
     {
@@ -23,19 +49,35 @@ export const tour = driver({
         side: "bottom",
         align: "end",
       },
-      onHighlighted: (element, step, options) => {
-        console.log("highlighted")
-        const leftPane = document.querySelector('div[data-tour-id="left-pane"]')
-        if (leftPane) {
-          new MutationObserver((mutations, observer) => {
-            for (const m of mutations) {
-              if (m.addedNodes.length > 0) {
-                observer.disconnect()
-                options.driver.moveNext()
-              }
+      onHighlighted: (_, __, options) => {
+        onNavigate({
+          to: "/dashboard",
+          hasNavigated: false,
+          precommitHandler: function () {
+            const leftPane = document.querySelector(
+              'div[data-tour-id="left-pane"]'
+            )
+            if (leftPane) {
+              new MutationObserver((mutations, observer) => {
+                for (const m of mutations) {
+                  if (
+                    this.hasNavigated &&
+                    m.addedNodes.length > 0 &&
+                    m.addedNodes[0]?.dataset?.tourId === "dashboard"
+                  ) {
+                    setTimeout(() => {
+                      observer.disconnect()
+                      options.driver.moveNext()
+                    }, 50) // Timeout makes the transition less jarring
+                  }
+                }
+              }).observe(leftPane, { childList: true })
             }
-          }).observe(leftPane, { childList: true })
-        }
+          },
+          handler: function () {
+            this.hasNavigated = true
+          },
+        })
       },
     },
     {
@@ -57,27 +99,38 @@ export const tour = driver({
         showButtons: ["close"],
         side: "bottom",
       },
-      onHighlighted: (element, step, options) => {
-        const leftPane = document.querySelector('div[data-tour-id="left-pane"]')
-        if (leftPane) {
-          new MutationObserver((mutations, observer) => {
-            for (const m of mutations) {
-              for (const node of m.addedNodes) {
-                if (node.nodeType === 1) {
-                  const recordButton = node.querySelector(
-                    'button[data-tour-id="record-btn"]'
-                  )
-                  if (recordButton) {
-                    setTimeout(() => {
-                      observer.disconnect()
-                      options.driver.moveNext()
-                    }, 50) // Timeout makes the transition less jarring
+      onHighlighted: (_, __, options) => {
+        onNavigate({
+          to: "/recorder",
+          hasNavigated: false,
+          precommitHandler: function () {
+            const leftPane = document.querySelector(
+              'div[data-tour-id="left-pane"]'
+            )
+            if (leftPane) {
+              new MutationObserver((mutations, observer) => {
+                for (const m of mutations) {
+                  for (const node of m.addedNodes) {
+                    if (node.nodeType === 1 && this.hasNavigated) {
+                      const recordButton = node.querySelector(
+                        'button[data-tour-id="record-btn"]'
+                      )
+                      if (recordButton) {
+                        setTimeout(() => {
+                          observer.disconnect()
+                          options.driver.moveNext()
+                        }, 50) // Timeout makes the transition less jarring
+                      }
+                    }
                   }
                 }
-              }
+              }).observe(leftPane, { childList: true, subtree: true })
             }
-          }).observe(leftPane, { childList: true, subtree: true })
-        }
+          },
+          handler: function () {
+            this.hasNavigated = true
+          },
+        })
       },
     },
     {
@@ -87,7 +140,7 @@ export const tour = driver({
         showButtons: ["close"],
         side: "bottom",
       },
-      onHighlighted: (element, step, options) => {
+      onHighlighted: (_, __, options) => {
         const stopButton = document.querySelector(
           'button[data-tour-id="stop-btn"]'
         )
@@ -127,7 +180,7 @@ export const tour = driver({
         showButtons: ["close"],
         side: "bottom",
       },
-      onHighlighted: (element, step, options) => {
+      onHighlighted: (_, __, options) => {
         const stopButton = document.querySelector(
           'button[data-tour-id="stop-btn"]'
         )
