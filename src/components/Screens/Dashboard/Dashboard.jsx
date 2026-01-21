@@ -16,6 +16,7 @@ import {
   redirect,
   notFound,
   HeadContent,
+  useSearch,
 } from "@tanstack/react-router"
 import { fetchProjects } from "@/lib/fetch/api-read"
 import {
@@ -26,11 +27,20 @@ import {
 import Loading from "../Loading/Loading"
 import { useDebounce } from "@uidotdev/usehooks"
 import { Pagination } from "./components/Pagination"
+import { zodValidator } from "@tanstack/zod-adapter"
+import z from "zod"
+import { fallback } from "@tanstack/zod-adapter"
 
 export const dashboardRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
-  component: Dashboard,
   path: "/dashboard/$",
+  validateSearch: zodValidator(
+    z.object({
+      query: fallback(z.string(), "").default(""),
+      filter: fallback(z.string(), "").default(""),
+      sort: fallback(z.enum(["desc", "asc"]), "desc").default("desc"),
+    })
+  ),
   beforeLoad: ({ params, context }) => {
     if (params._splat) {
       throw notFound()
@@ -39,8 +49,6 @@ export const dashboardRoute = createRoute({
     if (!context.user && !cwd) throw redirect({ to: "/" })
     return {
       projectsQueryOptions: {
-        // queryKey: ["projects", { searchParam: "" }],
-        // queryFn: fetchProjects,
         initialPageParam: 0,
         placeholderData: keepPreviousData,
         getNextPageParam: lastPage => lastPage?.nextOffset,
@@ -48,23 +56,16 @@ export const dashboardRoute = createRoute({
       },
     }
   },
-  loader: async ({ context }) => {
-    context.queryClient.prefetchQuery({
-      queryKey: [
-        "projects",
-        {
-          searchParam: "",
-          columnFilters: [{ id: "type", value: null }],
-          sorting: [
-            {
-              id: "lastModified",
-              desc: true,
-            },
-          ],
-        },
-      ],
+  loaderDeps: ({ search: { query, filter, sort } }) => ({
+    searchParam: query,
+    columnFilters: [{ id: "type", value: filter || null }],
+    sorting: [{ id: "lastModified", desc: sort === "desc" }],
+  }),
+  loader: async ({ context: { queryClient }, deps }) => {
+    queryClient.prefetchQuery({
+      queryKey: ["projects", deps],
       queryFn: async () => {
-        const firstPage = await fetchProjects({ pageParam: 0 })
+        const firstPage = await fetchProjects({ pageParam: 0, ...deps })
         return {
           pages: [firstPage],
           pageParams: [0],
@@ -80,6 +81,7 @@ export const dashboardRoute = createRoute({
       },
     ],
   }),
+  component: Dashboard,
 })
 
 function Dashboard() {
@@ -112,6 +114,8 @@ function Dashboard() {
     }
   }, [user, cwd, queryClient])
 
+  const { query } = useSearch({})
+
   const {
     data,
     error,
@@ -124,13 +128,13 @@ function Dashboard() {
     queryFn: ({ pageParam }) =>
       fetchProjects({
         pageParam,
-        searchParam: debouncedInput,
+        searchParam: query, // NOTE: replace with actual input value?
         columnFilters,
         sorting,
       }),
     queryKey: [
       "projects",
-      { searchParam: debouncedInput, columnFilters, sorting },
+      { searchParam: query, columnFilters, sorting },
     ],
   })
 
@@ -144,14 +148,36 @@ function Dashboard() {
   const handleColumnFiltersChange = updater => {
     const newColumnFiltersVal =
       updater instanceof Function ? updater(columnFilters) : updater
+    navigate({
+      from: dashboardRoute.fullPath,
+      search: prev => {
+        console.log({ prev })
+        return { ...prev, filter: newColumnFiltersVal[0]?.value }
+      },
+    })
     setColumnFilters(newColumnFiltersVal)
   }
 
   const handleSortingChange = updater => {
     const newSortingVal =
       updater instanceof Function ? updater(sorting) : updater
+    navigate({
+      from: dashboardRoute.fullPath,
+      search: prev => ({
+        ...prev,
+        sort: newSortingVal[0]?.desc ? "desc" : "asc",
+      }),
+    })
     setSorting(newSortingVal)
   }
+
+  // TODO: fix search filter
+  useEffect(() => {
+    navigate({
+      from: dashboardRoute.fullPath,
+      search: prev => ({ ...prev, query: debouncedInput ?? "" }),
+    })
+  }, [debouncedInput, navigate])
 
   const unfulfilledAddMutations = useMutationState({
     filters: {
