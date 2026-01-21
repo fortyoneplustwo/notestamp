@@ -61,7 +61,7 @@ export const fetchProjects = async ({
 export const fetchDuplicate = async ({ projectId }) => {
   const validatedProjectId = ProjectIdSchema.parse(projectId)
   const response = await customFetch("getDuplicate", {
-    validatedProjectId,
+    projectId: validatedProjectId,
   })
   if (!response.ok) {
     throw Error(`Network error: Response not ok`)
