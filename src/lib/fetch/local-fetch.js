@@ -119,7 +119,7 @@ export const localFetch = async (endpoint, params = null) => {
         const data = JSON.stringify({
           projects: chunk,
           nextOffset:
-            params?.pageParam + chunkSize < validProjects.length
+            params?.pageParam + chunkSize < filteredProjects.length
               ? params?.pageParam + chunkSize
               : null,
         })
