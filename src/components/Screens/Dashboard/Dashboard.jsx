@@ -101,19 +101,6 @@ function Dashboard() {
   const tableRef = useRef(null)
   const paginationRef = useRef(null)
   const scrollContainerRef = useRef(null)
-
-  useEffect(() => {
-    if (dirHandle) {
-      setCwd(dirHandle)
-    }
-  }, [dirHandle, setCwd])
-
-  useEffect(() => {
-    if (user || cwd) {
-      queryClient.invalidateQueries({ queryKey: ["projects"] })
-    }
-  }, [user, cwd, queryClient])
-
   const { query } = useSearch({})
 
   const {
@@ -128,15 +115,53 @@ function Dashboard() {
     queryFn: ({ pageParam }) =>
       fetchProjects({
         pageParam,
-        searchParam: query, // NOTE: replace with actual input value?
+        searchParam: query,
         columnFilters,
         sorting,
       }),
-    queryKey: [
-      "projects",
-      { searchParam: query, columnFilters, sorting },
-    ],
+    queryKey: ["projects", { searchParam: query, columnFilters, sorting }],
   })
+
+  useEffect(() => {
+    if (dirHandle) {
+      setCwd(dirHandle)
+    }
+  }, [dirHandle, setCwd])
+
+  useEffect(() => {
+    if (user || cwd) {
+      queryClient.invalidateQueries({ queryKey: ["projects"] })
+    }
+  }, [user, cwd, queryClient])
+
+  useEffect(() => {
+    navigate({
+      from: dashboardRoute.fullPath,
+      search: prev => ({ ...prev, query: debouncedInput ?? "" }),
+    })
+  }, [debouncedInput, navigate])
+
+  // Fetch next page when table is scrolled to the very bottom.
+  useEffect(() => {
+    const target = paginationRef.current
+    const root = scrollContainerRef.current
+
+    if (!target || !root) return
+
+    const observer = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage()
+          }
+        }
+      },
+      { root: root, threshold: 1.0 }
+    )
+    observer.observe(target)
+
+    return () => observer.disconnect()
+  }, [hasNextPage, fetchNextPage, isFetchingNextPage, data])
 
   useEffect(() => {
     if (error) {
@@ -144,6 +169,7 @@ function Dashboard() {
       toast.error("Failed to fetch list of projects")
     }
   }, [error])
+
 
   const handleColumnFiltersChange = updater => {
     const newColumnFiltersVal =
@@ -170,14 +196,6 @@ function Dashboard() {
     })
     setSorting(newSortingVal)
   }
-
-  // TODO: fix search filter
-  useEffect(() => {
-    navigate({
-      from: dashboardRoute.fullPath,
-      search: prev => ({ ...prev, query: debouncedInput ?? "" }),
-    })
-  }, [debouncedInput, navigate])
 
   const unfulfilledAddMutations = useMutationState({
     filters: {
@@ -340,7 +358,7 @@ function Dashboard() {
         mostRecentMutation.val.submittedAt < Date.parse(upstream.lastModified)
       ) {
         if (mostRecentMutation?.key === "pendingDelete") {
-          return false // NOTE: not sure about this
+          return false
         }
         return true
       }
@@ -381,27 +399,6 @@ function Dashboard() {
     const selected = stagedProjects.find(p => p.title === title)
     navigate({ from: "/", to: `${selected.type}/${encodeURI(selected.title)}` })
   }
-
-  useEffect(() => {
-    const target = paginationRef.current
-    const root = scrollContainerRef.current
-
-    if (!target || !root) return
-
-    const observer = new IntersectionObserver(
-      entries => {
-        for (const entry of entries) {
-          if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
-            fetchNextPage()
-          }
-        }
-      },
-      { root: root, threshold: 1.0 }
-    )
-    observer.observe(target)
-
-    return () => observer.disconnect()
-  }, [hasNextPage, fetchNextPage, isFetchingNextPage, data])
 
   return (
     <>
