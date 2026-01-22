@@ -18,6 +18,7 @@ const AudioRecorder = ({ ref, ...props }) => {
   const containerRef = useRef(null)
   const recorderRef = useRef(null)
   const durationRef = useRef(null)
+  const wasStopped = useRef(false)
 
   const navigate = useNavigate()
 
@@ -63,7 +64,7 @@ const AudioRecorder = ({ ref, ...props }) => {
       })
 
       recorder.on("record-end", blob => {
-        setStopped(true)
+        if (!wasStopped.current) return 
         const url = window.URL.createObjectURL(blob)
         setMediaToForward({
           src: url,
@@ -136,8 +137,8 @@ const AudioRecorder = ({ ref, ...props }) => {
   const handleStopRec = async () => {
     try {
       if (!recorderRef.current) return
+      wasStopped.current = true
       await recorderRef.current.stopRecording()
-      setStopped(true)
     } catch (error) {
       toast.error("Failed to stop recording")
       console.error("Error stopping recording:", error)
