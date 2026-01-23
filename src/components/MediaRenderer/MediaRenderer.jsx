@@ -9,7 +9,6 @@ import {
   Outlet,
   useLoaderData,
   useNavigate,
-  useParams,
   useRouteContext,
   useRouter,
 } from "@tanstack/react-router"
@@ -31,6 +30,10 @@ import { useContent } from "../Editor/hooks/useContent"
 import { useAppContext } from "@/context/AppContext"
 import { redirect, notFound } from "@tanstack/react-router"
 import { Error as ErrorScreen } from "../Screens/Loading/Error"
+import { zodValidator } from "@tanstack/zod-adapter"
+import { fallback } from "@tanstack/zod-adapter"
+import z from "zod"
+import { stripSearchParams } from "@tanstack/react-router"
 
 const mediaModules = import.meta.glob(`./media/*/index.jsx`, {
   import: "default",
@@ -49,6 +52,15 @@ export const mediaLayoutRoute = createRoute({
 export const mediaIdRoute = createRoute({
   getParentRoute: () => mediaLayoutRoute,
   path: "/$mediaId/{-$projectId}",
+  validateSearch: zodValidator(
+    z.object({
+      src: fallback(z.string(), "").default(""),
+      mimetype: fallback(z.string(), "").default(""),
+    })
+  ),
+  search: {
+    middlewares: [stripSearchParams({ src: "", mimetype: "" })],
+  },
   beforeLoad: async ({
     context: { queryClient },
     params: { mediaId, projectId },
@@ -106,6 +118,10 @@ export const mediaIdRoute = createRoute({
       },
     }
   },
+  loaderDeps: ({ search: { src, mimetype } }) => {
+    if (!src || !mimetype) return undefined
+    return { mediaToForward: { src, mimetype } }
+  },
   loader: async ({
     context: {
       queryClient,
@@ -114,6 +130,7 @@ export const mediaIdRoute = createRoute({
       mediaQueryOptions,
     },
     params: { mediaId, projectId },
+    deps: { mediaToForward },
   }) => {
     // Dynamically import media modules to trigger chunk download.
     // These are likely cached during preloading.
@@ -133,7 +150,6 @@ export const mediaIdRoute = createRoute({
 
     const templateMetadata = getProjectConfig(mediaId)
     let provisionalMetadata = undefined
-    let unfulfilledMutation = undefined
 
     if (projectId) {
       // await new Promise(reject => {
@@ -148,20 +164,19 @@ export const mediaIdRoute = createRoute({
         queryClient.prefetchQuery(mediaQueryOptions),
       ])
       provisionalMetadata = templateMetadata
-    } else if (shouldForwardMedia) {
+    } else if (mediaToForward) {
       await queryClient.ensureQueryData({
         queryKey: ["media", mediaToForward.src],
         queryFn: () => fetchMediaByUrl(mediaToForward.src),
       })
       provisionalMetadata = { ...templateMetadata, ...mediaToForward }
-      invalidateForward()
     } else {
       provisionalMetadata = templateMetadata
     }
 
     return {
+      mediaId,
       provisionalMetadata,
-      unfulfilledMutation: unfulfilledMutation,
       Comp: mediaModule,
     }
   },
@@ -195,10 +210,9 @@ export const mediaIdRoute = createRoute({
 })
 
 function Media() {
-  const { provisionalMetadata, Comp } = useLoaderData({})
+  const { provisionalMetadata, Comp, mediaId } = useLoaderData({})
   const { setMediaRef, setActiveProject } = useProjectContext()
   const { metadataQueryOptions, notesQueryOptions } = useRouteContext({})
-  const { mediaId } = useParams({})
   const { setContent } = useContent()
 
   const { data: fetchedMetadata, error: errorFetchingMetadata } =
