@@ -29,7 +29,7 @@ export const TextEditor = ({
 
   const initialValue = useMemo(
     () =>
-      JSON.parse(localStorage.getItem("content")) || [
+      JSON.parse(sessionStorage.getItem("content")) || [
         {
           type: "paragraph",
           children: [{ text: "" }],
@@ -68,7 +68,7 @@ export const TextEditor = ({
 
   useEffect(() => {
     const content = JSON.stringify(debouncedValue)
-    localStorage.setItem("content", content)
+    sessionStorage.setItem("content", content)
   }, [debouncedValue])
 
   /**
