@@ -14,11 +14,6 @@ import {
 } from "@tanstack/react-router"
 import { getProjectConfig } from "@/utils/getProjectConfig"
 import {
-  invalidateForward,
-  mediaToForward,
-  shouldForwardMedia,
-} from "@/utils/switchMedia"
-import {
   fetchMediaById,
   fetchMediaByUrl,
   fetchMetadata,
