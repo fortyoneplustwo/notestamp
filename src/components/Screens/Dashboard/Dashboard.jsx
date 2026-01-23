@@ -66,15 +66,15 @@ export const dashboardRoute = createRoute({
     sorting: [{ id: "lastModified", desc: sort === "desc" }],
   }),
   loader: async ({ context: { queryClient }, deps }) => {
-    queryClient.prefetchQuery({
+    queryClient.prefetchInfiniteQuery({
       queryKey: ["projects", deps],
-      queryFn: async () => {
-        const firstPage = await fetchProjects({ pageParam: 0, ...deps })
-        return {
-          pages: [firstPage],
-          pageParams: [0],
-        }
-      },
+      queryFn: ({ pageParam }) =>
+        fetchProjects({
+          pageParam,
+          ...deps,
+        }),
+      initialPageParam: 0,
+      getNextPageParam: () => 5,
       staleTime: Infinity,
     })
   },
@@ -173,7 +173,6 @@ function Dashboard() {
       toast.error("Failed to fetch list of projects")
     }
   }, [error])
-
 
   const handleColumnFiltersChange = updater => {
     const newColumnFiltersVal =
