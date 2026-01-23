@@ -1,13 +1,12 @@
 /* eslint-disable react/jsx-key */
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { Toolbar as Container } from "@/components/MediaRenderer/components/Toolbar"
 import { MarkButton } from "./components/MarkButton"
 import { BlockButton } from "./components/BlockButton"
 import { ActionButton } from "./components/ActionButton"
 import { useLists } from "../../plugins/withLists"
 import { useMarks } from "../../plugins/withMarks"
-import { downloadPdf } from "../../utils/pdfDownloader"
 import { useSlate } from "slate-react"
 import { Bold } from "lucide-react"
 import { Italic } from "lucide-react"
@@ -21,13 +20,30 @@ import { ArrowBigUp } from "lucide-react"
 import { useProjectContext } from "@/context/ProjectContext"
 import { MediaControlsMenu } from "./components/MediaControlsMenu"
 
+const modules = import.meta.glob("../../utils/pdfDownloader.jsx", {
+  import: "downloadPdf",
+})
+
 export const Toolbar = () => {
   const editor = useSlate()
   const { marks } = useMarks()
   const { lists } = useLists()
+  const downloadPdf = useRef()
 
   const { currProjectConfig } = useProjectContext()
   const [mediaHotkeys, setMediaHotkeys] = useState(null)
+
+  useEffect(() => {
+    const loadPdfDownloader = async () => {
+      try {
+        const path = "../../utils/pdfDownloader.jsx"
+        downloadPdf.current = await modules[path]()
+      } catch (err) {
+        console.error("Failed to load pdf downloader module:", err)
+      }
+    }
+    loadPdfDownloader()
+  }, [])
 
   useEffect(() => {
     if (currProjectConfig) {
@@ -148,7 +164,7 @@ export const Toolbar = () => {
           icon={FileDown}
           aria-label="Download PDF"
           title="Export notes as PDF"
-          onClick={async () => downloadPdf(editor)}
+          onClick={async () => downloadPdf.current?.(editor)}
         />
         {mediaHotkeys && <MediaControlsMenu data={mediaHotkeys} />}
       </div>
