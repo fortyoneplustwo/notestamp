@@ -17,6 +17,7 @@ import {
   notFound,
   HeadContent,
   useSearch,
+  stripSearchParams,
 } from "@tanstack/react-router"
 import { fetchProjects } from "@/lib/fetch/api-read"
 import {
@@ -41,6 +42,9 @@ export const dashboardRoute = createRoute({
       sort: fallback(z.enum(["desc", "asc"]), "desc").default("desc"),
     })
   ),
+  search: {
+    middlewares: [stripSearchParams({ query: "", filter: "", sort: "desc" })],
+  },
   beforeLoad: ({ params, context }) => {
     if (params._splat) {
       throw notFound()
