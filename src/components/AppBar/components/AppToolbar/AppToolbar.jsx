@@ -111,7 +111,8 @@ const AppToolbar = () => {
           deleteProjectMutation.mutateAsync(
             { id: snapshot.metadata.title },
             {
-              onSuccess: () => navigate({ from: "/", to: "/dashboard" }),
+              onSuccess: () =>
+                navigate({ from: "/", to: "/dashboard", replace: true }),
             }
           ),
           {
