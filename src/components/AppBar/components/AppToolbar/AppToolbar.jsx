@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { useModal } from "@/context/ModalContext"
+import { useModal } from "@/providers/ModalProvider"
 import { useProjectContext } from "@/context/ProjectContext"
 import { useAppContext } from "@/context/AppContext"
 import { CircleX, Save, Trash } from "lucide-react"

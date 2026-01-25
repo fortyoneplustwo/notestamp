@@ -1,7 +1,7 @@
 import { useState } from "react"
 // import { useRegister } from "@/hooks/useAuth"
 import { useAppContext } from "@/context/AppContext"
-import { useModal } from "@/context/ModalContext"
+import { useModal } from "@/providers/ModalProvider"
 import { Toggle } from "./components/Toggle.jsx"
 import { User } from "lucide-react"
 import { ModeToggle } from "./components/ModeToggle"
