@@ -54,7 +54,18 @@ export const mediaIdRoute = createRoute({
     })
   ),
   search: {
-    middlewares: [stripSearchParams({ src: "", mimetype: "" })],
+    middlewares: [
+      // Handle media forwarding
+      ({ search, next }) => {
+        const { isForwarding } = useAppContext.getState()
+        if (!isForwarding) {
+          return next({ src: "", mimetype: "" })
+        }
+        useAppContext.setState({ isForwarding: false })
+        return next(search)
+      },
+      stripSearchParams({ src: "", mimetype: "" })
+    ],
   },
   beforeLoad: async ({
     context: { queryClient },

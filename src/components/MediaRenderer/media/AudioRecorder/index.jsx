@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Circle, Pause, Square } from "lucide-react"
 import { useNavigate } from "@tanstack/react-router"
+import { forward } from "../../utils/forwardMedia"
 
 const AudioRecorder = ({ ref, ...props }) => {
   const [started, setStarted] = useState(false)
@@ -65,15 +66,19 @@ const AudioRecorder = ({ ref, ...props }) => {
       recorder.on("record-end", blob => {
         if (!wasStopped.current) return
         const url = window.URL.createObjectURL(blob)
-        navigate({
-          from: "/",
-          to: "/audio",
-          replace: true,
-          search: {
-            src: url,
-            mimetype: blob.type?.split(";")[0],
-          },
+        forward("/audio", {
+          src: url,
+          mimetype: blob.type?.split(";")[0],
         })
+        // navigate({
+        //   from: "/",
+        //   to: "/audio",
+        //   replace: true,
+        //   search: {
+        //     src: url,
+        //     mimetype: blob.type?.split(";")[0],
+        //   },
+        // })
       })
     }
 
