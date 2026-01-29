@@ -181,26 +181,34 @@ export const tour = driver({
         side: "bottom",
       },
       onHighlighted: (_, __, options) => {
-        const stopButton = document.querySelector(
-          'button[data-tour-id="stop-btn"]'
-        )
-        if (stopButton) {
-          new MutationObserver((mutations, observer) => {
-            for (const m of mutations) {
-              if (
-                m.type === "attributes" &&
-                m.attributeName === "disabled" &&
-                stopButton.getAttribute("disabled") !== null
-              ) {
-                observer.disconnect()
-                options.driver.moveNext()
-              }
+        onNavigate({
+          to: "/audio",
+          hasNavigated: false,
+          precommitHandler: function () {
+            const leftPane = document.querySelector(
+              'div[data-tour-id="left-pane"]'
+            )
+            if (leftPane) {
+              new MutationObserver((mutations, observer) => {
+                for (const m of mutations) {
+                  if (
+                    this.hasNavigated &&
+                    m.addedNodes.length > 0 &&
+                    m.addedNodes[0]?.dataset?.tourId === "audio-player"
+                  ) {
+                    setTimeout(() => {
+                      observer.disconnect()
+                      options.driver.moveNext()
+                    }, 50) // Timeout makes the transition less jarring
+                  }
+                }
+              }).observe(leftPane, { childList: true, subtree: true })
             }
-          }).observe(stopButton, {
-            attributes: true,
-            attributeFilter: ["disabled"],
-          })
-        }
+          },
+          handler: function () {
+            this.hasNavigated = true
+          },
+        })
       },
     },
     {

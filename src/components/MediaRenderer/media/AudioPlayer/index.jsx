@@ -267,7 +267,11 @@ const AudioPlayer = ({ ref, ...props }) => {
   }
 
   return (
-    <div data-testid="audio-player" className="flex flex-col h-full">
+    <div
+      data-testid="audio-player"
+      data-tour-id="audio-player"
+      className="flex flex-col h-full"
+    >
       {(props.src || props.title || mediaAvailable) && (
         <Toolbar className="gap-3">
           {mediaAvailable && !props.title && !props.src && (
