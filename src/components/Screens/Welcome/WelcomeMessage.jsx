@@ -10,8 +10,17 @@ import {
 } from "lucide-react"
 import { Compass } from "lucide-react"
 import React, { useEffect, useState } from "react"
+import { createRoute } from "@tanstack/react-router"
+import { appLayoutRoute } from "@/App"
+import { tour } from "@/lib/tour"
 
-const WelcomeMessage = ({ onClickTourButton }) => {
+export const indexRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: "/",
+  component: WelcomeMessage,
+})
+
+export function WelcomeMessage() {
   const [isHover, setIsHover] = useState(false)
 
   return (
@@ -49,7 +58,7 @@ const WelcomeMessage = ({ onClickTourButton }) => {
         <div className="flex items-center justify-center grow px-40 py-10">
           <Button
             className="grow"
-            onClick={onClickTourButton}
+            onClick={() => tour.drive()}
             onMouseEnter={() => setIsHover(true)}
             onMouseLeave={() => setIsHover(false)}
           >
@@ -104,4 +113,3 @@ const Typewriter = ({ text, delay }) => {
 
   return <span>{currentText}</span>
 }
-export default WelcomeMessage

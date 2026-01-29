@@ -29,7 +29,6 @@ const isValidProject = async dir => {
             return false
           }
         }
-        metadata.lastModified = new Date(metadataFile.lastModified)
         return metadata // Metadata file found and is valid
       }
     }
@@ -69,7 +68,7 @@ const status404 = {
   statusText: "Not found",
 }
 
-export const fsFetch = async (endpoint, params = null) => {
+export const localFetch = async (endpoint, params = null) => {
   console.log("fsFetch: ", endpoint, params)
   try {
     switch (endpoint) {
@@ -84,7 +83,46 @@ export const fsFetch = async (endpoint, params = null) => {
           )
         }
         await Promise.all(promises) // Check for validity in parallel
-        const data = JSON.stringify({ projects: validProjects })
+
+        const sortByLastModified = params?.sorting?.find(
+          sorting => sorting.id === "lastModified"
+        )
+        const sortedProjects = validProjects.sort((a, b) =>
+          (sortByLastModified ? sortByLastModified.desc : true)
+            ? new Date(b.lastModified) - new Date(a.lastModified)
+            : new Date(a.lastModified) - new Date(b.lastModified)
+        )
+
+        let filteredProjects = sortedProjects.filter(project =>
+          params?.searchParam
+            ? project.title.includes(params.searchParam)
+            : true
+        )
+
+        if (params?.columnFilters && params.columnFilters.length > 0) {
+          const filterByType = params.columnFilters.find(
+            filter => filter.id === "type"
+          )
+          if (filterByType) {
+            filteredProjects = filteredProjects.filter(project =>
+              filterByType.value ? project.type === filterByType.value : true
+            )
+          }
+        }
+
+        const chunkSize = 5
+        const chunk = filteredProjects.slice(
+          params?.pageParam,
+          params?.pageParam + chunkSize
+        )
+
+        const data = JSON.stringify({
+          projects: chunk,
+          nextOffset:
+            params?.pageParam + chunkSize < filteredProjects.length
+              ? params?.pageParam + chunkSize
+              : null,
+        })
         return new Response(data, status200)
       }
 
@@ -100,6 +138,17 @@ export const fsFetch = async (endpoint, params = null) => {
           }
         }
         return new Response(null, status404)
+
+      case "getDuplicate":
+        for await (const entry of params?.cwd?.values() || []) {
+          if (entry.name === params?.projectId) {
+            return new Response(
+              JSON.stringify({ isDuplicate: true }),
+              status200
+            )
+          }
+        }
+        return new Response(JSON.stringify({ isDuplicate: false }), status200)
 
       case "getProjectMedia":
         for await (const entry of params?.cwd?.values() || []) {

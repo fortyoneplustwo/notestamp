@@ -7,16 +7,20 @@ import { Toolbar } from "../../components/Toolbar"
 import { toast } from "sonner"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Circle, Pause, Square } from "lucide-react"
-import EventEmitter from "@/utils/EventEmitter"
+import { useNavigate } from "@tanstack/react-router"
+import { forward } from "../../utils/forwardMedia"
 
 const AudioRecorder = ({ ref, ...props }) => {
   const [started, setStarted] = useState(false)
-  const [stopped, setStopped] = useState(false)
+  const [stopped] = useState(false)
   const [value, setValue] = useState("")
   const [paused, setPaused] = useState(false)
   const containerRef = useRef(null)
   const recorderRef = useRef(null)
   const durationRef = useRef(null)
+  const wasStopped = useRef(false)
+
+  const navigate = useNavigate()
 
   const { wavesurfer } = useWavesurfer({
     container: containerRef,
@@ -60,13 +64,21 @@ const AudioRecorder = ({ ref, ...props }) => {
       })
 
       recorder.on("record-end", blob => {
-        setStopped(true)
+        if (!wasStopped.current) return
         const url = window.URL.createObjectURL(blob)
-        EventEmitter.dispatch("open-media-with-src", {
-          type: "audio",
+        forward("/audio", {
           src: url,
-          mimetype: blob && blob.type?.split(";")[0],
+          mimetype: blob.type?.split(";")[0],
         })
+        // navigate({
+        //   from: "/",
+        //   to: "/audio",
+        //   replace: true,
+        //   search: {
+        //     src: url,
+        //     mimetype: blob.type?.split(";")[0],
+        //   },
+        // })
       })
     }
 
@@ -133,8 +145,8 @@ const AudioRecorder = ({ ref, ...props }) => {
   const handleStopRec = async () => {
     try {
       if (!recorderRef.current) return
+      wasStopped.current = true
       await recorderRef.current.stopRecording()
-      setStopped(true)
     } catch (error) {
       toast.error("Failed to stop recording")
       console.error("Error stopping recording:", error)

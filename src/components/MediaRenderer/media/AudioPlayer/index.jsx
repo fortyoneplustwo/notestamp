@@ -5,10 +5,6 @@ import React, {
   useRef,
   useState,
 } from "react"
-import {
-  useGetProjectMedia,
-  useGetProjectMediaByUrl,
-} from "@/hooks/useReadData"
 import { Toolbar } from "../../components/Toolbar"
 import "../../style/Background.css"
 import { formatTime } from "../../utils/formatTime"
@@ -32,40 +28,59 @@ import { Slider } from "@/components/ui/slider"
 import { Dropzone } from "../../components/Dropzone"
 import { FileInput } from "../../components/FileInput"
 import isHotkey from "is-hotkey"
+import { useQuery } from "@tanstack/react-query"
+import { fetchMediaById, fetchMediaByUrl } from "@/lib/fetch/api-read"
 
 const AudioPlayer = ({ ref, ...props }) => {
   const [uploadedBlob, setUploadedBlob] = useState(null)
   const [audioUrl, setAudioUrl] = useState("")
+  const [mediaAvailable, setMediaAvailable] = useState(false)
+
   const [mimeType, setMimeType] = useState("")
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(100)
   const [isMuted, setIsMuted] = useState(false)
-  const [mediaAvailable, setMediaAvailable] = useState(false)
   const [loopActive, setLoopActive] = useState(false)
 
-  const hotkeyActions = new Map([
-    ["mod+k", () => handlePlayPause()],
-    ["mod+9", () => handleRewind()],
-    ["mod+0", () => handleForward()],
-    ["mod+m", () => handleToggleMute()],
-  ])
+  const hotkeyActions = useMemo(
+    () =>
+      new Map([
+        ["mod+k", () => handlePlayPause()],
+        ["mod+9", () => handleRewind()],
+        ["mod+0", () => handleForward()],
+        ["mod+m", () => handleToggleMute()],
+      ]),
+    []
+  )
 
   const containerRef = useRef(null)
   const regionsRef = useRef(null)
   const activeRegionRef = useRef(null)
 
-  const {
-    data: blobFromId,
-    fetchById,
-    loading: loadingFetchById,
-    error: errorFetchingById,
-  } = useGetProjectMedia()
-  const {
-    data: blobFromUrl,
-    fetchByUrl,
-    loading: loadingFetchByUrl,
-    error: errorFetchingByUrl,
-  } = useGetProjectMediaByUrl()
+  const fetchBlobById = useQuery({
+    queryFn: () => fetchMediaById(props.title),
+    queryKey: ["media", props.title],
+    enabled: !!props?.title,
+    staleTime: Infinity,
+  })
+  const fetchBlobByUrl = useQuery({
+    queryFn: () => fetchMediaByUrl(props.src),
+    queryKey: ["media", props.src],
+    enabled: !!props?.src,
+    staleTime: Infinity,
+  })
+
+  useEffect(() => {
+    if (!mediaAvailable && fetchBlobById.isSuccess && fetchBlobById.data) {
+      setMediaAvailable(true)
+    }
+  }, [fetchBlobById.isSuccess, fetchBlobById.data, mediaAvailable])
+
+  useEffect(() => {
+    if (!mediaAvailable && fetchBlobByUrl.isSuccess && fetchBlobByUrl.data) {
+      setMediaAvailable(true)
+    }
+  }, [fetchBlobByUrl.isSuccess, fetchBlobByUrl.data, mediaAvailable])
 
   const plugins = useMemo(() => {
     return [
@@ -94,23 +109,21 @@ const AudioPlayer = ({ ref, ...props }) => {
     if (!wavesurfer) return
 
     // On init, media can come from only 3 possible sources
-    if (props.src?.startsWith("blob")) {
+    if (props.src?.startsWith("blob") && props.mimetype) {
       // Passed from sound recorder
       wavesurfer.load(props.src)
-      fetchByUrl(props.src)
       setAudioUrl(props.src)
       setMimeType(props?.mimetype)
     } else if (uploadedBlob) {
       // Uploaded through dropzone
       wavesurfer.loadBlob(uploadedBlob)
-      setUploadedBlob(uploadedBlob)
       const url = window.URL.createObjectURL(uploadedBlob)
       setAudioUrl(url)
       setMimeType(uploadedBlob?.type)
-    } else if (blobFromId) {
+    } else if (props?.title) {
       // Fetched from a previously saved project
-      wavesurfer.loadBlob(blobFromId)
-      const url = window.URL.createObjectURL(blobFromId)
+      wavesurfer.loadBlob(fetchBlobById.data)
+      const url = window.URL.createObjectURL(fetchBlobById.data)
       setAudioUrl(url)
       setMimeType(props?.mimetype)
     }
@@ -129,34 +142,6 @@ const AudioPlayer = ({ ref, ...props }) => {
       wavesurfer && wavesurfer.destroy()
     }
   }, [wavesurfer])
-
-  useEffect(() => {
-    if (props.title) {
-      fetchById(props.title)
-    } else if (props.src) {
-      setMediaAvailable(true)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (loadingFetchById) return
-    if (errorFetchingById) {
-      toast.error("Failed to load project audio")
-      console.error("Error fetching project audio")
-      return
-    }
-    if (blobFromId) setMediaAvailable(true)
-  }, [blobFromId])
-
-  useEffect(() => {
-    if (loadingFetchByUrl) return
-    if (errorFetchingByUrl) {
-      toast.error("Failed to load project audio")
-      console.error("Error fetching project audio")
-      return
-    }
-    if (blobFromUrl) setMediaAvailable(true)
-  }, [blobFromUrl])
 
   useImperativeHandle(ref, () => {
     return {
@@ -186,7 +171,7 @@ const AudioPlayer = ({ ref, ...props }) => {
           : null
       },
       getMedia: () => {
-        return uploadedBlob || blobFromUrl || blobFromId
+        return uploadedBlob || fetchBlobByUrl.data || fetchBlobById.data
       },
       handleHotkey: event => {
         for (const [hotkey, action] of hotkeyActions.entries()) {
@@ -197,7 +182,16 @@ const AudioPlayer = ({ ref, ...props }) => {
         }
       },
     }
-  }, [props, audioUrl])
+  }, [
+    props,
+    fetchBlobById,
+    fetchBlobByUrl,
+    mimeType,
+    currentTime,
+    hotkeyActions,
+    uploadedBlob,
+    wavesurfer,
+  ])
 
   const handleDropzoneAccept = file => {
     setMediaAvailable(() => {
@@ -273,7 +267,11 @@ const AudioPlayer = ({ ref, ...props }) => {
   }
 
   return (
-    <div data-testid="audio-player" className="flex flex-col h-full">
+    <div
+      data-testid="audio-player"
+      data-tour-id="audio-player"
+      className="flex flex-col h-full"
+    >
       {(props.src || props.title || mediaAvailable) && (
         <Toolbar className="gap-3">
           {mediaAvailable && !props.title && !props.src && (

@@ -15,20 +15,26 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useImperativeHandle, useState } from "react"
+import { cn } from "@/lib/utils"
 
-export const DataTable = ({ ref, columns, data, onRowClick }) => {
-  const [columnFilters, setColumnFilters] = useState([])
-  const [sorting, setSorting] = useState([
-    { id: "lastModified", desc: "true " },
-  ])
+export const DataTable = ({
+  ref,
+  columns,
+  data,
+  onRowClick,
+  columnFilters,
+  sorting,
+  onColumnFiltersChange,
+  onSortingChange,
+}) => {
   const [, setViewportWidth] = useState(window.innerWidth)
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange: onColumnFiltersChange,
     getFilteredRowModel: getFilteredRowModel(),
-    onSortingChange: setSorting,
+    onSortingChange: onSortingChange,
     getSortedRowModel: getSortedRowModel(),
     state: {
       columnFilters,
@@ -53,18 +59,17 @@ export const DataTable = ({ ref, columns, data, onRowClick }) => {
     }
   })
 
-  // Fix: If the table overflows its scrollable container,
-  // then the last row may not fully render.
-  // Adding padding bottom pushes the content up a bit
-  // so the last row can be fully rendered.
   return (
-    <Table className="mb-3">
+    <Table isHeaderSticky={true}>
       <TableHeader>
         {table.getHeaderGroups().map(headerGroup => (
           <TableRow key={headerGroup.id}>
             {headerGroup.headers.map(header => {
               return (
-                <TableHead key={header.id}>
+                <TableHead
+                  key={header.id}
+                  className="sticky top-0 z-10 bg-background dark:bg-mybgsec shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.1)] dark:shadow-[inset_0_-1px_0_0_#27272a]"
+                >
                   {header.isPlaceholder
                     ? null
                     : flexRender(
@@ -81,6 +86,10 @@ export const DataTable = ({ ref, columns, data, onRowClick }) => {
         {table.getRowModel().rows?.length ? (
           table.getRowModel().rows.map(row => (
             <TableRow
+              className={cn({
+                // "bg-red-300/50": row.original.status === "error",
+                // "bg-yellow-200/50": row.original.status === "pending"
+              })}
               key={row.id}
               data-state={row.getIsSelected() && "selected"}
               onClick={() => onRowClick(row.getValue("title"))}

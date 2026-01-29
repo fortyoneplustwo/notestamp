@@ -1,4 +1,4 @@
-export const backendFetch = async (endpoint, params = null) => {
+export const remoteFetch = async (endpoint, params = null) => {
   const domain = "http://localhost:8000"
 
   try {

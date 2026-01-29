@@ -1,72 +1,37 @@
-import React, { useState, useRef, useEffect } from "react"
+import React from "react"
 import { TextEditor } from "./components/Editor/TextEditor"
-import { EventEmitter } from "./utils/EventEmitter"
-import WelcomeMessage from "./components/Screens/Welcome/WelcomeMessage"
-import Dashboard from "./components/Screens/Dashboard/Dashboard"
-import MediaRenderer from "./components/MediaRenderer/MediaRenderer"
-import { ProjectProvider } from "./context/ProjectContext"
+import { mediaRef } from "./context/ProjectContext"
 import LeftPane from "./components/Containers/LeftPane"
 import RightPane from "./components/Containers/RightPane"
 import AppBar from "./components/AppBar/AppBar"
-import { useGetProjectNotes, useGetUserData } from "./hooks/useReadData"
-import { ModalProvider } from "./context/ModalContext"
-import { useAppContext } from "./context/AppContext"
+import { ModalProvider } from "./providers/ModalProvider"
+// import { useAppContext } from "./context/AppContext"
 import { Toaster } from "sonner"
-import { ThemeProvider } from "./context/ThemeProvider"
+import { ThemeProvider } from "./providers/ThemeProvider"
 import { defaultMediaConfig } from "./config"
 import { myMediaComponents } from "./components/MediaRenderer/config"
 import { useCreateEditor } from "./components/Editor/hooks/useCreateEditor"
-import { useContent } from "./components/Editor/hooks/useContent"
-import { Joyride, Tooltip, useJoyride } from "./features/guided-tour"
 import "./index.css"
-import { toast } from "sonner"
+import { createRoute, Outlet } from "@tanstack/react-router"
+import { rootRoute } from "./router"
 
-const App = () => {
-  const mediaRendererRef = useRef(null)
-  const [isProjectOpen, setIsProjectOpen] = useState(null)
-  const [currProjectMetadata, setCurrProjectMetadata] = useState(null)
+export const appLayoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: "_appLayout",
+  component: App,
+})
 
+export function App() {
   const { editor } = useCreateEditor()
-  const { setContent } = useContent()
-  const { data: userData } = useGetUserData()
-  const { user, setUser, syncToFileSystem } = useAppContext()
-  const { steps, run, stepIndex, handleOnBeginTour, handleJoyrideCallback } =
-    useJoyride()
-  const { fetchById: fetchNotesById, error: errorFetchingNotes } =
-    useGetProjectNotes()
+  // const { data: userData } = useGetUserData()
+  // const { user, setUser, syncToFileSystem } = useAppContext()
 
-  useEffect(() => {
-    setUser(userData)
-  }, [userData, setUser])
-
-  const handleOpenNewProject = metadata => {
-    setIsProjectOpen(() => {
-      setCurrProjectMetadata({
-        ...metadata,
-        src: "",
-        title: "",
-        mimetype: "",
-        hotkeys: metadata?.hotkeys?.length > 0 ? [...metadata.hotkeys] : null,
-      })
-      return true
-    })
-  }
-
-  const handleOpenProject = async metadata => {
-    const config = defaultMediaConfig.find(
-      config => config.type === metadata.type
-    )
-    setCurrProjectMetadata({ ...config, ...metadata })
-    setIsProjectOpen(true)
-    const notes = await fetchNotesById(metadata?.title)
-    if (errorFetchingNotes || !notes) {
-      toast.error("Failed to fetch notes")
-    }
-    setContent(editor, notes)
-  }
+  // useEffect(() => {
+  //   setUser(userData)
+  // }, [userData, setUser])
 
   const handleGetMediaState = dateStampRequested => {
-    const state = mediaRendererRef.current?.getState?.(dateStampRequested)
+    const state = mediaRef.current?.getState?.(dateStampRequested)
     if (!state) return null
     if (state.label === null || state.label === undefined) return null
     if (state.value === null || state.value === undefined) return null
@@ -74,76 +39,31 @@ const App = () => {
   }
 
   const handleSeekMedia = (_, stampValue) => {
-    mediaRendererRef.current?.setState?.(stampValue)
+    mediaRef.current?.setState?.(stampValue)
   }
-
-  EventEmitter.subscribe("open-media-with-src", data => {
-    setCurrProjectMetadata({
-      ...data,
-      label: "Audio Player",
-      type: data.type,
-      src: data.src,
-    })
-    setIsProjectOpen(true)
-  })
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <div className="grid grid-rows-[auto_1fr] h-screen bg-sidebar-accent dark:bg-mybgprim">
-        <ProjectProvider currProjectConfig={currProjectMetadata}>
-          <ModalProvider>
-            <header className="flex row-span-1 bg-transparent pt-2 px-2">
-              <AppBar
-                showToolbar={isProjectOpen}
-                onCloseProject={() => {
-                  setIsProjectOpen(false)
-                  setCurrProjectMetadata(null)
-                }}
-                navItems={defaultMediaConfig.concat(myMediaComponents)}
-                onNavItemClick={handleOpenNewProject}
-                metadata={currProjectMetadata}
+      <ModalProvider>
+        <div className="grid grid-rows-[auto_1fr] gap-2 p-2 h-screen bg-sidebar-accent dark:bg-mybgprim">
+          <header className="flex bg-transparent">
+            <AppBar navItems={defaultMediaConfig.concat(myMediaComponents)} />
+          </header>
+          <main className="grid grid-cols-2 gap-2 overflow-hidden">
+            <LeftPane>
+              <Outlet />
+            </LeftPane>
+            <RightPane>
+              <TextEditor
+                editor={editor}
+                onStampInsert={handleGetMediaState}
+                onStampClick={handleSeekMedia}
               />
-            </header>
-            <main className="row-span-2 grid grid-cols-2">
-              <LeftPane>
-                {isProjectOpen ? (
-                  <MediaRenderer
-                    metadata={currProjectMetadata}
-                    ref={node => (mediaRendererRef.current = node)}
-                  />
-                ) : user || syncToFileSystem ? (
-                  <Dashboard onOpenProject={handleOpenProject} />
-                ) : (
-                  <WelcomeMessage onClickTourButton={handleOnBeginTour} />
-                )}
-              </LeftPane>
-              <RightPane>
-                <TextEditor
-                  editor={editor}
-                  onStampInsert={handleGetMediaState}
-                  onStampClick={handleSeekMedia}
-                />
-              </RightPane>
-            </main>
-            <Toaster position="bottom-left" richColors />
-          </ModalProvider>
-        </ProjectProvider>
-      </div>
-      <Joyride
-        locale={{ close: "Next" }}
-        stepIndex={stepIndex}
-        steps={steps}
-        run={run}
-        callback={handleJoyrideCallback}
-        spotlightClicks={true}
-        hideCloseButton={true}
-        disableOverlayClose={true}
-        showProgress={true}
-        tooltipComponent={Tooltip}
-        floaterProps={{ hideArrow: true }}
-      />
+            </RightPane>
+          </main>
+        </div>
+        <Toaster position="bottom-left" richColors />
+      </ModalProvider>
     </ThemeProvider>
   )
 }
-
-export default App
