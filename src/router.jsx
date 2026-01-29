@@ -32,15 +32,6 @@ export const rootRoute = createRootRouteWithContext()({
         content: "Write notes synced with media",
       },
     ],
-    links: [
-      { rel: "stylesheet", href: "https://fonts.cdnfonts.com/css/fira-code-2" },
-      { rel: "stylesheet", href: "https://fonts.cdnfonts.com/css/outfit" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,400,0,0",
-      },
-      { rel: "stylesheet", href: "https://fonts.cdnfonts.com/css/mosk" },
-    ],
   }),
   errorComponent: () => <>Error</>,
   component: () => (
