@@ -3,21 +3,20 @@ import Logo from "./components/Logo/Logo"
 import AppToolbar from "./components/AppToolbar/AppToolbar"
 import ProfileSettings from "./components/ProfileSettings/ProfileSettings"
 import { useParams } from "@tanstack/react-router"
-import { defaultMediaConfig } from "@/config"
-import { useMemo } from "react"
+import { configs as mediaModulesConfig } from "virtual:media/config"
 
-const AppBar = ({ navItems }) => {
+const AppBar = () => {
   const { mediaId } = useParams({ strict: false })
-  const isValidMediaId = useMemo(
-    () => defaultMediaConfig.find(m => m.type === mediaId),
-    [mediaId]
-  )
 
   return (
     <div className="flex w-full gap-4">
       <Logo />
       <span className="flex items-center grow">
-        {isValidMediaId ? <AppToolbar /> : <Nav items={navItems} />}
+        {mediaModulesConfig[mediaId] ? (
+          <AppToolbar />
+        ) : (
+          <Nav items={Object.entries(mediaModulesConfig)} />
+        )}
       </span>
       <ProfileSettings />
     </div>

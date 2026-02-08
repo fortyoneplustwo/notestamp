@@ -8,8 +8,6 @@ import { ModalProvider } from "./providers/ModalProvider"
 // import { useAppContext } from "./context/AppContext"
 import { Toaster } from "sonner"
 import { ThemeProvider } from "./providers/ThemeProvider"
-import { defaultMediaConfig } from "./config"
-import { myMediaComponents } from "./components/MediaRenderer/config"
 import { useCreateEditor } from "./components/Editor/hooks/useCreateEditor"
 import "./index.css"
 import { createRoute, Outlet } from "@tanstack/react-router"
@@ -47,7 +45,7 @@ export function App() {
       <ModalProvider>
         <div className="grid grid-rows-[auto_1fr] gap-2 p-2 h-screen bg-sidebar-accent dark:bg-mybgprim">
           <header className="flex bg-transparent">
-            <AppBar navItems={defaultMediaConfig.concat(myMediaComponents)} />
+            <AppBar />
           </header>
           <main className="grid grid-cols-2 gap-2 overflow-hidden">
             <LeftPane>

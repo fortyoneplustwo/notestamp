@@ -7,8 +7,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ArrowUpDown, ChevronDown } from "lucide-react"
 import { useState } from "react"
-import { defaultMediaConfig as mediaComponents } from "@/config"
+import { configs as mediaModulesConfig } from "virtual:media/config"
 import { LoaderCircle, CircleAlert } from "lucide-react"
+import iconRegistry from "@/lib/registries/iconsRegistry"
 
 export const columns = [
   {
@@ -64,18 +65,18 @@ export const columns = [
             >
               All
             </DropdownMenuCheckboxItem>
-            {mediaComponents
-              .filter(media => media.type !== "recorder")
-              .map(media => (
+            {Object.entries(mediaModulesConfig)
+              .filter(([moduleId]) => moduleId !== "recorder")
+              .map(([moduleId, { label }]) => (
                 <DropdownMenuCheckboxItem
-                  key={media.type}
-                  checked={filterByMedia === media.type}
+                  key={moduleId}
+                  checked={filterByMedia === moduleId}
                   onCheckedChange={() => {
-                    column.setFilterValue(media.type)
-                    setFilterByMedia(media.type)
+                    column.setFilterValue(moduleId)
+                    setFilterByMedia(moduleId)
                   }}
                 >
-                  {media.label}
+                  {label}
                 </DropdownMenuCheckboxItem>
               ))}
           </DropdownMenuContent>
@@ -84,7 +85,7 @@ export const columns = [
     },
     cell: ({ row }) => (
       <div className="flex justify-center">
-        {mediaComponents.find(media => media.type === row.original.type).icon}
+        {iconRegistry.get(row.original.type)}
       </div>
     ),
     filterFn: (row, columnId, filterValue) => {
