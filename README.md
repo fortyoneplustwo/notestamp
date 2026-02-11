@@ -76,16 +76,19 @@ const config = {
 export default config
 ```
 
-After saving your changes, you should notice a new item in the nav bar with the `label` defined in your config file
+After saving your changes, you should notice a new item in the nav bar with the `label` defined in your config file.
 
-<!-- diagram -->
+<img width="898" height="46" alt="Screenshot 2026-02-11 9 48 50 AM" src="https://github.com/user-attachments/assets/c80116eb-2c74-40a9-8104-efb031118e0c" />
+
 
 Clicking the item reveals 2 things:
 
 1. The url shows the route `/colors`, the name as our module's directory. For this reason, we use single-word lowercase names for this reason.
 
 2. You are presented with the following error screen in the left pane:
-<!-- diagram -->
+
+<img width="1920" height="1080" alt="Screenshot 2026-02-11 9 46 58 AM" src="https://github.com/user-attachments/assets/dcc54f57-dc4a-4a19-a585-62773218d992" />
+
 
 So far we have only made the framework _aware_ of our module. We haven't actually implemented it yet. That is what the error message is trying to tell us: that it could not find an implementation file to render our module in the left pane, hence why it is `undefined`.
 
@@ -104,7 +107,7 @@ This is another config file that should export a React component for the icon.
 
 Now save your changes and you should see an icon rendered inside the nav bar item.
 
-<!-- diagram -->
+<img width="898" height="46" alt="Screenshot 2026-02-11 9 45 26 AM" src="https://github.com/user-attachments/assets/84030458-e6bd-4b79-bcf7-f9059f443354" />
 
 ### Step 2: Rendering our module
 
@@ -148,7 +151,8 @@ export default Colors
 
 Save your changes. This time, when you click the nav bar item, it should render our component in lieu of the previous error message.
 
-<!-- diagram -->
+<img width="1920" height="1080" alt="Screenshot 2026-02-11 9 49 53 AM" src="https://github.com/user-attachments/assets/dad40d8e-1f40-4455-ba5b-3bbc4030156b" />
+
 
 Verify that clicking the `Change color` button cycles through the different colors.
 
@@ -191,7 +195,7 @@ useImperativeHandle(ref, () => ({
 
 After saving your changes, open our module and type a few lines in the editor. You should see stamps being inserted in the editor that reference the current color. Click the `Change color` button and type a few more new lines to verify that the stamps correctly reference the displayed color.
 
- <!-- diagram -->
+<img width="1920" height="1080" alt="Screenshot 2026-02-11 9 54 37 AM" src="https://github.com/user-attachments/assets/1bd258c8-c51e-4802-a4f4-5fea4ffb3926" />
 
 #### Define stamps' on-click handler
 
@@ -312,7 +316,7 @@ Save your changes, start a new project of type `colors` and save it with the dis
 
 Now close the project. You should see a dashboard in the left pane that lists _Green Project_.
 
-<!-- diagram -->
+<img width="1920" height="1080" alt="Screenshot 2026-02-11 9 58 25 AM" src="https://github.com/user-attachments/assets/b991eede-5ed3-4f4e-bb3d-b0111f8af060" />
 
 ### Step 5: Open a saved project
 
