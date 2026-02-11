@@ -1,5 +1,8 @@
+// WARNING:
+// This module is deprecated.
+// It will be deleted once tests have been rewritten.
+
 import { FileText, Headphones, Mic, TvMinimalPlay } from "lucide-react"
-import { myMediaComponents as customMediaConfig } from "./components/MediaRenderer/config"
 
 export const defaultMediaConfig = [
   {
@@ -76,7 +79,6 @@ export const defaultMediaConfig = [
       },
     ],
   },
-  ...customMediaConfig,
 ]
 
 export const validKeys = [

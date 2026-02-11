@@ -110,7 +110,7 @@ export const localFetch = async (endpoint, params = null) => {
           }
         }
 
-        const chunkSize = 5
+        const chunkSize = 20
         const chunk = filteredProjects.slice(
           params?.pageParam,
           params?.pageParam + chunkSize

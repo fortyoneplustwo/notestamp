@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo } from "react"
-import { defaultMediaConfig } from "@/config"
 import { editorRef, useProjectContext } from "../../context/ProjectContext"
 import Loading from "../Screens/Loading/Loading"
 import { appLayoutRoute } from "@/App"
@@ -12,7 +11,7 @@ import {
   useRouteContext,
   useRouter,
 } from "@tanstack/react-router"
-import { getProjectConfig } from "@/utils/getProjectConfig"
+import { makeNewProjectTemplate } from "@/utils/makeNewProjectTemplate"
 import {
   fetchMediaById,
   fetchMediaByUrl,
@@ -29,10 +28,8 @@ import { zodValidator } from "@tanstack/zod-adapter"
 import { fallback } from "@tanstack/zod-adapter"
 import z from "zod"
 import { stripSearchParams } from "@tanstack/react-router"
-
-const mediaModules = import.meta.glob(`./media/*/index.jsx`, {
-  import: "default",
-})
+import { configs as mediaModulesConfig } from "virtual:media/config"
+import lazyMediaModulesRegistry from "./mediaModulesRegistry.js"
 
 export const mediaLayoutRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
@@ -71,9 +68,7 @@ export const mediaIdRoute = createRoute({
     context: { queryClient },
     params: { mediaId, projectId },
   }) => {
-    try {
-      getProjectConfig(mediaId)
-    } catch {
+    if (!mediaModulesConfig[mediaId]) {
       throw notFound()
     }
 
@@ -141,20 +136,20 @@ export const mediaIdRoute = createRoute({
     // Dynamically import media modules to trigger chunk download.
     // These are likely cached during preloading.
     let mediaModule = undefined
-    const config = defaultMediaConfig.find(c => c.type === mediaId)
+    const config = mediaId in mediaModulesConfig
     if (!config) {
       throw new Error(
         `No configuration found for media module with id: ${mediaId}`
       )
     }
-    const path = `./media/${config.dir}/index.jsx`
+    const path = `./media/${mediaId}/index.jsx`
     try {
-      mediaModule = await mediaModules[path]()
+      mediaModule = await lazyMediaModulesRegistry[path]()
     } catch (err) {
       console.error("Failed to preload media module:", err)
     }
 
-    const templateMetadata = getProjectConfig(mediaId)
+    const templateMetadata = makeNewProjectTemplate(mediaId)
     let provisionalMetadata = undefined
 
     if (projectId) {
@@ -208,7 +203,7 @@ export const mediaIdRoute = createRoute({
       {
         title: projectId
           ? `${projectId} | Notestamp`
-          : `${defaultMediaConfig.find(({ type }) => type === mediaId)?.label} | Notestamp`,
+          : `${mediaModulesConfig[mediaId]?.label} | Notestamp`,
       },
     ],
   }),
