@@ -363,16 +363,23 @@ const Colors = ({ ref, ...props }) => {
 
   return (
     <div className="flex flex-col h-full">
-      <Toolbar className="flex justify-end">
-        <Button
-          size="xs"
-          title="Change color"
-          onClick={() => setColorsIndex(i => (i + 1) % colors.length)}
-        >
-          <RefreshCw />
-          Change color
-        </Button>
-      </Toolbar>
+      {/* 
+        IMPORTANT: 
+        In Notestamp, we do not allow the media to be changed once a project 
+        has been saved. So render the toolbar only for new projects.
+      */}
+      {!props?.title && (
+        <Toolbar className="flex justify-end">
+          <Button
+            size="xs"
+            title="Change color"
+            onClick={() => setColorsIndex(i => (i + 1) % colors.length)}
+          >
+            <RefreshCw />
+            Change color
+          </Button>
+        </Toolbar>
+      )}
       {/* Show a loading screen until both queries have completed */}
       {isLoading || isParsing ? (
         <Loading />
