@@ -6,6 +6,9 @@ export const makeNewProjectTemplate = moduleId => {
 
   return {
     title: "",
+    src: "",
+    mimetype: "",
+    label: "",
     type: moduleId,
     ...metadata,
   }
