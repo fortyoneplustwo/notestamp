@@ -42,9 +42,11 @@ The core of the app relies on a text editor that enables clickable symbols, call
 Related libraries I published:
 
 1. [notestamp-editor-react](https://github.com/fortyoneplustwo/notestamp-editor-react)
+
    A headless text editor component for React that functions exactly like the one used in Notestamp.
 
 2. [slate-stamps](https://github.com/fortyoneplustwo/slate-stamps)
+
    Use this plugin to augment your Slate-based text editor with auto-insertion of inline elements that can be tailored to your needs.
 
 ## Implementing a custom media module
