@@ -52,7 +52,7 @@ Related libraries I published:
 ## Implementing a custom media module
 
 If a particular media type isn't supported by default, you can integrate it into notestamp. A custom
-framework had been implemented to streamline this process with minimal mental overhead.
+framework has been implemented to streamline this process with minimal mental overhead.
 
 While the documentation is in progress, you can refer to the tutorial below.
 
