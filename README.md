@@ -20,12 +20,15 @@ https://notestamp.com
 I personally needed a tool that could help me take better notes for my classes, however, the ones available on the market were either pricey, platform-specific, or lacking in media options. Thus, I set on to build my own tool with the following goals in mind:
 
 - **Platform-agnostic**
+
   Should require no installation and be accessible from any operating system.
 
 - **User-owned data**
+
   Data is saved onto the user's device. The app should simply act as a service with which to interact with that data in some peculiar way.
 
 - **Extensible**
+
   Should enable users with basic programming skills to implement their own custom media modules through an intuitive framework.
 
 ## Stack
@@ -67,6 +70,7 @@ As you take notes, stamps will auto-insert to reference the currently displayed 
 
 At build time, the framework scans `src/components/MediaRenderer/media/`. Each subdirectory in this location represents a media module and contains all of its configuration and implementation code. 
 
+> [!Important]
 > Configuration files provide important static data about a module at build time. Without them, the framework will not be aware of the existence of our module. 
 
 Start by creating a directory for our module called `colors`.
