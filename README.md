@@ -214,7 +214,7 @@ Click the `Change color` button and type a few more new lines to verify that the
 
 Clicking a stamp does nothing at the moment. We need to opt into that behavior as well.
 
-When a stamp is clicked, the app will call `setState()`, a function exposed from within our module. If this function does not exposed, then nothing happens.
+When a stamp is clicked, the app will call `setState()`, a function exposed from within our module. If this function is not exposed, then nothing happens.
 
 ##### `setState(value: any) => void`
 
