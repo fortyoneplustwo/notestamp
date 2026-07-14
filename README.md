@@ -5,19 +5,15 @@ or recording.
 
 The text editor auto-inserts a stamp at the start of each new line, capturing the exact moment in the media when you began typing. Simply click any stamp in your notes to instantly seek the media to that exact point.
 
-## Install
-
-`pnpm install`
-
-`pnpm start`
-
 ## Motivation
 
-I personally needed a tool that could help me take better notes for my classes, however, the ones available on the market were either pricey, platform-specific, or lacking in media options. Thus, I set on to build my own tool with the following goals in mind:
+I needed a better way to take notes for my classes, specifically notes that stayed connected to the lectures, readings, and media they referenced. This lines up with what Zettelkasten calls "reference notes": notes tied to a specific source, as opposed to notes that stand on their own.
 
-- **Platform-agnostic**: no installation required accessible from any operating system.
-- **User-owned data**: data lives on the user's device. The app simply interacts with that data in some peculiar way.
-- **Extensible**: provide a framework for users to mod their copy of the software.
+The tools I found were pricey, locked to a single platform, or limited in what media they supported. So I built my own, with the following goals in mind:
+
+- **Platform-agnostic**: No installation required, accessible from any operating system.
+- **User-owned data**: Your data lives on your device. The app simply reads and writes to it.
+- **Extensible**: A framework for users to mod their own copy of the software.
 
 ## Text Editor
 
@@ -25,8 +21,8 @@ The core of the app relies on a custom text editor that auto-inserts inline elem
 
 Related libraries:
 
-- [notestamp-editor-react](https://github.com/fortyoneplustwo/notestamp-editor-react): a headless text editor component for React similar to the one used by notestamp.
-- [slate-stamps](https://github.com/fortyoneplustwo/slate-stamps): a plugin to augment your Slate-based text editor with auto-insertion of inline elements, completely customizable to your liking.
+- **[notestamp-editor-react](https://github.com/fortyoneplustwo/notestamp-editor-react)**: a headless text editor component for React similar to the one used by notestamp.
+- **[slate-stamps](https://github.com/fortyoneplustwo/slate-stamps)**: a plugin to augment your Slate-based text editor with auto-insertion of inline elements, completely customizable to your liking.
 
 ## Tutorial: Implement your own media module
 
@@ -44,6 +40,14 @@ framework has been implemented to streamline this process with minimal mental ov
 We will implement a media module that displays one of three colors -- red, blue or green -- at a time and enables cycling through them at the click of a button.
 
 Stamps auto-insert as you type, tagged with the current color. Click one to switch the display back to that color.
+
+### Step 0: Install
+
+Clone this repository then run
+
+`pnpm install`
+
+`pnpm start`
 
 ### Step 1: Configuration
 
