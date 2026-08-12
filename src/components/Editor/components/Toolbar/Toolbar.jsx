@@ -1,13 +1,14 @@
 /* eslint-disable react/jsx-key */
+/* eslint-disable react/display-name */
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState, memo } from "react"
 import { Toolbar as Container } from "@/components/MediaRenderer/components/Toolbar"
 import { MarkButton } from "./components/MarkButton"
 import { BlockButton } from "./components/BlockButton"
 import { ActionButton } from "./components/ActionButton"
 import { useLists } from "../../plugins/withLists"
 import { useMarks } from "../../plugins/withMarks"
-import { useSlate } from "slate-react"
+import { useSlateStatic } from "slate-react"
 import { Bold } from "lucide-react"
 import { Italic } from "lucide-react"
 import { Underline } from "lucide-react"
@@ -24,8 +25,8 @@ const modules = import.meta.glob("../../utils/pdfDownloader.jsx", {
   import: "downloadPdf",
 })
 
-export const Toolbar = () => {
-  const editor = useSlate()
+export const Toolbar = memo(({ selection }) => {
+  const editor = useSlateStatic()
   const { marks } = useMarks()
   const { lists } = useLists()
   const downloadPdf = useRef()
@@ -170,4 +171,4 @@ export const Toolbar = () => {
       </div>
     </Container>
   )
-}
+})
