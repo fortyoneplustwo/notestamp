@@ -83,47 +83,51 @@ export const TextEditor = ({
   // and the line above is an empty paragraph,
   // then we delete the empty paragraph,
   // essentially moving the content at and below the selection up by one line
-  // editor.deleteBackward = (...args) => {
-  //   const { selection } = editor
-  //   let match = Editor.above(editor, {
-  //     match: n =>
-  //       !Editor.isEditor(n) &&
-  //       SlateElement.isElement(n) &&
-  //       Editor.isBlock(editor, n),
-  //   })
-  //   if (!match) throw Error("Could not find non-editor wrapping block")
+  editor.deleteBackward = (...args) => {
+    const { selection } = editor
+    let match = Editor.above(editor, {
+      match: n =>
+        !Editor.isEditor(n) &&
+        SlateElement.isElement(n) &&
+        Editor.isBlock(editor, n),
+    })
+    if (!match) throw Error("Could not find non-editor wrapping block")
 
-  //   const [block, blockPath] = match
-  //   const isSelectionAtBlockStart = Point.equals(
-  //     selection.anchor,
-  //     Editor.start(editor, blockPath)
-  //   )
-  //   const pointBefore = Editor.before(editor, selection.anchor)
-  //   const isBlockEmpty = block =>
-  //     block.children.length === 1 && block.children[0].text === ""
+    const [block, blockPath] = match
+    const isSelectionAtBlockStart = Point.equals(
+      selection.anchor,
+      Editor.start(editor, blockPath)
+    )
+    if (!isSelectionAtBlockStart) {
+      deleteBackward(...args)
+      return
+    }
+    const pointBefore = Editor.before(editor, selection.anchor)
+    const isBlockEmpty = block =>
+      block.children.length === 1 && block.children[0].text === ""
 
-  //   match =
-  //     pointBefore &&
-  //     Editor.above(editor, {
-  //       at: pointBefore,
-  //       match: n => !Editor.isEditor(n) && Editor.isBlock(editor, n),
-  //       mode: "lowest",
-  //     })
+    match =
+      pointBefore &&
+      Editor.above(editor, {
+        at: pointBefore,
+        match: n => !Editor.isEditor(n) && Editor.isBlock(editor, n),
+        mode: "lowest",
+      })
 
-  //   if (match) {
-  //     const [blockAtPointBefore, blockPathAtPointBefore] = match
-  //     if (
-  //       isSelectionAtBlockStart &&
-  //       block.type === editor.stampedElementType &&
-  //       blockAtPointBefore.type === "paragraph" &&
-  //       isBlockEmpty(blockAtPointBefore)
-  //     ) {
-  //       Transforms.removeNodes(editor, { at: blockPathAtPointBefore })
-  //       return
-  //     }
-  //   }
-  //   deleteBackward(...args)
-  // }
+    if (match) {
+      const [blockAtPointBefore, blockPathAtPointBefore] = match
+      if (
+        isSelectionAtBlockStart &&
+        block.type === editor.stampedElementType &&
+        blockAtPointBefore.type === "paragraph" &&
+        isBlockEmpty(blockAtPointBefore)
+      ) {
+        Transforms.removeNodes(editor, { at: blockPathAtPointBefore })
+        return
+      }
+    }
+    deleteBackward(...args)
+  }
 
   // Disable soft breaks (Shift + Enter)
   editor.insertSoftBreak = () => {
