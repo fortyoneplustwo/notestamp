@@ -5,8 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react"
-import { Document, Page } from "react-pdf"
-import { pdfjs } from "react-pdf"
+import { Document, Page, pdfjs } from "react-pdf"
 import "../../style/Background.css"
 import "react-pdf/dist/Page/TextLayer.css"
 import { Toolbar } from "../../components/Toolbar"
@@ -20,7 +19,10 @@ import isHotkey from "is-hotkey"
 import { fetchMediaById } from "@/lib/fetch/api-read"
 import { useQuery } from "@tanstack/react-query"
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url,
+).toString();
 
 const PdfReader = ({ ref, ...props }) => {
   const [source, setSource] = useState(null)
