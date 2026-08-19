@@ -3,12 +3,14 @@ import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import { visualizer } from "rollup-plugin-visualizer"
 import { globSync } from "tinyglobby"
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig(() => {
   return {
-    build: {
-      outDir: "build",
-    },
+		build: {
+			// firebase looks for build/ not dist/
+			outDir: 'build'
+		},
     plugins: [
       react(),
       visualizer({
@@ -44,6 +46,19 @@ export default defineConfig(() => {
           }
         },
       },
+			VitePWA({
+				registerType: 'autoUpdate',
+				devOptions: {
+					enabled: true
+				},
+				manifest: {
+					name: 'notestamp',
+					short_name: 'notestamp',
+					description: 'Write notes synced with media.',
+					theme_color: '#ffffff',
+					display: 'browser',
+				}
+			})
     ],
     resolve: {
       alias: {
