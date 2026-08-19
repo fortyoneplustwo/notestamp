@@ -9,6 +9,7 @@ import {
 import { Toggle } from "./Toggle"
 
 export const useBlockButton = () => {
+  const { lists } = useLists()
   const isBlockActive = (editor, format, blockType = "type") => {
     const { selection } = editor
     if (!selection) return false
@@ -26,7 +27,6 @@ export const useBlockButton = () => {
   }
 
   const toggleBlock = (editor, format) => {
-    const { lists } = useLists()
     const isActive = isBlockActive(editor, format)
     const isList = Object.values(lists).includes(format)
     if (isList) {
@@ -40,6 +40,7 @@ export const useBlockButton = () => {
 export const BlockButton = ({ format, icon: Icon, title, ...props }) => {
   const editor = useSlate()
   const { isBlockActive, toggleBlock } = useBlockButton()
+  const isActive = isBlockActive(editor, format)
 
   return (
     <Tooltip>
@@ -48,8 +49,8 @@ export const BlockButton = ({ format, icon: Icon, title, ...props }) => {
           {...props}
           tabIndex={0}
           className="px-1"
-          active={isBlockActive(editor, format)}
-          aria-pressed={isBlockActive(editor, format)}
+          active={isActive}
+          aria-pressed={isActive}
           onMouseDown={event => {
             event.preventDefault()
             toggleBlock(editor, format)

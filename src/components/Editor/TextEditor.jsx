@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState, useEffect } from "react"
+import React, { useMemo, useCallback, useState, useEffect, useDeferredValue } from "react"
 import { Slate, Editable } from "slate-react"
 import { Editor, Transforms, Element as SlateElement, Point } from "slate"
 import isHotkey from "is-hotkey"
@@ -26,6 +26,9 @@ export const TextEditor = ({
       withLists(withStamps(baseEditor, stableOnStampInsert, stableOnStampClick))
     )
   )
+
+  const [selection, setSelection] = useState(editor.selection)
+  const deferredSelection = useDeferredValue(selection)
 
   const initialValue = useMemo(
     () =>
@@ -73,54 +76,66 @@ export const TextEditor = ({
 
   /**
    * Custom behaviour
+	 *
+	 * UPDATE:
+	 * Overriding deleteBackward() a second time (here)
+	 * causes too much keyboard input lag.
+	 * Comment it out for now.
+	 * TODO:
+	 * Need to vendor slate-stamps plugin and edit the first
+	 * override directly instead.
    */
-  const { deleteBackward } = editor
+  // const { deleteBackward } = editor
 
   // If the selection is at the start of a stamped line,
   // and the line above is an empty paragraph,
   // then we delete the empty paragraph,
   // essentially moving the content at and below the selection up by one line
-  editor.deleteBackward = (...args) => {
-    const { selection } = editor
-    let match = Editor.above(editor, {
-      match: n =>
-        !Editor.isEditor(n) &&
-        SlateElement.isElement(n) &&
-        Editor.isBlock(editor, n),
-    })
-    if (!match) throw Error("Could not find non-editor wrapping block")
+  // editor.deleteBackward = (...args) => {
+  //   const { selection } = editor
+  //   let match = Editor.above(editor, {
+  //     match: n =>
+  //       !Editor.isEditor(n) &&
+  //       SlateElement.isElement(n) &&
+  //       Editor.isBlock(editor, n),
+  //   })
+  //   if (!match) throw Error("Could not find non-editor wrapping block")
 
-    const [block, blockPath] = match
-    const isSelectionAtBlockStart = Point.equals(
-      selection.anchor,
-      Editor.start(editor, blockPath)
-    )
-    const pointBefore = Editor.before(editor, selection.anchor)
-    const isBlockEmpty = block =>
-      block.children.length === 1 && block.children[0].text === ""
+  //   const [block, blockPath] = match
+  //   const isSelectionAtBlockStart = Point.equals(
+  //     selection.anchor,
+  //     Editor.start(editor, blockPath)
+  //   )
+  //   if (!isSelectionAtBlockStart) {
+  //     deleteBackward(...args)
+  //     return
+  //   }
+  //   const pointBefore = Editor.before(editor, selection.anchor)
+  //   const isBlockEmpty = block =>
+  //     block.children.length === 1 && block.children[0].text === ""
 
-    match =
-      pointBefore &&
-      Editor.above(editor, {
-        at: pointBefore,
-        match: n => !Editor.isEditor(n) && Editor.isBlock(editor, n),
-        mode: "lowest",
-      })
+  //   match =
+  //     pointBefore &&
+  //     Editor.above(editor, {
+  //       at: pointBefore,
+  //       match: n => !Editor.isEditor(n) && Editor.isBlock(editor, n),
+  //       mode: "lowest",
+  //     })
 
-    if (match) {
-      const [blockAtPointBefore, blockPathAtPointBefore] = match
-      if (
-        isSelectionAtBlockStart &&
-        block.type === editor.stampedElementType &&
-        blockAtPointBefore.type === "paragraph" &&
-        isBlockEmpty(blockAtPointBefore)
-      ) {
-        Transforms.removeNodes(editor, { at: blockPathAtPointBefore })
-        return
-      }
-    }
-    deleteBackward(...args)
-  }
+  //   if (match) {
+  //     const [blockAtPointBefore, blockPathAtPointBefore] = match
+  //     if (
+  //       isSelectionAtBlockStart &&
+  //       block.type === editor.stampedElementType &&
+  //       blockAtPointBefore.type === "paragraph" &&
+  //       isBlockEmpty(blockAtPointBefore)
+  //     ) {
+  //       Transforms.removeNodes(editor, { at: blockPathAtPointBefore })
+  //       return
+  //     }
+  //   }
+  //   deleteBackward(...args)
+  // }
 
   // Disable soft breaks (Shift + Enter)
   editor.insertSoftBreak = () => {
@@ -211,17 +226,24 @@ export const TextEditor = ({
       <Slate
         editor={editor}
         initialValue={initialValue}
+        value={value}
         onChange={val => {
+          const isSelectionChange = editor.operations.some(
+            op => op.type === "set_selection"
+          )
           const isAstChange = editor.operations.some(
             op => "set_selection" !== op.type
           )
           if (isAstChange) {
             setValue(val)
           }
+          if (isSelectionChange) {
+            setSelection(editor.selection)
+          }
         }}
       >
         <div className="flex flex-col h-full">
-          <Toolbar />
+          <Toolbar selection={deferredSelection} />
           <Editable
             className="overflow-x-hidden outline-hidden p-1 w-full h-full color-black bg-white dark:bg-mybgsec"
             style={{ tabSize: "2" }}

@@ -24,6 +24,7 @@ export const useMarkButton = () => {
 export const MarkButton = ({ format, icon: Icon, title, ...props }) => {
   const editor = useSlate()
   const { isMarkActive, toggleMark } = useMarkButton()
+  const isActive = isMarkActive(editor, format)
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -31,9 +32,10 @@ export const MarkButton = ({ format, icon: Icon, title, ...props }) => {
           {...props}
           tabIndex={0}
           className="px-1"
-          active={isMarkActive(editor, format)}
-          aria-pressed={isMarkActive(editor, format)}
+          active={isActive}
+          aria-pressed={isActive}
           onMouseDown={event => {
+            console.log("press")
             event.preventDefault()
             toggleMark(editor, format)
           }}
